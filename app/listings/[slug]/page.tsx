@@ -1,80 +1,97 @@
-const listings = [
-  {
-    slug: "iphone-14-pro",
-    title: "iPhone 14 Pro",
-    location: "Colombo",
-    price: "Rs. 320,000",
-    image: "/images/phone.jpg",
-    description: "Excellent condition iPhone 14 Pro for sale.",
-  },
+"use client";
 
-  {
-    slug: "honda-vezel",
-    title: "Honda Vezel",
-    location: "Kandy",
-    price: "Rs. 12,500,000",
-    image: "/images/car.jpg",
-    description: "Well maintained Honda Vezel.",
-  },
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
-  {
-    slug: "apartment",
-    title: "Apartment",
-    location: "Negombo",
-    price: "Rs. 1,550,000",
-    image: "/images/apartment.jpg",
-    description: "Luxury apartment available for sale.",
-  },
+export default function ListingDetails() {
+  const [item, setItem] = useState<any>(null);
 
-  {
-    slug: "macbook-pro",
-    title: "MacBook Pro",
-    location: "Galle",
-    price: "Rs. 550,000",
-    image: "/images/macbook.jpg",
-    description: "Apple MacBook Pro in excellent condition.",
-  },
-];
+  const params = useParams();
+  const slug = params?.slug as string;
 
-export default async function ListingDetails({ params }: any) {
-  const { slug } = await params;
+  useEffect(() => {
+    if (!slug) return;
 
-  const listing = listings.find(
-    (item) => item.slug === slug
-  );
+    const fetchListing = async () => {
+      try {
+        const docRef = doc(
+          db,
+          "listings",
+          slug
+        );
 
-  if (!listing) {
-    return <div className="p-10">Listing not found</div>;
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setItem({
+            id: docSnap.id,
+            ...docSnap.data(),
+          });
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchListing();
+  }, [slug]);
+
+  if (!item) {
+    return (
+      <h1 className="p-10 text-xl">
+        Loading...
+      </h1>
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <img
-        src={listing.image}
-        alt={listing.title}
-        className="w-full h-[400px] object-cover rounded-xl"
-      />
+    <div className="max-w-4xl mx-auto p-6">
+      {item.imageUrl && (
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="w-full h-96 object-cover rounded-xl"
+        />
+      )}
 
       <h1 className="text-4xl font-bold mt-6">
-        {listing.title}
+        {item.title}
       </h1>
 
-      <p className="text-2xl font-bold mt-2">
-        {listing.price}
+      <p className="text-3xl font-bold text-green-600 mt-3">
+        Rs. {item.price}
       </p>
 
-      <p className="text-gray-500 mt-2">
-        {listing.location}
+      <p className="text-blue-600 mt-2">
+        {item.category}
       </p>
 
-      <div className="mt-6">
-        <h2 className="text-2xl font-semibold mb-2">
-          Description
-        </h2>
+      <p className="text-gray-600 mt-2">
+        {item.location}
+      </p>
 
-        <p className="text-gray-700">
-          {listing.description}
-        </p>
+      <h2 className="text-2xl font-bold mt-8">
+        Description
+      </h2>
+
+      <p className="text-gray-700 mt-3">
+        {item.description}
+      </p>
+
+      <div className="mt-6 flex gap-4">
+        <a
+          href={`https://wa.me/${item.phone}`}
+          target="_blank"
+          className="bg-green-600 text-white px-6 py-3 rounded-xl"
+        >
+          WhatsApp Seller
+        </a>
+
+        <button className="bg-blue-600 text-white px-6 py-3 rounded-xl">
+          Call Seller
+        </button>
       </div>
     </div>
   );

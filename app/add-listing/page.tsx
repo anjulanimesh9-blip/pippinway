@@ -11,10 +11,11 @@ export default function AddListingPage() {
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<any>(null);
  const [category, setCategory] = useState("");
+const [phone, setPhone] = useState("");
  const handleSubmit = async (e: any) => {
   e.preventDefault();
 
-  try {
+ try {
     let imageUrl = "";
 
     if (image) {
@@ -38,6 +39,7 @@ export default function AddListingPage() {
       category,
       description,
       imageUrl,
+      phone,
       createdAt: new Date(),
     });
 
@@ -65,52 +67,69 @@ export default function AddListingPage() {
           className="space-y-6"
         >
           <div>
-            <label className="block mb-2 font-semibold">
-              Product Title
-            </label>
+  <label className="block mb-2 font-semibold">
+    Product Title
+  </label>
 
-            <input
-              type="text"
-              placeholder="Enter product title"
-              value={title}
-              onChange={(e) =>
-                setTitle(e.target.value)
-              }
-              className="w-full border p-4 rounded-xl"
-            />
-          </div>
+  <input
+    type="text"
+    placeholder="Enter product title"
+    value={title}
+    onChange={(e) =>
+      setTitle(e.target.value)
+    }
+    className="w-full border p-3 rounded-xl"
+  />
+</div>
 
-          <div>
-            <label className="block mb-2 font-semibold">
-              Price
-            </label>
+<div>
+  <label className="block mb-2 font-semibold">
+    Price
+  </label>
 
-            <input
-              type="text"
-              placeholder="Enter price"
-              value={price}
-              onChange={(e) =>
-                setPrice(e.target.value)
-              }
-              className="w-full border p-4 rounded-xl"
-            />
-          </div>
+  <input
+    type="text"
+    placeholder="Enter price"
+    value={price}
+    onChange={(e) =>
+      setPrice(e.target.value)
+    }
+    className="w-full border p-3 rounded-xl"
+  />
+</div>
 
-          <div>
-            <label className="block mb-2 font-semibold">
-              Location
-            </label>
+<div>
+  <label className="block mb-2 font-semibold">
+    Location
+  </label>
 
-            <input
-              type="text"
-              placeholder="Enter location"
-              value={location}
-              onChange={(e) =>
-                setLocation(e.target.value)
-              }
-              className="w-full border p-4 rounded-xl"
-            />
-          </div>
+  <input
+    type="text"
+    placeholder="Enter location"
+    value={location}
+    onChange={(e) =>
+      setLocation(e.target.value)
+    }
+    className="w-full border p-3 rounded-xl"
+  />
+</div>
+
+<div>
+  <label className="block mb-2 font-semibold">
+    WhatsApp Number
+  </label>
+
+  <input
+    type="text"
+    placeholder="WhatsApp Number"
+    value={phone}
+    onChange={(e) =>
+      setPhone(e.target.value)
+    }
+    className="w-full border p-3 rounded-xl"
+  />
+</div>
+          
           <div className="mb-6">
   <label className="block mb-2 font-semibold">
     Category

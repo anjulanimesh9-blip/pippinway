@@ -102,7 +102,7 @@ useEffect(() => {
   )
   .map((item) => (
             <Link
-             href={`/listing/${item.id}`}
+             href={`/listings/${item.id}`}
               key={item.id}
               className="bg-white rounded-2xl shadow p-5 block"
             >
