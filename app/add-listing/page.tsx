@@ -1,10 +1,44 @@
 "use client";
 
-import { useState } from "react";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "../firebase";
+import { useState, useEffect } from "react";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function AddListingPage() {
+  const [country, setCountry] = useState("");
+  const router = useRouter();
+  useEffect(() => {
+  const loadUserData = async () => {
+    const user = auth.currentUser;
+
+    if (!user) return;
+
+    const userRef = doc(
+      db,
+      "users",
+      user.uid
+    );
+
+    const userSnap =
+      await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+
+      setPhone(data.phone || "");
+      setCountry(data.country || "");
+    }
+  };
+
+  loadUserData();
+}, []);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
@@ -32,18 +66,22 @@ const [phone, setPhone] = useState("");
       imageUrl = uploadData.filePath;
     }
 
-    await addDoc(collection(db, "listings"), {
-      title,
-      price,
-      location,
-      category,
-      description,
-      imageUrl,
-      phone,
-      createdAt: new Date(),
-    });
+await addDoc(collection(db, "listings"), {
+  title,
+  price,
+  location,
+  category,
+  country,
+  description,
+  imageUrl,
+  phone,
+  ownerEmail: auth.currentUser?.email,
+  createdAt: new Date(),
+});
 
     alert("Listing added successfully!");
+
+    router.push("/");
 
     setTitle("");
     setPrice("");
@@ -97,7 +135,29 @@ const [phone, setPhone] = useState("");
     className="w-full border p-3 rounded-xl"
   />
 </div>
-
+<div className="mb-4">
+  <label className="block mb-2 font-semibold">
+    Country
+  </label>
+<select
+  value={country}
+  onChange={(e) => setCountry(e.target.value)}
+  className="w-full border p-3 rounded-xl"
+>
+  <option value="">Select Country</option>
+  <option value="Singapore">Singapore</option>
+  <option value="India">India</option>
+  <option value="Thailand">Thailand</option>
+  <option value="Zimbabwe">Zimbabwe</option>
+  <option value="USA">USA</option>
+  <option value="Maldives">Maldives</option>
+  <option value="Sri Lanka">Sri Lanka</option>
+  <option value="South Africa">South Africa</option>
+  <option value="United Kingdom">United Kingdom</option>
+  <option value="Canada">Canada</option>
+</select>
+  
+</div>
 <div>
   <label className="block mb-2 font-semibold">
     Location
@@ -189,10 +249,24 @@ const [phone, setPhone] = useState("");
               className="w-full border p-4 rounded-xl h-40"
             />
           </div>
+<Link href="/">
+  <button
+    type="button"
+    style={{
+      padding: "10px 15px",
+      border: "1px solid #ccc",
+      borderRadius: "8px",
+      background: "white",
+      cursor: "pointer",
+    }}
+  >
+    🏠 Back to Home
+  </button>
+</Link>
 
-          <button className="bg-black text-white px-8 py-3 rounded-xl">
-            Post Listing
-          </button>
+<button className="bg-black text-white px-8 py-3 rounded-xl">
+  Post Listing
+</button>
         </form>
       </div>
     </div>

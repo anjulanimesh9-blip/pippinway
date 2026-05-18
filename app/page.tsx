@@ -11,11 +11,17 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 
 
 export default function Home() {
+  const [selectedCountry, setSelectedCountry] = useState("");
   const [listings, setListings] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] =
   useState("All");
   const [search, setSearch] = useState("");
+  const [locationFilter, setLocationFilter] =
+  useState("");
+
+const [maxPrice, setMaxPrice] =
+  useState("");
 
 useEffect(() => {
   fetchListings();
@@ -64,10 +70,59 @@ useEffect(() => {
   )}
 </div>
 
-      <section className="max-w-7xl mx-auto py-16 px-4">
-        <h1 className="text-4xl font-bold mb-10">
-          Latest Listings
-          <div className="flex gap-3 mb-8 flex-wrap">
+<section className="max-w-7xl mx-auto py-16 px-4">
+
+ <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+    <h1 className="text-4xl font-bold">
+      Latest Listings
+    </h1>
+
+  </div>
+<div className="flex gap-4 flex-wrap mb-6">
+  <select
+  value={selectedCountry}
+  onChange={(e) =>
+    setSelectedCountry(e.target.value)
+  }
+  className="p-3 border rounded-xl w-[147px]"
+>
+  <option value="">All Countries</option>
+  <option value="Singapore">Singapore</option>
+  <option value="India">India</option>
+  <option value="Thailand">Thailand</option>
+  <option value="Zimbabwe">Zimbabwe</option>
+  <option value="USA">USA</option>
+  <option value="Maldives">Maldives</option>
+  <option value="Sri Lanka">Sri Lanka</option>
+  <option value="South Africa">South Africa</option>
+  <option value="United Kingdom">United Kingdom</option>
+  <option value="Canada">Canada</option>
+</select>
+  <input
+    type="text"
+    placeholder="Filter by location"
+    value={locationFilter}
+    onChange={(e) =>
+      setLocationFilter(
+        e.target.value
+      )
+    }
+    className="p-3 border rounded-xl"
+  />
+
+  <input
+    type="number"
+    placeholder="Max price"
+    value={maxPrice}
+    onChange={(e) =>
+      setMaxPrice(
+        e.target.value
+      )
+    }
+    className="p-3 border rounded-xl"
+  />
+</div>
+  <div className="flex gap-3 mb-8 flex-wrap">
   {[
     "All",
     "Electronics",
@@ -91,15 +146,48 @@ useEffect(() => {
     </button>
   ))}
 </div>
-        </h1>
-
-        <div className="grid md:grid-cols-4 gap-6">
+<div className="grid md:grid-cols-4 gap-6">
           {listings
-  .filter((item) =>
+.filter((item) => {
+  const matchCountry =
+  selectedCountry === ""
+    ? true
+    : item.country ===
+      selectedCountry;
+  const matchCategory =
     selectedCategory === "All"
       ? true
-      : item.category === selectedCategory
-  )
+      : item.category ===
+        selectedCategory;
+
+  const matchSearch =
+    item.title
+      ?.toLowerCase()
+      .includes(
+        search.toLowerCase()
+      );
+
+  const matchLocation =
+    item.location
+      ?.toLowerCase()
+      .includes(
+        locationFilter.toLowerCase()
+      );
+
+  const matchPrice =
+    maxPrice === ""
+      ? true
+      : Number(item.price) <=
+        Number(maxPrice);
+
+return (
+  matchCategory &&
+  matchSearch &&
+  matchLocation &&
+  matchPrice &&
+  matchCountry
+);
+})
   .map((item) => (
             <Link
              href={`/listings/${item.id}`}

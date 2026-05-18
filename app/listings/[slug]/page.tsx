@@ -1,16 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { db, auth } from "../../firebase";
+import { useParams, useRouter } from "next/navigation";
+
 
 export default function ListingDetails() {
-  const [item, setItem] = useState<any>(null);
 
+  const [item, setItem] = useState<any>(null);
+  const currentUser = auth.currentUser;
+  const router = useRouter();
   const params = useParams();
   const slug = params?.slug as string;
+  
 
+  const handleDelete = async () => {
+  const confirmDelete = confirm(
+    "Are you sure you want to delete this listing?"
+  );
+
+  if (!confirmDelete) return;
+
+  await deleteDoc(doc(db, "listings", slug));
+
+  alert("Listing deleted!");
+  router.push("/");
+};
   useEffect(() => {
     if (!slug) return;
 
@@ -48,6 +64,12 @@ export default function ListingDetails() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <button
+  onClick={() => router.push("/")}
+  className="mb-6 bg-black text-white px-5 py-2 rounded-xl"
+>
+  ← Back to Home
+</button>
       {item.imageUrl && (
         <img
           src={item.imageUrl}
@@ -79,20 +101,43 @@ export default function ListingDetails() {
       <p className="text-gray-700 mt-3">
         {item.description}
       </p>
+<div className="mt-6 flex gap-4">
+  <a
+    href={`https://wa.me/${item.phone}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-green-600 text-white px-6 py-3 rounded-xl"
+  >
+    WhatsApp Seller
+  </a>
 
-      <div className="mt-6 flex gap-4">
-        <a
-          href={`https://wa.me/${item.phone}`}
-          target="_blank"
-          className="bg-green-600 text-white px-6 py-3 rounded-xl"
-        >
-          WhatsApp Seller
-        </a>
+  <a
+    href={`tel:${item.phone}`}
+    className="bg-blue-600 text-white px-6 py-3 rounded-xl"
+  >
+    Call Seller
+  </a>
 
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-xl">
-          Call Seller
-        </button>
-      </div>
+  {currentUser?.email === item.ownerEmail && (
+    <>
+      <button
+        onClick={handleDelete}
+        className="bg-red-600 text-white px-6 py-3 rounded-xl"
+      >
+        Delete Listing
+      </button>
+
+      <button
+        onClick={() =>
+          router.push(`/edit/${slug}`)
+        }
+        className="bg-yellow-500 text-white px-6 py-3 rounded-xl"
+      >
+        Edit Listing
+      </button>
+    </>
+  )}
+</div>
     </div>
   );
 }

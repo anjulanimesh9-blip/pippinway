@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleLogin = async (e: any) => {
     e.preventDefault();
@@ -18,7 +21,8 @@ export default function LoginPage() {
         password
       );
 
-      alert("Login successful!");
+      
+      router.push("/profile");
     } catch (error: any) {
       alert(error.message);
     }
@@ -52,10 +56,22 @@ export default function LoginPage() {
             }
             className="w-full border p-3 rounded-xl"
           />
+<div className="flex gap-2 mt-4">
+  <button className="bg-black text-white w-full py-3 rounded-xl">
+    Login
+  </button>
 
-          <button className="w-full bg-black text-white py-3 rounded-xl">
-            Login
-          </button>
+  <Link href="/" className="w-full">
+    <button
+      type="button"
+      className="w-full border rounded-xl py-3"
+    >
+      🏠 Back to Home
+    </button>
+  </Link>
+</div>
+          
+        
         </form>
       </div>
     </div>
