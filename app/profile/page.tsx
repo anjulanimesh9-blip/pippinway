@@ -5,6 +5,7 @@ import {
   collection,
   getDocs,
 } from "firebase/firestore";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
@@ -16,7 +17,8 @@ export default function ProfilePage() {
 
   const [myAds, setMyAds] =
     useState<any[]>([]);
-
+  const [menuOpen, setMenuOpen] =
+  useState(false);
   useEffect(() => {
     const fetchMyAds =
       async () => {
@@ -68,13 +70,82 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#0B1120] text-white flex">
+{/* Mobile Header */}
+<div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#111827] border-b border-gray-800 flex items-center justify-between px-4 py-1">
+  <Image
+    src="/images/logo.png"
+    alt="Pippinway"
+    width={110}
+    height={35}
+    className="object-contain"
+  />
+
+  <button
+    onClick={() =>
+      setMenuOpen(!menuOpen)
+    }
+    className="text-3xl leading-none"
+  >
+    ☰
+  </button>
+</div>
+
+{/* Sidebar */}
+<div
+  className={`fixed md:relative inset-y-0 top-0 left-0 z-50 h-screen w-64 md:w-72 bg-[#111827] p-6 flex flex-col border-r border-gray-800 transition-transform duration-300 ${
+    menuOpen
+      ? "translate-x-0"
+      : "-translate-x-full md:translate-x-0"
+  }`}
+>
+
+  <div className="mb-10">
+    <Image
+      src="/images/logo.png"
+      alt="Pippinway"
+      width={260}
+      height={120}
+      className="object-contain"
+    />
+  </div>
+
+  <div className="flex flex-col gap-3">
+    <button
+      onClick={() => router.push("/profile")}
+      className="bg-blue-600 hover:bg-blue-700 rounded-2xl p-4 text-left"
+    >
+      🏠 Dashboard
+    </button>
+
+    <button
+      onClick={() => router.push("/")}
+      className="bg-[#1F2937] hover:bg-gray-700 rounded-2xl p-4 text-left"
+    >
+      📦 My Listings
+    </button>
+
+    <button
+      onClick={() => router.push("/add-listing")}
+      className="bg-[#1F2937] hover:bg-gray-700 rounded-2xl p-4 text-left"
+    >
+      ➕ Add Listing
+    </button>
+
+    <button
+      onClick={handleLogout}
+      className="bg-red-600 hover:bg-red-700 rounded-2xl p-4 text-left mt-10"
+    >
+      🚪 Logout
+    </button>
+  </div>
+</div>
+     <div className="flex-1 p-4 md:p-8 overflow-y-auto mt-35 md:mt-0">
 
         {/* Header */}
-        <div className="bg-white rounded-3xl shadow p-8 mb-8">
-          <h1 className="text-4xl font-bold">
-            Welcome 👋
+        <div className="bg-[#111827] border border-gray-800 rounded-3xl shadow p-5 md:p-8 mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">
+            Welcome back, Anjula! 👋
           </h1>
 
           <p className="text-gray-500 mt-2">
@@ -84,32 +155,32 @@ export default function ProfilePage() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-3xl shadow p-6">
+          <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
             <h2 className="text-gray-500">
               Total Ads
             </h2>
 
-            <p className="text-4xl font-bold mt-2">
+            <p className="text-4xl font-bold mt-2 text-white">
               {myAds.length}
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow p-6">
+          <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
             <h2 className="text-gray-500">
               Active Listings
             </h2>
 
-            <p className="text-4xl font-bold mt-2">
+            <p className="text-4xl font-bold mt-2 text-white">
               {myAds.length}
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow p-6">
+          <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
             <h2 className="text-gray-500">
               Categories
             </h2>
 
-            <p className="text-4xl font-bold mt-2">
+            <p className="text-4xl font-bold mt-2 text-white">
               {
                 new Set(
                   myAds.map(
@@ -123,28 +194,28 @@ export default function ProfilePage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-3xl shadow p-6 mb-8 flex flex-wrap gap-4">
+        <div className="bg-[#0F172A] border border-gray-700 rounded-3xl p-6 mb-8 flex flex-col md:flex-row gap-4">
           <button
             onClick={() =>
               router.push("/")
             }
-            className="bg-black text-white px-6 py-3 rounded-xl"
+            className="bg-black text-white px-6 py-3 rounded-xl w-full md:w-auto"
           >
             Home
           </button>
 
           <button
             onClick={() =>
-              router.push("/add-listing")
+             router.push("/add-listing")
             }
-            className="bg-green-600 text-white px-6 py-3 rounded-xl"
+            className="bg-green-600 text-white px-6 py-3 rounded-xl w-full md:w-auto"
           >
             Add Listing
           </button>
 
           <button
             onClick={handleLogout}
-            className="bg-red-600 text-white px-6 py-3 rounded-xl"
+            className="bg-red-600 text-white px-6 py-3 rounded-xl w-full md:w-auto"
           >
             Logout
           </button>
