@@ -49,7 +49,7 @@ useEffect(() => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-[#020817]">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 pt-6 flex justify-between items-center">
   {user ? (
@@ -71,9 +71,153 @@ useEffect(() => {
 </div>
 
 <section className="max-w-7xl mx-auto py-16 px-4">
+  {/* Hero Banner */}
+<div className="relative overflow-hidden rounded-[35px] bg-gradient-to-r from-[#0f172a] via-[#111827] to-[#1e293b] border border-gray-800 p-8 md:p-12 mb-10 shadow-2xl">
+  
+  <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px]" />
+  <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 blur-[100px]" />
 
- <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-    <h1 className="text-4xl font-bold">
+  <div className="relative z-10 grid md:grid-cols-2 gap-10 items-center">
+    
+    {/* Left Side */}
+    <div>
+      <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+        🚀 #1 Marketplace
+      </span>
+
+      <h1 className="text-5xl md:text-7xl font-extrabold text-white mt-6 leading-tight">
+        Buy, Sell &
+        <span className="text-blue-500">
+          {" "}Shop Smarter
+        </span>
+      </h1>
+
+      <p className="text-gray-300 text-lg mt-5 max-w-lg">
+        Discover electronics, vehicles, property,
+        fashion and more on Pippinway —
+        fast, trusted and easy.
+      </p>
+
+      <div className="flex gap-4 mt-8 flex-wrap">
+        <Link
+          href="/add-listing"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold transition"
+        >
+          + Post Ad
+        </Link>
+
+        <button
+          className="border border-gray-600 text-white px-8 py-4 rounded-2xl hover:bg-white/10 transition"
+        >
+          Explore Listings
+        </button>
+      </div>
+    </div>
+
+    {/* Right Side Promo Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+      
+      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-6 min-h-[130px] flex flex-col justify-center shadow-lg">
+        <h3 className="text-white text-xl font-bold">
+          🔥 Trending
+        </h3>
+        <p className="text-gray-400 mt-2">
+          Electronics & Vehicles
+        </p>
+      </div>
+
+      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-5 shadow-lg">
+        <h3 className="text-white text-xl font-bold">
+          💎 Premium Ads
+        </h3>
+        <p className="text-gray-400 mt-2">
+          Top featured listings
+        </p>
+      </div>
+
+      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-5 shadow-lg">
+        <h3 className="text-white text-xl font-bold">
+          🌍 Countries
+        </h3>
+        <p className="text-gray-400 mt-2">
+          Buy & sell worldwide
+        </p>
+      </div>
+
+      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-5 shadow-lg">
+        <h3 className="text-white text-xl font-bold">
+          ⚡ Fast & Easy
+        </h3>
+        <p className="text-gray-400 mt-2">
+          Post ads in seconds
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+ <div className="mb-8">
+    {/* Categories */}
+<div className="mb-12">
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-3xl font-bold text-white">
+      Shop by Category
+    </h2>
+
+    <button className="text-blue-400 hover:text-blue-300">
+      View All →
+    </button>
+  </div>
+
+  <div className="grid grid-cols-2 gap-5 w-full">
+    {[
+      {
+        name: "Electronics",
+        icon: "📱",
+      },
+      {
+        name: "Vehicles",
+        icon: "🚗",
+      },
+      {
+        name: "Property",
+        icon: "🏠",
+      },
+      {
+        name: "Fashion",
+        icon: "👕",
+      },
+      {
+        name: "Jobs",
+        icon: "💼",
+      },
+      {
+        name: "Services",
+        icon: "🛠️",
+      },
+    ].map((cat) => (
+      <button
+        key={cat.name}
+        onClick={() =>
+          setSelectedCategory(
+            cat.name
+          )
+        }
+        className="bg-[#0f172a] border border-gray-800 hover:border-blue-500 hover:scale-105 transition rounded-[28px] p-5 h-[120px] flex flex-col items-center justify-center text-center shadow-lg"
+      >
+        <div className="text-5xl mb-3">
+          {cat.icon}
+        </div>
+
+        <h3 className="text-white font-semibold text-lg">
+          {cat.name}
+        </h3>
+      </button>
+    ))}
+  </div>
+</div>
+    <h1 className="text-4xl font-bold text-white mb-6">
       Latest Listings
     </h1>
 
@@ -192,16 +336,20 @@ return (
             <Link
              href={`/listings/${item.id}`}
               key={item.id}
-              className="bg-white rounded-2xl shadow p-5 block"
+              className="bg-[#0f172a] border border-gray-800 rounded-[28px] shadow-xl p-4 block hover:scale-[1.02] hover:border-blue-500 transition duration-300 overflow-hidden"
             >
-              {item.imageUrl && (
+         {item.imageUrl ? (
   <img
     src={item.imageUrl}
     alt={item.title}
-    className="w-full h-52 object-cover rounded-xl mb-4"
+    className="w-full h-56 object-cover rounded-2xl"
   />
-)}
-              <h2 className="text-2xl font-bold mb-3">
+) : (
+  <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
+    No Image
+  </div>
+)}     
+              <h2 className="text-xl font-bold text-white mt-4">
                 {item.title}
               </h2>
               <p className="text-sm text-blue-600 mb-2">
@@ -212,11 +360,11 @@ return (
                 {item.location}
               </p>
 
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-green-400">
                 Rs. {item.price}
               </p>
 
-              <p className="text-gray-500 mt-4">
+              <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                 {item.description}
               </p>
             </Link>
