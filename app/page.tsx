@@ -70,9 +70,9 @@ useEffect(() => {
   )}
 </div>
 
-<section className="max-w-7xl mx-auto py-16 px-4">
+<section className="w-full max-w-7xl mx-auto py-16 px-4 overflow-hidden">
   {/* Hero Banner */}
-<div className="relative overflow-hidden rounded-[35px] bg-gradient-to-r from-[#0f172a] via-[#111827] to-[#1e293b] border border-gray-800 p-8 md:p-12 mb-10 shadow-2xl">
+<div className="relative w-full overflow-hidden rounded-[35px] bg-gradient-to-r from-[#0f172a] via-[#111827] to-[#1e293b] border border-gray-800 p-8 md:p-12 mb-10 shadow-2xl">
   
   <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px]" />
   <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 blur-[100px]" />
@@ -98,7 +98,7 @@ useEffect(() => {
         fast, trusted and easy.
       </p>
 
-      <div className="flex gap-4 mt-8 flex-wrap">
+      <div className="hidden md:flex gap-4 mt-8 flex-wrap">
         <Link
           href="/add-listing"
           className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold transition"
@@ -170,7 +170,7 @@ useEffect(() => {
     </button>
   </div>
 
-  <div className="grid grid-cols-2 gap-5 w-full">
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
     {[
       {
         name: "Electronics",
@@ -204,7 +204,7 @@ useEffect(() => {
             cat.name
           )
         }
-        className="bg-[#0f172a] border border-gray-800 hover:border-blue-500 hover:scale-105 transition rounded-[28px] p-5 h-[120px] flex flex-col items-center justify-center text-center shadow-lg"
+        className="bg-[#0f172a] border border-gray-800 hover:border-blue-500 hover:scale-105 transition rounded-[24px] p-4 min-h-[120px] flex flex-col items-center justify-center text-center shadow-lg"
       >
         <div className="text-5xl mb-3">
           {cat.icon}
@@ -222,13 +222,14 @@ useEffect(() => {
     </h1>
 
   </div>
-<div className="flex gap-4 flex-wrap mb-6">
-  <select
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-stretch">
+    <select
+    
   value={selectedCountry}
   onChange={(e) =>
     setSelectedCountry(e.target.value)
   }
-  className="p-3 border rounded-xl w-[147px]"
+  className="bg-[#111827] border border-gray-700 text-white px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
 >
   <option value="">All Countries</option>
   <option value="Singapore">Singapore</option>
@@ -251,8 +252,17 @@ useEffect(() => {
         e.target.value
       )
     }
-    className="p-3 border rounded-xl"
+   className="bg-[#111827] border border-gray-700 text-white placeholder-gray-400 px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
   />
+<input
+  type="text"
+  placeholder="Search products..."
+  value={search}
+  onChange={(e) =>
+    setSearch(e.target.value)
+  }
+  className="bg-[#111827] border border-gray-700 text-white placeholder-gray-400 px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
+/>
 
   <input
     type="number"
@@ -263,7 +273,7 @@ useEffect(() => {
         e.target.value
       )
     }
-    className="p-3 border rounded-xl"
+    className="bg-[#111827] border border-gray-700 text-white placeholder-gray-400 px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
   />
 </div>
   <div className="flex gap-3 mb-8 flex-wrap">
