@@ -9,6 +9,8 @@ import Link from "next/link";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] =
+  useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: any) => {
@@ -21,17 +23,18 @@ export default function LoginPage() {
         password
       );
 
-      
+      setLoginError(false);
+
       router.push("/profile");
     } catch (error: any) {
-      alert(error.message);
-    }
+  setLoginError(true);
+}
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-[#020817] px-4">
+      <div className="w-full max-w-md bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-2xl">
+        <h1 className="text-3xl font-bold mb-6 text-center text-white">
           Login
         </h1>
 
@@ -44,7 +47,12 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border p-3 rounded-xl"
+           className={`w-full border text-white caret-white p-4 rounded-2xl placeholder-gray-400 bg-[#111827] focus:outline-none ${
+  loginError
+    ? "border-red-500"
+    : "border-gray-700"
+
+}`}
           />
 
           <input
@@ -54,17 +62,29 @@ export default function LoginPage() {
             onChange={(e) =>
               setPassword(e.target.value)
             }
-            className="w-full border p-3 rounded-xl"
+            className={`w-full border text-white caret-white p-4 rounded-2xl placeholder-gray-400 bg-[#111827] focus:outline-none ${
+  loginError
+    ? "border-red-500"
+    : "border-gray-700"
+}`}
           />
-<div className="flex gap-2 mt-4">
-  <button className="bg-black text-white w-full py-3 rounded-xl">
-    Login
-  </button>
+          {loginError && (
+  <p className="text-red-500 text-sm">
+    Wrong email or password
+  </p>
+)}
+<div className="grid grid-cols-2 gap-3 mt-6">
+  <button
+  type="submit"
+  className="bg-black hover:bg-gray-900 transition text-white w-full py-4 rounded-2xl"
+>
+  Login
+</button>
 
   <Link href="/" className="w-full">
     <button
       type="button"
-      className="w-full border rounded-xl py-3"
+      className="border border-gray-700 bg-[#111827] hover:bg-[#1f2937] transition text-white py-4 rounded-2xl w-full"
     >
       🏠 Back to Home
     </button>

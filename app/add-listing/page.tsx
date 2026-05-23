@@ -10,93 +10,186 @@ import {
 import { db, auth } from "../firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
 export default function AddListingPage() {
-  const [country, setCountry] = useState("");
+  const [phone, setPhone] =
+  useState("");
+  const [country, setCountry] =
+    useState("");
+    const [errors, setErrors] =
+  useState<any>({});
+
   const router = useRouter();
+
   useEffect(() => {
-  const loadUserData = async () => {
-    const user = auth.currentUser;
+    const unsubscribe =
+      auth.onAuthStateChanged(
+        (user) => {
+          if (!user) {
+            router.push("/login");
+          }
+        }
+      );
 
-    if (!user) return;
+    return () => unsubscribe();
+  }, [router]);
 
-    const userRef = doc(
-      db,
-      "users",
-      user.uid
-    );
+  useEffect(() => {
+    const loadUserData =
+      async () => {
+        const user =
+          auth.currentUser;
 
-    const userSnap =
-      await getDoc(userRef);
+        if (!user) return;
 
-    if (userSnap.exists()) {
-      const data = userSnap.data();
+        const userRef = doc(
+          db,
+          "users",
+          user.uid
+        );
 
-      setPhone(data.phone || "");
-      setCountry(data.country || "");
-    }
-  };
+        const userSnap =
+          await getDoc(userRef);
 
-  loadUserData();
-}, []);
+        if (
+          userSnap.exists()
+        ) {
+          const data =
+            userSnap.data();
+
+          setPhone(
+            data.phone || ""
+          );
+
+          setCountry(
+            data.country || ""
+          );
+        }
+      };
+
+    loadUserData();
+  }, []);
+
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<any>(null);
  const [category, setCategory] = useState("");
-const [phone, setPhone] = useState("");
- const handleSubmit = async (e: any) => {
+const handleSubmit = async (
+  e: any
+) => {
   e.preventDefault();
 
- try {
+  const newErrors: any =
+    {};
+
+  if (!title)
+    newErrors.title =
+      true;
+
+  if (!price)
+    newErrors.price =
+      true;
+
+  if (!country)
+    newErrors.country =
+      true;
+
+  if (!location)
+    newErrors.location =
+      true;
+
+  if (!phone)
+    newErrors.phone =
+      true;
+
+  if (!category)
+    newErrors.category =
+      true;
+
+  if (!description)
+    newErrors.description =
+      true;
+
+  if (!image)
+    newErrors.image =
+      true;
+
+  setErrors(newErrors);
+
+  if (
+    Object.keys(
+      newErrors
+    ).length > 0
+  ) {
+    return;
+  }
+
+  try {
     let imageUrl = "";
 
     if (image) {
-      const formData = new FormData();
-      formData.append("file", image);
+      const formData =
+        new FormData();
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      formData.append(
+        "file",
+        image
+      );
 
-      const uploadData = await uploadRes.json();
+      const uploadRes =
+        await fetch(
+          "/api/upload",
+          {
+            method:
+              "POST",
+            body:
+              formData,
+          }
+        );
 
-      imageUrl = uploadData.filePath;
+      const uploadData =
+        await uploadRes.json();
+
+      imageUrl =
+        uploadData.filePath;
     }
 
-await addDoc(collection(db, "listings"), {
-  title,
-  price,
-  location,
-  category,
-  country,
-  description,
-  imageUrl,
-  phone,
-  ownerEmail: auth.currentUser?.email,
-  createdAt: new Date(),
-});
+    await addDoc(
+      collection(
+        db,
+        "listings"
+      ),
+      {
+        title,
+        price,
+        location,
+        category,
+        country,
+        description,
+        imageUrl,
+        phone,
+        ownerEmail:
+          auth
+            .currentUser
+            ?.email,
+        createdAt:
+          new Date(),
+      }
+    );
 
-    alert("Listing added successfully!");
-
-    router.push("/");
-
-    setTitle("");
-    setPrice("");
-    setLocation("");
-    setDescription("");
-    setImage(null);
+    router.push(
+      "/profile"
+    );
   } catch (error) {
     console.log(error);
   }
 };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
-        <h1 className="text-4xl font-bold mb-8">
+    <div className="min-h-screen bg-[#020817] p-6">
+      <div className="max-w-2xl mx-auto bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-xl text-[#111827] text-[#111827] text-white">
+        <h1 className="text-4xl font-bold mb-8 text-[#111827] text-[#111827] text-white">
           Add New Listing
         </h1>
 
@@ -116,7 +209,11 @@ await addDoc(collection(db, "listings"), {
     onChange={(e) =>
       setTitle(e.target.value)
     }
-    className="w-full border p-3 rounded-xl"
+    className={`w-full p-3 rounded-xl border ${
+  errors.title
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
   />
 </div>
 
@@ -132,7 +229,11 @@ await addDoc(collection(db, "listings"), {
     onChange={(e) =>
       setPrice(e.target.value)
     }
-    className="w-full border p-3 rounded-xl"
+   className={`w-full p-3 rounded-xl border ${
+  errors.price
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
   />
 </div>
 <div className="mb-4">
@@ -142,7 +243,11 @@ await addDoc(collection(db, "listings"), {
 <select
   value={country}
   onChange={(e) => setCountry(e.target.value)}
-  className="w-full border p-3 rounded-xl"
+  className={`w-full p-3 rounded-xl border ${
+  errors.country
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
 >
   <option value="">Select Country</option>
   <option value="Singapore">Singapore</option>
@@ -170,7 +275,11 @@ await addDoc(collection(db, "listings"), {
     onChange={(e) =>
       setLocation(e.target.value)
     }
-    className="w-full border p-3 rounded-xl"
+    className={`w-full p-3 rounded-xl border ${
+  errors.location
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
   />
 </div>
 
@@ -186,7 +295,11 @@ await addDoc(collection(db, "listings"), {
     onChange={(e) =>
       setPhone(e.target.value)
     }
-    className="w-full border p-3 rounded-xl"
+    className={`w-full p-3 rounded-xl border ${
+  errors.phone
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
   />
 </div>
           
@@ -200,7 +313,11 @@ await addDoc(collection(db, "listings"), {
     onChange={(e) =>
       setCategory(e.target.value)
     }
-    className="w-full border p-4 rounded-xl"
+    className={`w-full p-4 rounded-xl border ${
+  errors.category
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
   >
     <option value="">
       Select Category
@@ -237,7 +354,11 @@ await addDoc(collection(db, "listings"), {
   onChange={(e) =>
     setImage(e.target.files?.[0])
   }
-  className="w-full border p-3 rounded-xl mb-4"
+  className={`w-full p-3 rounded-xl mb-4 border ${
+  errors.image
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
 />
 
             <textarea
@@ -246,7 +367,11 @@ await addDoc(collection(db, "listings"), {
               onChange={(e) =>
                 setDescription(e.target.value)
               }
-              className="w-full border p-4 rounded-xl h-40"
+              className={`w-full p-4 rounded-xl h-40 border ${
+  errors.description
+    ? "border-red-500"
+    : "border-gray-300"
+}`}
             />
           </div>
 <Link href="/">
@@ -256,7 +381,7 @@ await addDoc(collection(db, "listings"), {
       padding: "10px 15px",
       border: "1px solid #ccc",
       borderRadius: "8px",
-      background: "white",
+      background: "[#111827] text-[#111827] text-white",
       cursor: "pointer",
     }}
   >
@@ -264,7 +389,7 @@ await addDoc(collection(db, "listings"), {
   </button>
 </Link>
 
-<button className="bg-black text-white px-8 py-3 rounded-xl">
+<button className="bg-black text-[#111827] text-[#111827] text-white px-8 py-3 rounded-xl">
   Post Listing
 </button>
         </form>

@@ -12,10 +12,30 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
+  const [errors, setErrors] =
+  useState<any>({});
   const router = useRouter();
 
   const handleRegister = async (e: any) => {
     e.preventDefault();
+    const newErrors: any = {};
+
+if (!email) newErrors.email = true;
+if (!password)
+  newErrors.password = true;
+if (!phone)
+  newErrors.phone = true;
+if (!country)
+  newErrors.country = true;
+
+if (
+  Object.keys(newErrors).length > 0
+) {
+  setErrors(newErrors);
+  return;
+}
+
+setErrors({});
 
     try {
     const userCredential =
@@ -42,10 +62,10 @@ await setDoc(
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#020817] px-4">
+      <div className="w-full max-w-md bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-2xl">
        
-        <h1 className="text-3xl font-bold mb-6 text-center">
+        <h1 className="text-3xl font-bold mb-6 text-center text-white">
           Register
         </h1>
 
@@ -58,7 +78,11 @@ await setDoc(
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border p-3 rounded-xl"
+            className={`w-full border p-4 rounded-2xl bg-[#111827] text-white caret-white placeholder-gray-400 ${
+  errors.email
+    ? "border-red-500"
+    : "border-gray-700"
+}`}
           />
 
           <input
@@ -68,20 +92,32 @@ await setDoc(
             onChange={(e) =>
               setPassword(e.target.value)
             }
-            className="w-full border p-3 rounded-xl"
+            className={`w-full border p-4 rounded-2xl bg-[#111827] text-white caret-white placeholder-gray-400 ${
+  errors.password
+    ? "border-red-500"
+    : "border-gray-700"
+}`}
           />
           <input
   type="text"
   placeholder="WhatsApp Number"
   value={phone}
   onChange={(e) => setPhone(e.target.value)}
-  className="w-full border p-3 rounded-xl"
+  className={`w-full border p-4 rounded-2xl bg-[#111827] text-white caret-white placeholder-gray-400 ${
+  errors.phone
+    ? "border-red-500"
+    : "border-gray-700"
+}`}
 />
 
 <select
   value={country}
   onChange={(e) => setCountry(e.target.value)}
-  className="w-full border p-3 rounded-xl"
+  className={`w-full border p-4 rounded-2xl bg-[#111827] text-white ${
+  errors.country
+    ? "border-red-500"
+    : "border-gray-700"
+}`}
 >
   <option value="">Select Country</option>
   <option value="Singapore">Singapore</option>
@@ -95,15 +131,15 @@ await setDoc(
   <option value="United Kingdom">United Kingdom</option>
   <option value="Canada">Canada</option>
 </select>
-<div className="flex gap-2 mt-4">
-  <button className="bg-black text-white w-full py-3 rounded-xl">
+<div className="grid grid-cols-2 gap-3 mt-6">
+  <button className="bg-black hover:bg-gray-900 transition text-white w-full py-4 rounded-2xl">
     Create Account
   </button>
 
   <Link href="/" className="w-full">
     <button
       type="button"
-      className="w-full border rounded-xl py-3"
+      className="border border-gray-700 bg-[#111827] hover:bg-[#1f2937] transition text-white py-4 rounded-2xl w-full"
     >
       🏠 Back to Home
     </button>

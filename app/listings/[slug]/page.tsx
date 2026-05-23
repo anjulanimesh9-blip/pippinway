@@ -146,7 +146,7 @@ setRelatedAds(
             item.imageUrl
           }
           alt={item.title}
-          className="w-full h-96 object-cover rounded-xl"
+          className="w-full h-[400px] object-cover rounded-2xl"
         />
       )}
 
