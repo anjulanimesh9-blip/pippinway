@@ -23,6 +23,19 @@ export default function Home() {
 const [maxPrice, setMaxPrice] =
   useState("");
 
+  const currencyMap: any = {
+  singapore: "SGD $",
+  india: "₹",
+  thailand: "฿",
+  zimbabwe: "USD $",
+  usa: "USD $",
+  maldives: "MVR",
+  "sri lanka": "Rs.",
+  "south africa": "R",
+  "united kingdom": "£",
+  canada: "CAD $",
+};
+
 useEffect(() => {
   fetchListings();
 
@@ -371,7 +384,13 @@ return (
               </p>
 
               <p className="text-2xl font-bold text-green-400">
-                Rs. {item.price}
+ {
+  currencyMap[
+    item.country
+      ?.trim()
+      .toLowerCase()
+  ] || "Rs."
+} {item.price}
               </p>
 
               <p className="text-gray-400 text-sm mt-1 line-clamp-2">
