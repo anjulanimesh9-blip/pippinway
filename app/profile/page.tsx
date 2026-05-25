@@ -238,22 +238,25 @@ export default function ProfilePage() {
                 <Link
                   key={ad.id}
                   href={`/listings/${ad.id}`}
-                  className="bg-white rounded-3xl shadow overflow-hidden hover:scale-105 transition"
+                  className="bg-[#111827] border border-gray-800 rounded-3xl shadow overflow-hidden hover:scale-105 transition"
                 >
-                  {ad.imageUrl && (
-                    <img
-                      src={
-                        ad.imageUrl
-                      }
-                      alt={
-                        ad.title
-                      }
-                      className="w-full h-52 object-cover"
-                    />
-                  )}
-
+                {ad.imageUrl ? (
+  <img
+    src={ad.imageUrl}
+    alt={ad.title}
+    className="w-full h-52 object-cover"
+    onError={(e) => {
+     (e.target as HTMLImageElement).style.display =
+"none";
+    }}
+  />
+) : (
+  <div className="w-full h-52 bg-[#1F2937] flex items-center justify-center text-gray-500">
+    No Image
+  </div>
+)}
                   <div className="p-5">
-                    <h3 className="text-xl font-bold">
+                    <h3 className="text-xl font-bold text-white">
                       {ad.title}
                     </h3>
 
@@ -263,7 +266,7 @@ export default function ProfilePage() {
                       }
                     </p>
 
-                    <p className="text-2xl font-bold mt-3">
+                    <p className="text-2xl font-bold mt-3 text-green-400">
                       Rs. {ad.price}
                     </p>
                   </div>

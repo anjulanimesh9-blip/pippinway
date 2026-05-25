@@ -15,7 +15,8 @@ import {
 export default function EditListing() {
   const params = useParams();
   const router = useRouter();
-  const slug = params?.slug as string;
+  const slug =
+    params?.slug as string;
 
   const [title, setTitle] =
     useState("");
@@ -23,8 +24,12 @@ export default function EditListing() {
     useState("");
   const [description, setDescription] =
     useState("");
-   const [phone, setPhone] =
-  useState(""); 
+  const [phone, setPhone] =
+    useState("");
+  const [imageUrls, setImageUrls] =
+    useState<string[]>([]);
+  const [imageFiles, setImageFiles] =
+    useState<File[]>([]);
 
   useEffect(() => {
     const fetchListing =
@@ -38,95 +43,249 @@ export default function EditListing() {
         const docSnap =
           await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        if (
+          docSnap.exists()
+        ) {
+          const data =
+            docSnap.data();
 
-          setTitle(data.title || "");
-          setPhone(data.phone || "");
-          setPrice(data.price || "");
+          setTitle(
+            data.title || ""
+          );
+          setPhone(
+            data.phone || ""
+          );
+          setPrice(
+            data.price || ""
+          );
           setDescription(
             data.description || ""
+          );
+
+          setImageUrls(
+            data.imageUrls ||
+              (data.imageUrl
+                ? [
+                    data.imageUrl,
+                  ]
+                : [])
           );
         }
       };
 
-    if (slug) fetchListing();
+    if (slug)
+      fetchListing();
   }, [slug]);
 
   const handleUpdate =
     async () => {
-      const docRef = doc(
-        db,
-        "listings",
-        slug
-      );
+      try {
+        let updatedImages =
+          [...imageUrls];
 
-      await updateDoc(docRef, {
-        title,
-        price,
-        description,
-        phone,
-      });
+        // upload new images
+        if (
+          imageFiles.length >
+          0
+        ) {
+          updatedImages =
+            [];
 
-      alert("Updated!");
+          for (
+            const image of imageFiles
+          ) {
+            const formData =
+              new FormData();
 
-      router.push(
-        `/listings/${slug}`
-      );
+            formData.append(
+              "file",
+              image
+            );
+
+            const uploadRes =
+              await fetch(
+                "/api/upload",
+                {
+                  method:
+                    "POST",
+                  body:
+                    formData,
+                }
+              );
+
+            const uploadData =
+              await uploadRes.json();
+
+            updatedImages.push(
+              uploadData.filePath
+            );
+          }
+        }
+
+        const docRef = doc(
+          db,
+          "listings",
+          slug
+        );
+
+        await updateDoc(
+          docRef,
+          {
+            title,
+            price,
+            description,
+            phone,
+            imageUrls:
+              updatedImages,
+            imageUrl:
+              updatedImages[0],
+          }
+        );
+
+        alert(
+          "Updated Successfully!"
+        );
+
+        router.push(
+          `/listings/${slug}`
+        );
+
+      } catch (error) {
+        console.error(
+          error
+        );
+
+        alert(
+          "Update failed!"
+        );
+      }
     };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">
-        Edit Listing
-      </h1>
-<input
-  type="text"
-  placeholder="Title"
-  value={title}
-  onChange={(e) =>
-    setTitle(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl mb-4"
-/>
+    <div className="min-h-screen bg-black text-white p-5">
+      <div className="max-w-2xl mx-auto bg-[#0b0b0b] border border-gray-800 rounded-[30px] p-6 shadow-2xl">
 
-<input
-  type="text"
-  placeholder="WhatsApp Number"
-  value={phone}
-  onChange={(e) =>
-    setPhone(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl mb-4"
-/>
+        <button
+          onClick={() =>
+            router.push("/")
+          }
+          className="mb-6 bg-[#111] border border-gray-700 text-white px-4 py-2 rounded-2xl text-sm"
+        >
+          ← Back to Home
+        </button>
 
-<input
-  type="text"
-  placeholder="Price"
-  value={price}
-  onChange={(e) =>
-    setPrice(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl mb-4"
-/>
+        <h1 className="text-3xl font-bold mb-6">
+          Edit Listing
+        </h1>
 
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) =>
-          setDescription(
-            e.target.value
-          )
-        }
-        className="w-full border p-3 rounded-xl mb-4"
-      />
+        {/* Current Photos */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          {imageUrls.map(
+            (
+              image,
+              index
+            ) => (
+              <img
+                key={index}
+                src={image}
+                alt="Listing"
+                className="w-full h-40 object-cover rounded-2xl border border-gray-700"
+              />
+            )
+          )}
+        </div>
 
-      <button
-        onClick={handleUpdate}
-        className="bg-black text-white px-6 py-3 rounded-xl"
-      >
-        Save Changes
-      </button>
+        <input
+          type="text"
+          placeholder="Title"
+          value={title}
+          onChange={(e) =>
+            setTitle(
+              e.target.value
+            )
+          }
+          className="w-full bg-[#111] border border-gray-700 text-white p-4 rounded-2xl mb-4"
+        />
+
+        <input
+          type="text"
+          placeholder="WhatsApp Number"
+          value={phone}
+          onChange={(e) =>
+            setPhone(
+              e.target.value
+            )
+          }
+          className="w-full bg-[#111] border border-gray-700 text-white p-4 rounded-2xl mb-4"
+        />
+
+        <input
+          type="text"
+          placeholder="Price"
+          value={price}
+          onChange={(e) =>
+            setPrice(
+              e.target.value
+            )
+          }
+          className="w-full bg-[#111] border border-gray-700 text-white p-4 rounded-2xl mb-4"
+        />
+
+        <textarea
+          placeholder="Description"
+          value={description}
+          onChange={(e) =>
+            setDescription(
+              e.target.value
+            )
+          }
+          className="w-full bg-[#111] border border-gray-700 text-white p-4 rounded-2xl mb-4 h-32"
+        />
+
+        <div className="mb-5">
+          <label className="block mb-2 text-sm text-gray-400">
+            Upload 4 New Photos
+          </label>
+
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => {
+              const files =
+                Array.from(
+                  e.target
+                    .files || []
+                );
+
+              if (
+                files.length !==
+                4
+              ) {
+                alert(
+                  "Please select exactly 4 photos"
+                );
+                return;
+              }
+
+              setImageFiles(
+                files
+              );
+            }}
+            className="w-full bg-[#111] border border-gray-700 text-white p-4 rounded-2xl"
+          />
+        </div>
+
+        <button
+          onClick={
+            handleUpdate
+          }
+          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-2xl transition"
+        >
+          Save Changes
+        </button>
+
+      </div>
     </div>
   );
 }

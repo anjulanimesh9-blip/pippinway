@@ -19,8 +19,8 @@ export default function ListingDetails() {
   const [item, setItem] =
     useState<any>(null);
 
- const [relatedAds, setRelatedAds] =
-  useState<any[]>([]);
+  const [relatedAds, setRelatedAds] =
+    useState<any[]>([]);
 
   const currentUser =
     auth.currentUser;
@@ -32,16 +32,16 @@ export default function ListingDetails() {
     params?.slug as string;
 
   const currencyMap: any = {
-    Singapore: "SGD $",
-    India: "₹",
-    Thailand: "฿",
-    Zimbabwe: "USD $",
-    USA: "USD $",
-    Maldives: "MVR",
-    "Sri Lanka": "Rs.",
-    "South Africa": "R",
-    "United Kingdom": "£",
-    Canada: "CAD $",
+    singapore: "SGD $",
+    india: "₹",
+    thailand: "฿",
+    zimbabwe: "USD $",
+    usa: "USD $",
+    maldives: "MVR",
+    "sri lanka": "Rs.",
+    "south africa": "R",
+    "united kingdom": "£",
+    canada: "CAD $",
   };
 
   const handleDelete =
@@ -122,9 +122,7 @@ export default function ListingDetails() {
             );
           }
         } catch (error) {
-          console.error(
-            error
-          );
+          console.error(error);
         }
       };
 
@@ -133,20 +131,18 @@ export default function ListingDetails() {
 
   if (!item) {
     return (
-      <h1 className="p-10 text-xl text-white">
+      <h1 className="p-10 text-xl text-white bg-black min-h-screen">
         Loading...
       </h1>
     );
   }
-  const currency =
-  currencyMap[
-    item?.country?.trim()
-  ] || "Rs.";
 
-console.log(
-  "Country =",
-  item?.country
-);
+  const currency =
+    currencyMap[
+      item?.country
+        ?.trim()
+        ?.toLowerCase()
+    ] || "Rs.";
 
   return (
     <div className="min-h-screen bg-black text-white p-5">
@@ -156,68 +152,49 @@ console.log(
           onClick={() =>
             router.push("/")
           }
-<<<<<<< HEAD
-          alt={item.title}
-          className="w-full h-[400px] object-cover rounded-2xl"
-        />
-      )}
-
-      <h1 className="text-4xl font-bold mt-6">
-        {item.title}
-      </h1>
-
-      <p className="text-3xl font-bold text-green-600 mt-3">
-        Rs. {item.price}
-      </p>
-
-      <p className="text-blue-600 mt-2">
-        {item.category}
-      </p>
-
-      <p className="text-gray-600 mt-2">
-        {item.location}
-      </p>
-
-      <h2 className="text-2xl font-bold mt-8">
-        Description
-      </h2>
-
-      <p className="text-gray-700 mt-3">
-        {
-          item.description
-        }
-      </p>
-
-      {/* Buttons */}
-      <div className="mt-6 flex gap-4 flex-wrap">
-        <a
-          href={`https://wa.me/${item.phone}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-green-600 text-white px-6 py-3 rounded-xl"
-=======
           className="mb-6 bg-[#111] border border-gray-700 text-white px-4 py-2 rounded-2xl text-sm"
->>>>>>> c6aa639 (Updated currency system and edit page)
         >
           ← Back to Home
         </button>
 
-        {item.imageUrl && (
-          <img
-            src={item.imageUrl}
-            alt={item.title}
-            className="w-full h-[380px] object-cover rounded-[32px] shadow-2xl"
-          />
-        )}
+<div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide mb-6">
+  {(
+    item.imageUrls ||
+    [item.imageUrl]
+  )?.map(
+    (
+      image: string,
+      index: number
+    ) => (
+      <div
+        key={index}
+        className="min-w-full snap-center relative"
+      >
+        <img
+          src={image}
+          alt={`Photo ${index}`}
+          className="w-full h-[320px] object-contain bg-[#111] rounded-[32px] shadow-2xl p-3"
+        />
+
+        <div className="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-4 py-2 rounded-full backdrop-blur-md">
+          {index + 1} /{" "}
+          {(
+            item.imageUrls ||
+            [item.imageUrl]
+          ).length}
+        </div>
+      </div>
+    )
+  )}
+</div>
 
         <h1 className="text-4xl font-bold mt-6">
-  {item.title}
-</h1>
+          {item.title}
+        </h1>
 
-
-<p className="text-4xl font-extrabold text-green-500 mt-3">
-  {currency} {item.price}
-</p>
+        <p className="text-4xl font-extrabold text-green-500 mt-3">
+          {currency} {item.price}
+        </p>
 
         <p className="flex items-center gap-2 text-blue-400 mt-3 font-medium">
           📂 {item.category}
@@ -235,7 +212,6 @@ console.log(
           {item.description}
         </p>
 
-        {/* Buttons */}
         <div className="mt-14 grid grid-cols-2 gap-4 w-full mb-6">
           <a
             href={`https://wa.me/${item.phone}`}
@@ -279,7 +255,6 @@ console.log(
           </div>
         )}
 
-        {/* Similar Ads */}
         <h2 className="text-2xl font-bold mt-16 mb-6">
           Similar Ads
         </h2>
@@ -292,24 +267,25 @@ console.log(
                 href={`/listings/${ad.id}`}
                 className="min-w-[260px] bg-[#111111] border border-gray-800 rounded-[28px] p-3 shadow-xl overflow-hidden"
               >
-                {ad.imageUrl && (
-                  <img
-                    src={
-                      ad.imageUrl
-                    }
-                    alt={ad.title}
-                    className="w-full h-44 object-cover rounded-2xl"
-                  />
-                )}
+          <img
+  src={
+    ad.imageUrls?.[0] ||
+    ad.imageUrl
+  }
+  alt={ad.title}
+  className="w-full h-[180px] object-cover rounded-[24px]"
+/>
 
                 <h3 className="font-bold text-lg mt-3 text-white">
                   {ad.title}
                 </h3>
 
                 <p className="text-green-500 font-bold text-xl">
-                  {currencyMap[
+                  {(currencyMap[
                     ad.country
-                  ] || "Rs."}{" "}
+                      ?.trim()
+                      ?.toLowerCase()
+                  ] || "Rs.")}{" "}
                   {ad.price}
                 </p>
 

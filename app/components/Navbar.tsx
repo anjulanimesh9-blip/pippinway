@@ -60,10 +60,7 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6 text-white font-medium">
           <Link href="/">Home</Link>
-          <Link href="/listings">
-            Listings
-          </Link>
-          <Link href="/add-listing">
+                    <Link href="/add-listing">
             Add Listing
           </Link>
           <Link href="/login">
@@ -92,79 +89,67 @@ export default function Navbar() {
 
       {/* Mobile Dropdown */}
       {menuOpen && (
-        <div
-          ref={menuRef}
-          className="md:hidden bg-[#111827] border-t border-gray-800 flex flex-col p-4 gap-4 text-white"
-        >
-          <button
-            className="text-left"
-            onClick={() => {
-              setMenuOpen(false);
-              router.push("/");
-            }}
-          >
-            Home
-          </button>
+  <div
+    ref={menuRef}
+    className="md:hidden bg-[#111827] border-t border-gray-800 flex flex-col p-4 gap-4 text-white"
+  >
+    <button
+      className="text-left"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/");
+      }}
+    >
+      Home
+    </button>
 
-          <button
-            className="text-left"
-            onClick={() => {
-              setMenuOpen(false);
-              router.push(
-                "/listings"
-              );
-            }}
-          >
-            Listings
-          </button>
+    <button
+      className="text-left"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push(
+          "/add-listing"
+        );
+      }}
+    >
+      Add Listing
+    </button>
 
-          <button
-            className="text-left"
-            onClick={() => {
-              setMenuOpen(false);
-              router.push(
-                "/add-listing"
-              );
-            }}
-          >
-            Add Listing
-          </button>
+    <button
+      className="text-left"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/login");
+      }}
+    >
+      Login
+    </button>
 
-          <button
-            className="text-left"
-            onClick={() => {
-              setMenuOpen(false);
-              router.push("/login");
-            }}
-          >
-            Login
-          </button>
+    <button
+      className="text-left"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push(
+          "/register"
+        );
+      }}
+    >
+      Register
+    </button>
 
-          <button
-            className="text-left"
-            onClick={() => {
-              setMenuOpen(false);
-              router.push(
-                "/register"
-              );
-            }}
-          >
-            Register
-          </button>
-
-          <button
-            className="text-left"
-            onClick={() => {
-              setMenuOpen(false);
-              router.push(
-                "/profile"
-              );
-            }}
-          >
-            Profile
-          </button>
-        </div>
-      )}
+    <button
+      className="text-left"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push(
+          "/profile"
+        );
+      }}
+    >
+      Profile
+    </button>
+  </div>
+)}
     </nav>
   );
 }
