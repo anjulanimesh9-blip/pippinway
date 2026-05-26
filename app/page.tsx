@@ -111,7 +111,7 @@ const fetchListings =
   <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px]" />
   <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 blur-[100px]" />
 
-  <div className="relative z-10 grid md:grid-cols-2 gap-10 items-center">
+  <div className="relative z-10 grid lg:grid-cols-[1.1fr_1fr] gap-12 gap-10 items-center">
     
     {/* Left Side */}
     <div>
@@ -131,20 +131,63 @@ const fetchListings =
         fashion and more on Pippinway —
         fast, trusted and easy.
       </p>
+      <div className="grid grid-cols-3 gap-4 mt-8">
+  <div className="bg-[#111827] border border-gray-800 rounded-3xl p-5 text-center">
+    <h3 className="text-3xl font-bold text-white">
+      50K+
+    </h3>
+    <p className="text-gray-400 text-sm mt-1">
+      Active Users
+    </p>
+  </div>
+
+  <div className="bg-[#111827] border border-gray-800 rounded-3xl p-5 text-center">
+    <h3 className="text-3xl font-bold text-white">
+      10K+
+    </h3>
+    <p className="text-gray-400 text-sm mt-1">
+      Listings
+    </p>
+  </div>
+
+  <div className="bg-[#111827] border border-gray-800 rounded-3xl p-5 text-center">
+    <h3 className="text-3xl font-bold text-white">
+      24/7
+    </h3>
+    <p className="text-gray-400 text-sm mt-1">
+      Support
+    </p>
+  </div>
+</div>
 
       <div className="hidden md:flex gap-4 mt-8 flex-wrap">
-        <Link
-          href="/add-listing"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold transition"
-        >
-          + Post Ad
-        </Link>
-
-        <button
-          className="border border-gray-600 text-white px-8 py-4 rounded-2xl hover:bg-white/10 transition"
-        >
-          Explore Listings
-        </button>
+       <Link
+  href="/add-listing"
+  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] text-white px-8 py-4 rounded-[22px] font-semibold transition duration-300 flex items-center gap-2 justify-center"
+>
+  <span className="text-xl">
+    ➕
+  </span>
+  Post Ad
+</Link>
+<button
+  onClick={() =>
+    document
+      .getElementById(
+        "latest-listings"
+      )
+      ?.scrollIntoView({
+        behavior:
+          "smooth",
+      })
+  }
+  className="border border-blue-500/40 bg-white/5 backdrop-blur-md text-white px-8 py-4 rounded-[22px] hover:bg-blue-500/10 hover:border-blue-500 transition duration-300 flex items-center gap-2 justify-center"
+>
+  <span className="text-xl">
+    🔍
+  </span>
+  Explore Listings
+</button>
       </div>
       </div>
       {/* Right Side Worldwide Card */}
@@ -153,39 +196,56 @@ const fetchListings =
 
     <div className="bg-gradient-to-br from-[#07101f] to-[#0f172a] p-6 md:p-8">
 
-      <div className="flex justify-center">
-        <img
-          src="/images/logo.png"
-          alt="Pippinway"
-          className="w-[220px] md:w-[320px] object-contain"
-        />
-      </div>
+    <div className="text-center mb-5">
+  <img
+    src="/images/logo.png"
+    alt="Pippinway"
+    className="w-[220px] md:w-[320px] mx-auto drop-shadow-[0_0_30px_rgba(59,130,246,0.4)]"
+  />
 
+  <h2 className="text-3xl md:text-4xl font-bold text-white mt-3">
+    Pippinway
+  </h2>
+
+  <p className="text-gray-400 mt-2">
+    Trusted Marketplace Worldwide
+  </p>
+</div>
       <h3 className="text-center text-2xl md:text-3xl font-bold text-white mt-3">
-        🌍 We Serve In
+        <div className="flex items-center justify-center gap-2 mt-3 mb-4">
+  <span className="text-2xl">
+    🌍
+  </span>
+
+  <h3 className="text-2xl md:text-3xl font-bold text-white">
+    WE SERVE IN
+  </h3>
+</div>
+
+<div className="w-40 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent mx-auto mb-4"></div>
       </h3>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6">
-        {[
-          "🇬🇧 UK",
-          "🇺🇸 USA",
-          "🇨🇦 Canada",
-          "🇱🇰 Sri Lanka",
-          "🇿🇼 Zimbabwe",
-          "🇮🇳 India",
-          "🇸🇬 Singapore",
-          "🇹🇭 Thailand",
-          "🇿🇦 South Africa",
-          "🇲🇻 Maldives",
-        ].map((country) => (
-          <div
-            key={country}
-            className="bg-[#111827] border border-gray-800 rounded-2xl py-3 px-2 text-center text-white text-sm font-medium hover:border-blue-500 transition"
-          >
-            {country}
-          </div>
-        ))}
-      </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
+  {[
+    "🇬🇧 UK",
+    "🇺🇸 USA",
+    "🇨🇦 Canada",
+    "🇱🇰 Sri Lanka",
+    "🇿🇼 Zimbabwe",
+    "🇮🇳 India",
+    "🇸🇬 Singapore",
+    "🇹🇭 Thailand",
+    "🇿🇦 South Africa",
+    "🇲🇻 Maldives",
+  ].map((country) => (
+    <div
+      key={country}
+      className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[22px] py-5 px-4 min-h-[90px] text-center text-white font-semibold hover:scale-105 hover:border-blue-500 transition duration-300 shadow-lg"
+    >
+      {country}
+    </div>
+  ))}
+</div>
     </div>
   </div>
 </div>
@@ -272,9 +332,12 @@ const fetchListings =
     ))}
   </div>
 </div>
-    <h1 className="text-4xl font-bold text-white mb-6">
-      Latest Listings
-    </h1>
+    <h1
+  id="latest-listings"
+  className="text-4xl font-bold text-white mb-6"
+>
+  Latest Listings
+</h1>
 
   </div>
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-stretch">
