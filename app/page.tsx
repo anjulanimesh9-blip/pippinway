@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import { db, auth } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
@@ -19,9 +24,9 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] =
   useState("");
+  const [sortBy, setSortBy] =
+  useState("newest");
 
-const [maxPrice, setMaxPrice] =
-  useState("");
 
   const currencyMap: any = {
   singapore: "SGD $",
@@ -44,21 +49,37 @@ useEffect(() => {
   });
 }, []);
 
-  const fetchListings = async () => {
-    const querySnapshot = await getDocs(
-      collection(db, "listings")
+const fetchListings =
+  async () => {
+    const q = query(
+      collection(
+        db,
+        "listings"
+      ),
+      orderBy(
+        "createdAt",
+        "desc"
+      )
     );
 
-    const data: any[] = [];
+    const querySnapshot =
+      await getDocs(q);
 
-    querySnapshot.forEach((doc) => {
-      data.push({
-        id: doc.id,
-        ...doc.data(),
-      });
-    });
+    const data:
+      any[] = [];
 
-    setListings(data);
+    querySnapshot.forEach(
+      (doc) => {
+        data.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      }
+    );
+
+    setListings(
+      data
+    );
   };
 
   return (
@@ -125,49 +146,50 @@ useEffect(() => {
           Explore Listings
         </button>
       </div>
-    </div>
+      </div>
+      {/* Right Side Worldwide Card */}
+<div className="relative">
+  <div className="bg-[#0b1120] border border-blue-900/40 rounded-[35px] overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.15)]">
 
-    {/* Right Side Promo Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-      
-      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-6 min-h-[130px] flex flex-col justify-center shadow-lg">
-        <h3 className="text-white text-xl font-bold">
-          🔥 Trending
-        </h3>
-        <p className="text-gray-400 mt-2">
-          Electronics & Vehicles
-        </p>
+    <div className="bg-gradient-to-br from-[#07101f] to-[#0f172a] p-6 md:p-8">
+
+      <div className="flex justify-center">
+        <img
+          src="/images/logo.png"
+          alt="Pippinway"
+          className="w-[220px] md:w-[320px] object-contain"
+        />
       </div>
 
-      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-5 shadow-lg">
-        <h3 className="text-white text-xl font-bold">
-          💎 Premium Ads
-        </h3>
-        <p className="text-gray-400 mt-2">
-          Top featured listings
-        </p>
-      </div>
+      <h3 className="text-center text-2xl md:text-3xl font-bold text-white mt-3">
+        🌍 We Serve In
+      </h3>
 
-      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-5 shadow-lg">
-        <h3 className="text-white text-xl font-bold">
-          🌍 Countries
-        </h3>
-        <p className="text-gray-400 mt-2">
-          Buy & sell worldwide
-        </p>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6">
+        {[
+          "🇬🇧 UK",
+          "🇺🇸 USA",
+          "🇨🇦 Canada",
+          "🇱🇰 Sri Lanka",
+          "🇿🇼 Zimbabwe",
+          "🇮🇳 India",
+          "🇸🇬 Singapore",
+          "🇹🇭 Thailand",
+          "🇿🇦 South Africa",
+          "🇲🇻 Maldives",
+        ].map((country) => (
+          <div
+            key={country}
+            className="bg-[#111827] border border-gray-800 rounded-2xl py-3 px-2 text-center text-white text-sm font-medium hover:border-blue-500 transition"
+          >
+            {country}
+          </div>
+        ))}
       </div>
-
-      <div className="bg-[#111827] border border-gray-800 rounded-[28px] p-5 shadow-lg">
-        <h3 className="text-white text-xl font-bold">
-          ⚡ Fast & Easy
-        </h3>
-        <p className="text-gray-400 mt-2">
-          Post ads in seconds
-        </p>
-      </div>
-
     </div>
   </div>
+</div>
+</div>
 </div>
 
  <div className="mb-8">
@@ -184,32 +206,52 @@ useEffect(() => {
   </div>
 
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-    {[
-      {
-        name: "Electronics",
-        icon: "📱",
-      },
-      {
-        name: "Vehicles",
-        icon: "🚗",
-      },
-      {
-        name: "Property",
-        icon: "🏠",
-      },
-      {
-        name: "Fashion",
-        icon: "👕",
-      },
-      {
-        name: "Jobs",
-        icon: "💼",
-      },
-      {
-        name: "Services",
-        icon: "🛠️",
-      },
-    ].map((cat) => (
+{[
+  {
+    name: "Cars",
+    icon: "🚗",
+  },
+  {
+    name: "Motorbikes",
+    icon: "🏍️",
+  },
+  {
+    name: "Property",
+    icon: "🏠",
+  },
+  {
+    name: "Electronics",
+    icon: "📱",
+  },
+  {
+    name: "Fashion",
+    icon: "👕",
+  },
+  {
+    name: "Jobs",
+    icon: "💼",
+  },
+  {
+    name: "Services",
+    icon: "🛠️",
+  },
+  {
+    name: "Animals",
+    icon: "🐶",
+  },
+  {
+    name: "Furniture",
+    icon: "🛋️",
+  },
+  {
+    name: "Education",
+    icon: "📚",
+  },
+  {
+    name: "Other",
+    icon: "📦",
+  },
+].map((cat) => (
       <button
         key={cat.name}
         onClick={() =>
@@ -277,27 +319,47 @@ useEffect(() => {
   className="bg-[#111827] border border-gray-700 text-white placeholder-gray-400 px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
 />
 
-  <input
-    type="number"
-    placeholder="Max price"
-    value={maxPrice}
-    onChange={(e) =>
-      setMaxPrice(
-        e.target.value
-      )
-    }
-    className="bg-[#111827] border border-gray-700 text-white placeholder-gray-400 px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
-  />
+ <select
+  value={sortBy}
+  onChange={(e) =>
+    setSortBy(
+      e.target.value
+    )
+  }
+  className="bg-[#111827] border border-gray-700 text-white px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
+>
+  <option value="newest">
+    Newest First
+  </option>
+
+  <option value="oldest">
+    Oldest First
+  </option>
+
+  <option value="low-high">
+    Price: Low → High
+  </option>
+
+  <option value="high-low">
+    Price: High → Low
+  </option>
+</select>
 </div>
   <div className="flex gap-3 mb-8 flex-wrap">
   {[
-    "All",
-    "Electronics",
-    "Vehicles",
-    "Property",
-    "Fashion",
-    "Jobs",
-  ].map((cat) => (
+  "All",
+  "Cars",
+  "Motorbikes",
+  "Property",
+  "Electronics",
+  "Fashion",
+  "Jobs",
+  "Services",
+  "Animals",
+  "Furniture",
+  "Education",
+  "Other",
+].map((cat) => (
     <button
       key={cat}
       onClick={() =>
@@ -341,19 +403,72 @@ useEffect(() => {
         locationFilter.toLowerCase()
       );
 
-  const matchPrice =
-    maxPrice === ""
-      ? true
-      : Number(item.price) <=
-        Number(maxPrice);
-
+        
 return (
   matchCategory &&
   matchSearch &&
   matchLocation &&
-  matchPrice &&
   matchCountry
 );
+})
+.sort((a, b) => {
+  if (
+    sortBy ===
+    "newest"
+  ) {
+    return (
+      (b.createdAt
+        ?.seconds ||
+        0) -
+      (a.createdAt
+        ?.seconds ||
+        0)
+    );
+  }
+
+  if (
+    sortBy ===
+    "oldest"
+  ) {
+    return (
+      (a.createdAt
+        ?.seconds ||
+        0) -
+      (b.createdAt
+        ?.seconds ||
+        0)
+    );
+  }
+
+  if (
+    sortBy ===
+    "low-high"
+  ) {
+    return (
+      Number(
+        a.price
+      ) -
+      Number(
+        b.price
+      )
+    );
+  }
+
+  if (
+    sortBy ===
+    "high-low"
+  ) {
+    return (
+      Number(
+        b.price
+      ) -
+      Number(
+        a.price
+      )
+    );
+  }
+
+  return 0;
 })
   .map((item) => (
             <Link
@@ -375,24 +490,44 @@ return (
               <h2 className="text-xl font-bold text-white mt-4">
                 {item.title}
               </h2>
-              <p className="text-sm text-blue-600 mb-2">
+ 
+<p className="text-sm text-blue-600 mb-2">
   {item.category}
 </p>
 
-              <p className="text-gray-600 mb-2">
-                {item.location}
-              </p>
+<p className="text-gray-600 mb-2">
+  {item.location}
+</p>
 
-              <p className="text-2xl font-bold text-green-400">
- {
-  currencyMap[
-    item.country
-      ?.trim()
-      .toLowerCase()
-  ] || "Rs."
-} {item.price}
-              </p>
+<p className="text-gray-500 text-xs mt-2">
+  🕒{" "}
+  {item.createdAt
+    ? new Date(
+        item.createdAt
+          .seconds *
+          1000
+      ).toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      )
+    : "Recently"}
+</p>
 
+<p className="text-2xl font-bold text-green-400">
+  {
+    currencyMap[
+      item.country
+        ?.trim()
+        .toLowerCase()
+    ] || "Rs."
+  }{" "}
+  {item.price}
+</p>
+         
               <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                 {item.description}
               </p>

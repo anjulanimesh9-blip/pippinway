@@ -116,6 +116,7 @@ export default function ListingDetails() {
                       listingData.category &&
                     ad.id !== slug
                 );
+                
 
             setRelatedAds(
               filteredAds
@@ -203,6 +204,23 @@ export default function ListingDetails() {
         <p className="flex items-center gap-2 text-gray-300 mt-2 text-lg">
           📍 {item.location}
         </p>
+        <p className="text-gray-500 text-sm mt-2">
+  🕒 Posted on{" "}
+  {item.createdAt
+    ? new Date(
+        item.createdAt
+          .seconds *
+          1000
+      ).toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      )
+    : "Recently"}
+</p>
 
         <h2 className="text-2xl font-bold mt-12 mb-5">
           Description

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   useState,
   useEffect,
@@ -12,10 +13,13 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] =
     useState(false);
 
-  const router = useRouter();
+  const router =
+    useRouter();
 
   const menuRef =
-    useRef<HTMLDivElement>(null);
+    useRef<HTMLDivElement>(
+      null
+    );
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -50,25 +54,44 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
         {/* Logo */}
-        <Link
-          href="/"
-          className="text-3xl font-bold text-white"
-        >
-          Pippinway
-        </Link>
+       <Link
+
+  href="/"
+  className="flex items-center gap-2"
+>
+  <Image
+    src="/images/logo.png"
+    alt="Pippinway Logo"
+    width={90}
+    height={90}
+    className="object-contain shrink-0"
+  />
+
+ <div className="flex flex-col leading-tight min-w-0">
+  <span className="text-xl md:text-2xl font-bold text-white">
+    pippinway.com
+  </span>
+</div>
+  </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6 text-white font-medium">
-          <Link href="/">Home</Link>
-                    <Link href="/add-listing">
+          <Link href="/">
+            Home
+          </Link>
+
+          <Link href="/add-listing">
             Add Listing
           </Link>
+
           <Link href="/login">
             Login
           </Link>
+
           <Link href="/register">
             Register
           </Link>
+
           <Link href="/profile">
             Profile
           </Link>
@@ -79,7 +102,8 @@ export default function Navbar() {
           className="md:hidden text-white text-3xl"
           onClick={() =>
             setMenuOpen(
-              (prev) => !prev
+              (prev) =>
+                !prev
             )
           }
         >
@@ -89,67 +113,81 @@ export default function Navbar() {
 
       {/* Mobile Dropdown */}
       {menuOpen && (
-  <div
-    ref={menuRef}
-    className="md:hidden bg-[#111827] border-t border-gray-800 flex flex-col p-4 gap-4 text-white"
-  >
-    <button
-      className="text-left"
-      onClick={() => {
-        setMenuOpen(false);
-        router.push("/");
-      }}
-    >
-      Home
-    </button>
+        <div
+          ref={menuRef}
+          className="md:hidden bg-[#111827] border-t border-gray-800 flex flex-col p-4 gap-4 text-white"
+        >
+          <button
+            className="text-left"
+            onClick={() => {
+              setMenuOpen(
+                false
+              );
+              router.push(
+                "/"
+              );
+            }}
+          >
+            Home
+          </button>
 
-    <button
-      className="text-left"
-      onClick={() => {
-        setMenuOpen(false);
-        router.push(
-          "/add-listing"
-        );
-      }}
-    >
-      Add Listing
-    </button>
+          <button
+            className="text-left"
+            onClick={() => {
+              setMenuOpen(
+                false
+              );
+              router.push(
+                "/add-listing"
+              );
+            }}
+          >
+            Add Listing
+          </button>
 
-    <button
-      className="text-left"
-      onClick={() => {
-        setMenuOpen(false);
-        router.push("/login");
-      }}
-    >
-      Login
-    </button>
+          <button
+            className="text-left"
+            onClick={() => {
+              setMenuOpen(
+                false
+              );
+              router.push(
+                "/login"
+              );
+            }}
+          >
+            Login
+          </button>
 
-    <button
-      className="text-left"
-      onClick={() => {
-        setMenuOpen(false);
-        router.push(
-          "/register"
-        );
-      }}
-    >
-      Register
-    </button>
+          <button
+            className="text-left"
+            onClick={() => {
+              setMenuOpen(
+                false
+              );
+              router.push(
+                "/register"
+              );
+            }}
+          >
+            Register
+          </button>
 
-    <button
-      className="text-left"
-      onClick={() => {
-        setMenuOpen(false);
-        router.push(
-          "/profile"
-        );
-      }}
-    >
-      Profile
-    </button>
-  </div>
-)}
+          <button
+            className="text-left"
+            onClick={() => {
+              setMenuOpen(
+                false
+              );
+              router.push(
+                "/profile"
+              );
+            }}
+          >
+            Profile
+          </button>
+        </div>
+      )}
     </nav>
   );
 }
