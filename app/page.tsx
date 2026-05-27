@@ -85,7 +85,7 @@ const fetchListings =
   return (
     <main className="min-h-screen bg-[#020817]">
       <Navbar />
-      <section className="w-full max-w-[1600px] mx-auto py-8 px-4 overflow-hidden relative">
+      <section className="w-full max-w-[1600px] mx-auto py-8 px-4 overflow-visible md:overflow-visible md:overflow-hidden relative">
       <div className="max-w-7xl mx-auto px-4 pt-6 flex justify-between items-stretch">
   {user ? (
     <>
@@ -106,7 +106,7 @@ const fetchListings =
 </div>
 
 {/* Hero Banner */}
-<div className="relative w-full rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.08)]">
+<div className="relative w-full rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-visible md:overflow-visible md:overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.08)]">
 
   {/* Glow */}
   <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 blur-[140px]" />
@@ -122,7 +122,7 @@ const fetchListings =
       </span>
 
       <div className="mt-8">
-        <h1 className="text-5xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
+        <h1 className="text-3xl sm:text-4xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
           Buy, Sell &
           <span className="text-blue-500 block">
             Shop Smarter
@@ -214,7 +214,7 @@ const fetchListings =
     </div>
 
     {/* RIGHT SIDE */}
-    <div className="bg-[#07101f] border border-blue-900/40 rounded-[40px] overflow-hidden relative min-h-[720px] md:min-h-[860px] flex items-center justify-center">
+    <div className="bg-[#07101f] border border-blue-900/40 rounded-[40px] overflow-visible md:overflow-hidden relative min-h-[580px] md:min-h-[860px] flex items-center justify-center">
 
       <div className="absolute inset-0 opacity-15 md:opacity-30">
         <img
@@ -224,43 +224,53 @@ const fetchListings =
         />
       </div>
 
-      <div className="relative z-10 pt-14 px-5 pb-6 md:p-14">
+      <div className="relative z-10 pt-24 md:pt-14 px-5 pb-6 md:p-14">
 
         <img
           src="/images/logo.png"
           alt="Pippinway"
-          className="w-[120px] md:w-[360px] lg:w-[520px] mx-auto mt-0 md:mt-0"
+          className="w-[100px] md:w-[250px] lg:w-[320px] mx-auto mt-0 md:mt-0"
         />
 
-        <h2 className="text-center text-white text-3xl font-bold mt-5">
+        <h2 className="text-center text-white text-3xl md:text-4xl font-extrabold tracking-wide mt-5">
           WE SERVE IN
         </h2>
 
         <div className="w-44 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent mx-auto mt-2 mb-5 md:mb-8" />
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          {[
-            "🇬🇧 UK",
-            "🇺🇸 USA",
-            "🇨🇦 Canada",
-            "🇱🇰 Sri Lanka",
-            "🇿🇼 Zimbabwe",
-            "🇮🇳 India",
-            "🇸🇬 Singapore",
-            "🇹🇭 Thailand",
-            "🇿🇦 South Africa",
-            "🇲🇻 Maldives",
-          ].map((country) => (
-            <div
-              key={country}
-              className="bg-white/5 border border-white/10 rounded-[22px] md:rounded-[28px] py-3 px-2 md:p-6 text-sm md:text-lg text-center text-white font-semibold hover:border-blue-500 transition"
-            >
-              {country}
-            </div>
-          ))}
-        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 px-2">
+         {[
+  { flag: "https://flagcdn.com/w40/gb.png", name: "UK" },
+  { flag: "https://flagcdn.com/w40/us.png", name: "USA" },
+  { flag: "https://flagcdn.com/w40/ca.png", name: "Canada" },
+  { flag: "https://flagcdn.com/w40/lk.png", name: "Sri Lanka" },
+  { flag: "https://flagcdn.com/w40/zw.png", name: "Zimbabwe" },
+  { flag: "https://flagcdn.com/w40/in.png", name: "India" },
+  { flag: "https://flagcdn.com/w40/sg.png", name: "Singapore" },
+  { flag: "https://flagcdn.com/w40/th.png", name: "Thailand" },
+  { flag: "https://flagcdn.com/w40/za.png", name: "South Africa" },
+  { flag: "https://flagcdn.com/w40/mv.png", name: "Maldives" },
+].map((country) => (
+  <div
+    key={country.name}
+    className="bg-white/5 border border-white/10 rounded-[22px] md:rounded-[28px] py-2 px-4 md:p-6 text-sm md:text-lg text-center text-white font-semibold hover:border-blue-500 transition"
+  >
+    <div className="flex items-center justify-center gap-2 md:gap-3">
+  <img
+  src={country.flag}
+  alt={country.name}
+  className="w-9 h-7 object-cover rounded shadow-sm"
+/>
 
-        <div className="grid grid-cols-3 gap-3 mt-8 border-t border-white/10 pt-8">
+      <span>
+        {country.name}
+      </span>
+    </div>
+  </div>
+))}
+</div>
+
+        <div className="grid grid-cols-3 gap-2 mt-6 border-t border-white/10 pt-8">
           <div className="text-center">
             <div className="text-3xl md:text-4xl">
               🔒
@@ -298,7 +308,7 @@ const fetchListings =
     {/* Categories */}
 <div className="mb-14 mt-6">
   <div className="flex items-center justify-between mb-6">
-    <h2 className="text-3xl font-bold text-white">
+    <h2 className="text-3xl md:text-4xl font-extrabold tracking-wide text-white">
       Shop by Category
     </h2>
 
@@ -579,7 +589,8 @@ return (
             <Link
              href={`/listings/${item.id}`}
               key={item.id}
-              className="bg-[#0f172a] border border-gray-800 rounded-[28px] shadow-xl p-4 block hover:scale-[1.02] hover:border-blue-500 transition duration-300 overflow-hidden relative"
+              className="bg-[#0f172a] border border-gray-800 rounded-[28px] shadow-xl p-4 block hover:scale-[1.02] hover:border-blue-500 transition duration-300 overflow-visible md:overflow-visible md:overflow-visible md:overflow-hidden"
+            
             >
          {item.imageUrl ? (
   <img
