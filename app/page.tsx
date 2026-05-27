@@ -85,10 +85,11 @@ const fetchListings =
   return (
     <main className="min-h-screen bg-[#020817]">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 pt-6 flex justify-between items-center">
+      <section className="w-full max-w-[1600px] mx-auto py-8 px-4 overflow-hidden relative">
+      <div className="max-w-7xl mx-auto px-4 pt-6 flex justify-between items-stretch">
   {user ? (
     <>
-      <p className="font-semibold">
+      <p className="font-semibold text-gray-300">
         Welcome, {user.email}
       </p>
 
@@ -104,157 +105,198 @@ const fetchListings =
   )}
 </div>
 
-<section className="w-full max-w-7xl mx-auto py-16 px-4 overflow-hidden">
-  {/* Hero Banner */}
-<div className="relative w-full overflow-hidden rounded-[35px] bg-gradient-to-r from-[#0f172a] via-[#111827] to-[#1e293b] border border-gray-800 p-8 md:p-12 mb-10 shadow-2xl">
-  
-  <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px]" />
-  <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 blur-[100px]" />
+{/* Hero Banner */}
+<div className="relative w-full rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.08)]">
 
-  <div className="relative z-10 grid lg:grid-cols-[1.1fr_1fr] gap-12 gap-10 items-center">
-    
-    {/* Left Side */}
-    <div>
-      <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+  {/* Glow */}
+  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 blur-[140px]" />
+  <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/10 blur-[120px]" />
+
+  <div className="relative z-10 grid lg:grid-cols-[1fr_1.1fr] gap-8 items-center">
+
+    {/* LEFT SIDE */}
+    <div className="flex flex-col justify-between h-full max-w-[620px]">
+
+      <span className="inline-flex w-fit bg-blue-600 text-white px-5 py-3 rounded-full text-sm font-semibold">
         🚀 #1 Marketplace
       </span>
 
-      <h1 className="text-5xl md:text-7xl font-extrabold text-white mt-6 leading-tight">
-        Buy, Sell &
-        <span className="text-blue-500">
-          {" "}Shop Smarter
-        </span>
-      </h1>
+      <div className="mt-8">
+        <h1 className="text-5xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
+          Buy, Sell &
+          <span className="text-blue-500 block">
+            Shop Smarter
+          </span>
+        </h1>
 
-      <p className="text-gray-300 text-lg mt-5 max-w-lg">
-        Discover electronics, vehicles, property,
-        fashion and more on Pippinway —
-        fast, trusted and easy.
-      </p>
-      <div className="grid grid-cols-3 gap-4 mt-8">
-  <div className="bg-[#111827] border border-gray-800 rounded-3xl p-5 text-center">
-    <h3 className="text-3xl font-bold text-white">
-      50K+
-    </h3>
-    <p className="text-gray-400 text-sm mt-1">
-      Active Users
-    </p>
-  </div>
-
-  <div className="bg-[#111827] border border-gray-800 rounded-3xl p-5 text-center">
-    <h3 className="text-3xl font-bold text-white">
-      10K+
-    </h3>
-    <p className="text-gray-400 text-sm mt-1">
-      Listings
-    </p>
-  </div>
-
-  <div className="bg-[#111827] border border-gray-800 rounded-3xl p-5 text-center">
-    <h3 className="text-3xl font-bold text-white">
-      24/7
-    </h3>
-    <p className="text-gray-400 text-sm mt-1">
-      Support
-    </p>
-  </div>
-</div>
-
-      <div className="hidden md:flex gap-4 mt-8 flex-wrap">
-       <Link
-  href="/add-listing"
-  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] text-white px-8 py-4 rounded-[22px] font-semibold transition duration-300 flex items-center gap-2 justify-center"
->
-  <span className="text-xl">
-    ➕
-  </span>
-  Post Ad
-</Link>
-<button
-  onClick={() =>
-    document
-      .getElementById(
-        "latest-listings"
-      )
-      ?.scrollIntoView({
-        behavior:
-          "smooth",
-      })
-  }
-  className="border border-blue-500/40 bg-white/5 backdrop-blur-md text-white px-8 py-4 rounded-[22px] hover:bg-blue-500/10 hover:border-blue-500 transition duration-300 flex items-center gap-2 justify-center"
->
-  <span className="text-xl">
-    🔍
-  </span>
-  Explore Listings
-</button>
+        <p className="text-gray-300 text-xl mt-6 max-w-xl leading-9">
+          Discover electronics, vehicles,
+          property, fashion and more on
+          <span className="text-blue-400 font-semibold">
+            {" "}Pippinway
+          </span>{" "}
+          — fast, trusted and easy.
+        </p>
       </div>
+
+      {/* Buttons */}
+      <div className="flex flex-wrap gap-4 mt-10">
+        <Link
+          href="/add-listing"
+          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5 rounded-[24px] font-semibold hover:scale-105 transition flex items-center gap-3"
+        >
+          ➕ Post Ad
+        </Link>
+
+        <button
+          onClick={() =>
+            document
+              .getElementById(
+                "latest-listings"
+              )
+              ?.scrollIntoView({
+                behavior: "smooth",
+              })
+          }
+          className="border border-blue-500/30 bg-white/5 text-white px-8 py-5 rounded-[24px] hover:bg-blue-500/10 transition flex items-center gap-3"
+        >
+          🔍 Explore Listings
+        </button>
       </div>
-      {/* Right Side Worldwide Card */}
-<div className="relative">
-  <div className="bg-[#0b1120] border border-blue-900/40 rounded-[35px] overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.15)]">
 
-    <div className="bg-gradient-to-br from-[#07101f] to-[#0f172a] p-6 md:p-8">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-5 mt-10">
+        {[
+          {
+            title: "50K+",
+            text: "Happy Users",
+          },
+          {
+            title: "10K+",
+            text: "Active Listings",
+          },
+          {
+            title: "24/7",
+            text: "Trusted Support",
+          },
+        ].map((item) => (
+          <div
+            key={item.title}
+            className="bg-[#0f172a] border border-white/10 rounded-[32px] p-8 text-center"
+          >
+            <h3 className="text-3xl md:text-4xl font-bold text-white">
+              {item.title}
+            </h3>
 
-    <div className="text-center mb-5">
-  <img
-    src="/images/logo.png"
-    alt="Pippinway"
-    className="w-[220px] md:w-[320px] mx-auto drop-shadow-[0_0_30px_rgba(59,130,246,0.4)]"
-  />
+            <p className="text-gray-400 mt-2">
+              {item.text}
+            </p>
+          </div>
+        ))}
+      </div>
 
-  <h2 className="text-3xl md:text-4xl font-bold text-white mt-3">
-    Pippinway
-  </h2>
-
-  <p className="text-gray-400 mt-2">
-    Trusted Marketplace Worldwide
-  </p>
-</div>
-      <h3 className="text-center text-2xl md:text-3xl font-bold text-white mt-3">
-        <div className="flex items-center justify-center gap-2 mt-3 mb-4">
-  <span className="text-2xl">
-    🌍
-  </span>
-
-  <h3 className="text-2xl md:text-3xl font-bold text-white">
-    WE SERVE IN
-  </h3>
-</div>
-
-<div className="w-40 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent mx-auto mb-4"></div>
-      </h3>
-
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
-  {[
-    "🇬🇧 UK",
-    "🇺🇸 USA",
-    "🇨🇦 Canada",
-    "🇱🇰 Sri Lanka",
-    "🇿🇼 Zimbabwe",
-    "🇮🇳 India",
-    "🇸🇬 Singapore",
-    "🇹🇭 Thailand",
-    "🇿🇦 South Africa",
-    "🇲🇻 Maldives",
-  ].map((country) => (
-    <div
-      key={country}
-      className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[22px] py-5 px-4 min-h-[90px] text-center text-white font-semibold hover:scale-105 hover:border-blue-500 transition duration-300 shadow-lg"
-    >
-      {country}
+      {/* Categories */}
+      <div className="grid grid-cols-4 gap-4 mt-10">
+        {[
+          "🚗 Vehicles",
+          "🏠 Property",
+          "📱 Electronics",
+          "👕 Fashion",
+        ].map((item) => (
+          <div
+            key={item}
+            className="bg-[#0f172a] border border-white/10 rounded-[24px] py-5 text-center text-white font-medium"
+          >
+            {item}
+          </div>
+        ))}
+      </div>
     </div>
-  ))}
-</div>
+
+    {/* RIGHT SIDE */}
+    <div className="bg-[#07101f] border border-blue-900/40 rounded-[40px] overflow-hidden relative min-h-[720px] md:min-h-[860px] flex items-center justify-center">
+
+      <div className="absolute inset-0 opacity-15 md:opacity-30">
+        <img
+          src="/images/world-map.png"
+          alt=""
+          className="w-full h-full object-cover opacity-80"
+        />
+      </div>
+
+      <div className="relative z-10 pt-14 px-5 pb-6 md:p-14">
+
+        <img
+          src="/images/logo.png"
+          alt="Pippinway"
+          className="w-[120px] md:w-[360px] lg:w-[520px] mx-auto mt-0 md:mt-0"
+        />
+
+        <h2 className="text-center text-white text-3xl font-bold mt-5">
+          WE SERVE IN
+        </h2>
+
+        <div className="w-44 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent mx-auto mt-2 mb-5 md:mb-8" />
+
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+          {[
+            "🇬🇧 UK",
+            "🇺🇸 USA",
+            "🇨🇦 Canada",
+            "🇱🇰 Sri Lanka",
+            "🇿🇼 Zimbabwe",
+            "🇮🇳 India",
+            "🇸🇬 Singapore",
+            "🇹🇭 Thailand",
+            "🇿🇦 South Africa",
+            "🇲🇻 Maldives",
+          ].map((country) => (
+            <div
+              key={country}
+              className="bg-white/5 border border-white/10 rounded-[22px] md:rounded-[28px] py-3 px-2 md:p-6 text-sm md:text-lg text-center text-white font-semibold hover:border-blue-500 transition"
+            >
+              {country}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mt-8 border-t border-white/10 pt-8">
+          <div className="text-center">
+            <div className="text-3xl md:text-4xl">
+              🔒
+            </div>
+            <h3 className="text-white font-bold mt-2">
+              Safe & Secure
+            </h3>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl md:text-4xl">
+              ⚡
+            </div>
+            <h3 className="text-white font-bold mt-2">
+              Fast & Easy
+            </h3>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl md:text-4xl">
+              🤝
+            </div>
+            <h3 className="text-white font-bold mt-2">
+              Trusted
+            </h3>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
-</div>
-</div>
 </div>
 
  <div className="mb-8">
     {/* Categories */}
-<div className="mb-12">
+<div className="mb-14 mt-6">
   <div className="flex items-center justify-between mb-6">
     <h2 className="text-3xl font-bold text-white">
       Shop by Category
@@ -319,7 +361,7 @@ const fetchListings =
             cat.name
           )
         }
-        className="bg-[#0f172a] border border-gray-800 hover:border-blue-500 hover:scale-105 transition rounded-[24px] p-4 min-h-[120px] flex flex-col items-center justify-center text-center shadow-lg"
+        className="bg-[#0f172a] border border-gray-800 hover:border-blue-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition rounded-[24px] p-4 min-h-[120px] flex flex-col items-center justify-center text-center shadow-lg"
       >
         <div className="text-5xl mb-3">
           {cat.icon}
@@ -334,7 +376,7 @@ const fetchListings =
 </div>
     <h1
   id="latest-listings"
-  className="text-4xl font-bold text-white mb-6"
+  className="text-3xl md:text-4xl font-bold text-white mb-6"
 >
   Latest Listings
 </h1>
@@ -537,7 +579,7 @@ return (
             <Link
              href={`/listings/${item.id}`}
               key={item.id}
-              className="bg-[#0f172a] border border-gray-800 rounded-[28px] shadow-xl p-4 block hover:scale-[1.02] hover:border-blue-500 transition duration-300 overflow-hidden"
+              className="bg-[#0f172a] border border-gray-800 rounded-[28px] shadow-xl p-4 block hover:scale-[1.02] hover:border-blue-500 transition duration-300 overflow-hidden relative"
             >
          {item.imageUrl ? (
   <img
@@ -596,8 +638,102 @@ return (
               </p>
             </Link>
           ))}
-        </div>
+        </div> 
       </section>
+      <footer className="mt-32 border-t border-gray-800 bg-[#020817]">
+  <div className="max-w-7xl mx-auto px-4 py-14">
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+
+      {/* Logo */}
+      <div>
+        <img
+          src="/images/logo.png"
+          alt="Pippinway"
+          className="w-[220px] mb-4"
+        />
+
+        <p className="text-gray-400 leading-7 text-sm md:text-base">
+          Buy, sell and explore products
+          worldwide with Pippinway —
+          trusted, fast and easy.
+        </p>
+      </div>
+
+      {/* Quick Links */}
+      <div>
+        <h3 className="text-white font-bold text-xl mb-4">
+          Quick Links
+        </h3>
+
+        <div className="flex flex-col gap-3 text-gray-400">
+          <Link href="/">
+            Home
+          </Link>
+
+          <Link href="/add-listing">
+            Add Listing
+          </Link>
+
+          <Link href="/profile">
+            Profile
+          </Link>
+
+          <Link href="/login">
+            Login
+          </Link>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div>
+        <h3 className="text-white font-bold text-xl mb-4">
+          Categories
+        </h3>
+
+        <div className="flex flex-col gap-3 text-gray-400">
+          <span>Cars</span>
+          <span>Property</span>
+          <span>Electronics</span>
+          <span>Jobs</span>
+          <span>Fashion</span>
+        </div>
+      </div>
+
+      {/* Countries */}
+      <div>
+        <h3 className="text-white font-bold text-xl mb-4">
+          Available Countries
+        </h3>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            "🇬🇧 UK",
+            "🇺🇸 USA",
+            "🇨🇦 Canada",
+            "🇱🇰 Sri Lanka",
+            "🇿🇼 Zimbabwe",
+            "🇮🇳 India",
+          ].map((country) => (
+            <span
+              key={country}
+              className="bg-[#111827] border border-gray-700 text-gray-300 px-3 py-2 rounded-xl text-sm"
+            >
+              {country}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-400 text-base">
+      © 2026 Pippinway.com — All Rights Reserved
+    </div>
+  </div>
+</footer>
     </main>
   );
 }
+
+
+
