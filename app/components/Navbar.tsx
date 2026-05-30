@@ -115,10 +115,10 @@ export default function Navbar() {
       {menuOpen && (
         <div
           ref={menuRef}
-          className="md:hidden bg-[#111827] border-t border-gray-800 flex flex-col p-4 gap-4 text-white"
+          className="md:hidden bg-[#0b1120]/95 backdrop-blur-xl border-t border-blue-900/30 flex flex-col p-4 gap-4 text-white animate-in slide-in-from-top duration-300"
         >
           <button
-            className="text-left"
+            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
             onClick={() => {
               setMenuOpen(
                 false
@@ -132,7 +132,7 @@ export default function Navbar() {
           </button>
 
           <button
-            className="text-left"
+            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
             onClick={() => {
               setMenuOpen(
                 false
@@ -146,7 +146,7 @@ export default function Navbar() {
           </button>
 
           <button
-            className="text-left"
+            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
             onClick={() => {
               setMenuOpen(
                 false
@@ -160,7 +160,7 @@ export default function Navbar() {
           </button>
 
           <button
-            className="text-left"
+            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
             onClick={() => {
               setMenuOpen(
                 false
@@ -174,7 +174,7 @@ export default function Navbar() {
           </button>
 
           <button
-            className="text-left"
+            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
             onClick={() => {
               setMenuOpen(
                 false

@@ -86,7 +86,7 @@ const fetchListings =
     <main className="min-h-screen bg-[#020817]">
       <Navbar />
       <section className="w-full max-w-[1600px] mx-auto py-8 px-4 overflow-visible md:overflow-visible md:overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-4 pt-6 flex justify-between items-stretch">
+      <div className="max-w-7xl mx-auto px-4 pt-6 flex flex-col md:flex-row gap-3 md:gap-0 justify-between items-start md:items-center">
   {user ? (
     <>
       <p className="font-semibold text-gray-300">
@@ -95,7 +95,7 @@ const fetchListings =
 
       <button
         onClick={() => signOut(auth)}
-        className="bg-black text-white px-4 py-2 rounded-xl"
+        className="bg-black text-white px-4 py-2 rounded-xl w-fit"
       >
         Logout
       </button>
@@ -106,13 +106,13 @@ const fetchListings =
 </div>
 
 {/* Hero Banner */}
-<div className="relative w-full rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-visible md:overflow-visible md:overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.08)]">
+<div className="relative w-full rounded-[28px] md:rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-visible md:overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.08)]">
 
   {/* Glow */}
   <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 blur-[140px]" />
   <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/10 blur-[120px]" />
 
-  <div className="relative z-10 grid lg:grid-cols-[1fr_1.1fr] gap-8 items-center">
+  <div className="relative z-10 grid lg:grid-cols-[1fr_1.1fr] gap-8 items-center pt-10 md:pt-0">
 
     {/* LEFT SIDE */}
     <div className="flex flex-col justify-between h-full max-w-[620px]">
@@ -122,7 +122,7 @@ const fetchListings =
       </span>
 
       <div className="mt-8">
-        <h1 className="text-3xl sm:text-4xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
+        <h1 className="text-3xl sm:text-3xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
           Buy, Sell &
           <span className="text-blue-500 block">
             Shop Smarter
@@ -165,7 +165,7 @@ const fetchListings =
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-5 mt-10">
+      <div className="grid grid-cols-3 gap-3 md:gap-5 mt-10">
         {[
           {
             title: "50K+",
@@ -182,7 +182,7 @@ const fetchListings =
         ].map((item) => (
           <div
             key={item.title}
-            className="bg-[#0f172a] border border-white/10 rounded-[32px] p-8 text-center"
+            className="bg-[#0f172a] border border-white/10 rounded-[32px] p-4 md:p-8 text-center"
           >
             <h3 className="text-3xl md:text-4xl font-bold text-white">
               {item.title}
@@ -191,23 +191,6 @@ const fetchListings =
             <p className="text-gray-400 mt-2">
               {item.text}
             </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Categories */}
-      <div className="grid grid-cols-4 gap-4 mt-10">
-        {[
-          "🚗 Vehicles",
-          "🏠 Property",
-          "📱 Electronics",
-          "👕 Fashion",
-        ].map((item) => (
-          <div
-            key={item}
-            className="bg-[#0f172a] border border-white/10 rounded-[24px] py-5 text-center text-white font-medium"
-          >
-            {item}
           </div>
         ))}
       </div>
@@ -275,7 +258,7 @@ const fetchListings =
             <div className="text-3xl md:text-4xl">
               🔒
             </div>
-            <h3 className="text-white font-bold mt-2">
+            <h3 className="block text-white text-lg py-3 px-4 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition">
               Safe & Secure
             </h3>
           </div>
@@ -641,9 +624,8 @@ return (
         .toLowerCase()
     ] || "Rs."
   }{" "}
-  {item.price}
+ {Number(item.price).toLocaleString()}
 </p>
-         
               <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                 {item.description}
               </p>
@@ -677,7 +659,7 @@ return (
           Quick Links
         </h3>
 
-        <div className="flex flex-col gap-3 text-gray-400">
+        <div className="text-white text-lg py-3 px-4 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition">
           <Link href="/">
             Home
           </Link>

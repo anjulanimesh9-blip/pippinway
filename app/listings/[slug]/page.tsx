@@ -22,6 +22,9 @@ export default function ListingDetails() {
   const [relatedAds, setRelatedAds] =
     useState<any[]>([]);
 
+    const [showDeleteModal, setShowDeleteModal] =
+  useState(false);
+
   const currentUser =
     auth.currentUser;
 
@@ -46,13 +49,6 @@ export default function ListingDetails() {
 
   const handleDelete =
     async () => {
-      const confirmDelete =
-        confirm(
-          "Are you sure you want to delete this listing?"
-        );
-
-      if (!confirmDelete)
-        return;
 
       await deleteDoc(
         doc(
@@ -147,7 +143,7 @@ export default function ListingDetails() {
 
   return (
     <div className="min-h-screen bg-black text-white p-5">
-      <div className="max-w-4xl mx-auto bg-[#0b0b0b] rounded-[32px] shadow-2xl p-6">
+      <div className="max-w-5xl mx-auto bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[40px] shadow-[0_0_50px_rgba(59,130,246,0.08)] p-6 md:p-8">
 
         <button
           onClick={() =>
@@ -158,7 +154,7 @@ export default function ListingDetails() {
           ← Back to Home
         </button>
 
-<div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide mb-6">
+<div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
   {(
     item.imageUrls ||
     [item.imageUrl]
@@ -174,7 +170,7 @@ export default function ListingDetails() {
         <img
           src={image}
           alt={`Photo ${index}`}
-          className="w-full h-[320px] object-contain bg-[#111] rounded-[32px] shadow-2xl p-3"
+          className="w-full h-[320px] md:h-[500px] object-contain bg-[#0f172a] border border-white/10 rounded-[32px] shadow-[0_0_40px_rgba(59,130,246,0.08)] p-4"
         />
 
         <div className="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-4 py-2 rounded-full backdrop-blur-md">
@@ -193,9 +189,10 @@ export default function ListingDetails() {
           {item.title}
         </h1>
 
-        <p className="text-4xl font-extrabold text-green-500 mt-3">
-          {currency} {item.price}
-        </p>
+       <p className="text-4xl font-extrabold text-green-500 mt-3">
+  {currency}{" "}
+  {Number(item.price).toLocaleString()}
+</p>
 
         <p className="flex items-center gap-2 text-blue-400 mt-3 font-medium">
           📂 {item.category}
@@ -226,7 +223,7 @@ export default function ListingDetails() {
           Description
         </h2>
 
-        <p className="text-gray-300 text-lg leading-8">
+        <p className="text-gray-300 text-base md:text-lg leading-8 bg-white/5 border border-white/10 rounded-[24px] p-5">
           {item.description}
         </p>
 
@@ -235,14 +232,14 @@ export default function ListingDetails() {
             href={`https://wa.me/${item.phone}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-green-600 hover:scale-105 transition text-white py-4 rounded-2xl font-semibold text-xs text-center shadow-lg w-full"
+            className="bg-gradient-to-r from-green-600 to-green-500 hover:scale-105 transition text-white py-4 rounded-[24px] font-semibold text-sm text-center shadow-lg w-full"
           >
             WhatsApp Seller
           </a>
 
           <a
             href={`tel:${item.phone}`}
-            className="bg-blue-600 hover:scale-105 transition text-white py-4 rounded-2xl font-semibold text-xs text-center shadow-lg w-full"
+            className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:scale-105 transition text-white py-4 rounded-[24px] font-semibold text-sm text-center shadow-lg w-full"
           >
             Call Seller
           </a>
@@ -250,15 +247,15 @@ export default function ListingDetails() {
 
         {currentUser?.email ===
           item.ownerEmail && (
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <button
-              onClick={
-                handleDelete
-              }
-              className="bg-red-600 text-white py-3 rounded-2xl"
-            >
-              Delete
-            </button>
+          <div className="grid grid-cols-2 gap-3 mt-5">
+           <button
+  onClick={() =>
+    setShowDeleteModal(true)
+  }
+  className="bg-gradient-to-r from-red-600 to-red-500 text-white py-4 rounded-[22px] font-semibold shadow-lg hover:scale-[1.02] transition"
+>
+  Delete
+</button>
 
             <button
               onClick={() =>
@@ -266,24 +263,57 @@ export default function ListingDetails() {
                   `/edit/${slug}`
                 )
               }
-              className="bg-yellow-500 text-white py-3 rounded-2xl"
+              className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black py-4 rounded-[22px] font-semibold shadow-lg hover:scale-[1.02] transition"
             >
               Edit
             </button>
           </div>
         )}
+{showDeleteModal && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+    <div className="bg-[#0f172a] border border-white/10 rounded-[30px] p-6 w-full max-w-sm text-center shadow-2xl">
+      <h2 className="text-2xl font-bold text-white">
+        Delete Listing?
+      </h2>
 
+      <p className="text-gray-400 mt-3">
+        Are you sure you want to
+        delete this listing?
+      </p>
+
+      <div className="grid grid-cols-2 gap-3 mt-6">
+        <button
+          onClick={() =>
+            setShowDeleteModal(false)
+          }
+          className="bg-gray-700 text-white py-3 rounded-[18px]"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={async () => {
+            await handleDelete();
+          }}
+          className="bg-red-600 text-white py-3 rounded-[18px]"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         <h2 className="text-2xl font-bold mt-16 mb-6">
           Similar Ads
         </h2>
 
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
           {relatedAds.map(
             (ad) => (
               <Link
                 key={ad.id}
                 href={`/listings/${ad.id}`}
-                className="min-w-[260px] bg-[#111111] border border-gray-800 rounded-[28px] p-3 shadow-xl overflow-hidden"
+                className="min-w-[240px] md:min-w-[280px] bg-[#111111] border border-gray-800 rounded-[28px] p-3 shadow-xl overflow-hidden snap-start"
               >
           <img
   src={
@@ -291,7 +321,7 @@ export default function ListingDetails() {
     ad.imageUrl
   }
   alt={ad.title}
-  className="w-full h-[180px] object-cover rounded-[24px]"
+  className="w-full h-[170px] md:h-[190px] object-cover rounded-[24px]"
 />
 
                 <h3 className="font-bold text-lg mt-3 text-white">
@@ -304,7 +334,7 @@ export default function ListingDetails() {
                       ?.trim()
                       ?.toLowerCase()
                   ] || "Rs.")}{" "}
-                  {ad.price}
+                  {Number(ad.price).toLocaleString()}
                 </p>
 
                 <p className="text-gray-400 text-sm">

@@ -236,7 +236,7 @@ try {
 
   return (
     <div className="min-h-screen bg-black text-white p-5">
-      <div className="max-w-2xl mx-auto bg-[#0b0b0b] border border-gray-800 rounded-[30px] p-6">
+      <div className="max-w-3xl mx-auto bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[40px] shadow-[0_0_50px_rgba(59,130,246,0.08)] p-6 md:p-10">
 
         <button
           onClick={() =>
@@ -268,7 +268,7 @@ try {
                   .value
               )
             }
-            className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4"
+            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
           />
 
           <input
@@ -283,7 +283,7 @@ try {
                   .value
               )
             }
-            className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4"
+            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
           />
 
          <select
@@ -293,7 +293,7 @@ try {
       e.target.value
     )
   }
-  className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4"
+  className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
 >
   <option value="">
     Select Country
@@ -344,7 +344,7 @@ try {
                   .value
               )
             }
-            className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4"
+            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
           />
 
           <input
@@ -359,7 +359,7 @@ try {
                   .value
               )
             }
-            className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4"
+            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
           />
 
           <select
@@ -369,7 +369,7 @@ try {
       e.target.value
     )
   }
-  className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4 text-white"
+  className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
 >
   <option value="">
     Select Category
@@ -433,7 +433,7 @@ try {
                   .value
               )
             }
-            className="w-full bg-[#111] border border-gray-700 p-4 rounded-2xl mb-4 h-32"
+            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 h-36 transition"
           />
 
         <div className="space-y-3 mb-5">
@@ -441,7 +441,7 @@ try {
     (num, index) => (
       <div
         key={num}
-        className="bg-[#111] border border-gray-700 rounded-2xl p-4"
+        className="bg-[#0b1120] border border-blue-900/30 rounded-[24px] p-5"
       >
         <label className="block text-sm text-gray-300 mb-2">
           Photo {num}
@@ -491,7 +491,7 @@ try {
           <button
   type="submit"
   disabled={loading}
-  className="w-full bg-yellow-500 text-black font-bold py-4 rounded-2xl disabled:opacity-60"
+  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:scale-[1.02] transition text-white font-bold py-4 rounded-[24px] text-lg shadow-lg disabled:opacity-60"
 >
   {loading
     ? "Uploading..."
