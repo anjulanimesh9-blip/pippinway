@@ -4,6 +4,8 @@ import { auth, db } from "../firebase";
 import {
   collection,
   getDocs,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +19,9 @@ export default function ProfilePage() {
 
   const [myAds, setMyAds] =
     useState<any[]>([]);
+    const [favoriteAds,
+  setFavoriteAds] =
+  useState<any[]>([]);
   const [menuOpen, setMenuOpen] =
   useState(false);
   useEffect(() => {
@@ -52,8 +57,56 @@ export default function ProfilePage() {
         setMyAds(ads);
       };
 
-    if (user) fetchMyAds();
+    if (user) {
+  fetchMyAds();
+  fetchFavorites();
+}
   }, [user]);
+  const fetchFavorites =
+  async () => {
+    const favSnapshot =
+      await getDocs(
+        collection(
+          db,
+          "users",
+          user!.uid,
+          "favorites"
+        )
+      );
+
+    const favAds:
+      any[] = [];
+
+    for (const fav of
+      favSnapshot.docs) {
+
+      const listingRef =
+        doc(
+          db,
+          "listings",
+          fav.id
+        );
+
+      const listingSnap =
+        await getDoc(
+          listingRef
+        );
+
+      if (
+        listingSnap.exists()
+      ) {
+        favAds.push({
+          id:
+            listingSnap.id,
+          ...listingSnap.data(),
+        });
+      }
+    }
+
+    setFavoriteAds(
+      favAds
+    );
+  };
 
   const handleLogout =
     async () => {
@@ -164,6 +217,60 @@ export default function ProfilePage() {
               {myAds.length}
             </p>
           </div>
+
+   <div className="mt-14">       
+  <h2 className="text-3xl font-bold mb-6">
+    My Favorites ❤️
+  </h2>
+
+  <div className="grid md:grid-cols-3 gap-6">
+    {favoriteAds.length ===
+    0 ? (
+      <p>
+        No favorites yet
+      </p>
+    ) : (
+      favoriteAds.map(
+        (ad) => (
+          <Link
+            key={ad.id}
+            href={`/listings/${ad.id}`}
+            className="bg-[#111827] border border-gray-800 rounded-3xl shadow overflow-hidden hover:scale-105 transition"
+          >
+            {ad.imageUrl ? (
+              <img
+                src={ad.imageUrl}
+                alt={ad.title}
+                className="w-full h-52 object-cover"
+              />
+            ) : (
+              <div className="w-full h-52 bg-[#1F2937] flex items-center justify-center text-gray-500">
+                No Image
+              </div>
+            )}
+
+            <div className="p-5">
+              <h3 className="text-xl font-bold text-white">
+                {ad.title}
+              </h3>
+
+              <p className="text-gray-500 mt-2">
+                {ad.location}
+              </p>
+
+              <p className="text-2xl font-bold mt-3 text-green-400">
+                Rs.{" "}
+                {Number(
+                  ad.price
+                ).toLocaleString()}
+              </p>
+            </div>
+          </Link>
+        )
+      )
+    )}
+  </div>
+</div>
 
           <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
             <h2 className="text-gray-500">

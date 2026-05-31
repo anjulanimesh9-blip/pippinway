@@ -3,14 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
+import { db, auth } from "./firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection,
   getDocs,
   query,
   orderBy,
+  doc,
+  setDoc,
+  deleteDoc,
+  getDoc,
 } from "firebase/firestore";
-import { db, auth } from "./firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 
 
 
@@ -26,6 +30,8 @@ export default function Home() {
   useState("");
   const [sortBy, setSortBy] =
   useState("newest");
+  const [favorites, setFavorites] =
+  useState<string[]>([]);
 
 
   const currencyMap: any = {
@@ -48,6 +54,31 @@ useEffect(() => {
     setUser(currentUser);
   });
 }, []);
+useEffect(() => {
+  if (!user) return;
+
+  const fetchFavorites =
+    async () => {
+      const snapshot =
+        await getDocs(
+          collection(
+            db,
+            "users",
+            user.uid,
+            "favorites"
+          )
+        );
+
+      const favs =
+        snapshot.docs.map(
+          (doc) => doc.id
+        );
+
+      setFavorites(favs);
+    };
+
+  fetchFavorites();
+}, [user]);
 
 const fetchListings =
   async () => {
@@ -82,6 +113,59 @@ const fetchListings =
     );
   };
 
+  const toggleFavorite =
+  async (
+    e: any,
+    listingId: string
+  ) => {
+    e.preventDefault();
+
+    if (!user) {
+      alert(
+        "Please login first"
+      );
+      return;
+    }
+
+    const favRef = doc(
+      db,
+      "users",
+      user.uid,
+      "favorites",
+      listingId
+    );
+
+    const exists =
+      favorites.includes(
+        listingId
+      );
+
+    if (exists) {
+      await deleteDoc(
+        favRef
+      );
+
+      setFavorites(
+        favorites.filter(
+          (id) =>
+            id !== listingId
+        )
+      );
+    } else {
+      await setDoc(
+        favRef,
+        {
+          createdAt:
+            new Date(),
+        }
+      );
+
+      setFavorites([
+        ...favorites,
+        listingId,
+      ]);
+    }
+  };
   return (
     <main className="min-h-screen bg-[#020817]">
       <Navbar />
@@ -473,7 +557,7 @@ const fetchListings =
     </button>
   ))}
 </div>
-<div className="grid md:grid-cols-4 gap-6">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {listings
 .filter((item) => {
   const matchCountry =
@@ -568,69 +652,84 @@ return (
 
   return 0;
 })
-  .map((item) => (
-            <Link
-             href={`/listings/${item.id}`}
-              key={item.id}
-              className="bg-[#0f172a] border border-gray-800 rounded-[28px] shadow-xl p-4 block hover:scale-[1.02] hover:border-blue-500 transition duration-300 overflow-visible md:overflow-visible md:overflow-visible md:overflow-hidden"
-            
-            >
-         {item.imageUrl ? (
-  <img
-    src={item.imageUrl}
-    alt={item.title}
-    className="w-full h-56 object-cover rounded-2xl"
-  />
-) : (
-  <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
-    No Image
-  </div>
-)}     
-              <h2 className="text-xl font-bold text-white mt-4">
-                {item.title}
-              </h2>
- 
-<p className="text-sm text-blue-600 mb-2">
-  {item.category}
+.map((item) => (
+  <Link
+    href={`/listings/${item.id}`}
+    key={item.id}
+    className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block hover:scale-[1.03] hover:border-blue-500 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-300 overflow-hidden"
+  >
+    {item.imageUrl ? (
+      <>
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="w-full h-56 object-cover rounded-[22px] group-hover:scale-105 transition duration-500"
+        />
+
+        <div className="absolute top-4 left-4 bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-semibold z-10">
+          Featured
+        </div>
+
+<button
+  onClick={(e) =>
+    toggleFavorite(
+      e,
+      item.id
+    )
+  }
+  className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white w-10 h-10 rounded-full z-10 flex items-center justify-center"
+>
+  {favorites.includes(
+    item.id
+  )
+    ? "❤️"
+    : "🤍"}
+</button>
+      </>
+    ) : (
+      <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
+        No Image
+      </div>
+    )}
+
+    <h2 className="text-xl font-bold text-white mt-4">
+      {item.title}
+    </h2>
+
+    <p className="text-sm text-blue-600 mb-2">
+      {item.category}
+    </p>
+
+    <p className="text-gray-600 mb-2">
+      {item.location}
+    </p>
+
+    <p className="text-gray-500 text-xs mt-2">
+      🕒{" "}
+      {item.createdAt
+        ? new Date(
+            item.createdAt.seconds * 1000
+          ).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "Recently"}
+    </p>
+
+<p className="text-3xl font-extrabold text-green-400 mt-2">
+  {currencyMap[
+    item.country?.trim().toLowerCase()
+  ] || "Rs."}{" "}
+  {Number(item.price).toLocaleString()}
 </p>
 
-<p className="text-gray-600 mb-2">
-  {item.location}
-</p>
-
-<p className="text-gray-500 text-xs mt-2">
-  🕒{" "}
-  {item.createdAt
-    ? new Date(
-        item.createdAt
-          .seconds *
-          1000
-      ).toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }
-      )
-    : "Recently"}
-</p>
-
-<p className="text-2xl font-bold text-green-400">
-  {
-    currencyMap[
-      item.country
-        ?.trim()
-        .toLowerCase()
-    ] || "Rs."
-  }{" "}
- {Number(item.price).toLocaleString()}
-</p>
-              <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                {item.description}
-              </p>
-            </Link>
-          ))}
+    <p className="text-gray-400 text-sm mt-1 line-clamp-2 min-h-[40px]">
+      {item.description}
+    </p>
+  </Link>
+))
+}
         </div> 
       </section>
       <footer className="mt-32 border-t border-gray-800 bg-[#020817]">
