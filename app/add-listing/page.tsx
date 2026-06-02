@@ -55,6 +55,9 @@ export default function AddListing() {
 
   const [errors, setErrors] =
     useState<any>({});
+    const [adType,
+  setAdType] =
+  useState("free");
 
     useEffect(() => {
   const unsubscribe =
@@ -212,6 +215,11 @@ try {
           ?.email,
       createdAt:
         new Date(),
+        featured:
+  adType ===
+  "featured",
+
+adType,
     }
   );
 
@@ -435,6 +443,66 @@ try {
             }
             className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 h-36 transition"
           />
+          <div className="mb-5">
+  <label className="block text-lg font-bold mb-3">
+    Select Ad Type
+  </label>
+
+  <div className="grid md:grid-cols-2 gap-4">
+
+    {/* Free Ad */}
+    <div
+      onClick={() =>
+        setAdType(
+          "free"
+        )
+      }
+className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blue-400 hover:bg-blue-500/5 ${
+  adType === "free"
+    ? "border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
+    : "border-gray-700 bg-[#0b1120]"
+}`}
+    >
+      <h3 className="font-bold text-xl">
+        Free Ad
+      </h3>
+
+      <p className="text-gray-400 mt-2">
+        Standard listing
+      </p>
+    </div>
+
+    {/* Featured */}
+    <div
+      onClick={() =>
+        setAdType(
+          "featured"
+        )
+      }
+      className={`cursor-pointer border rounded-[24px] p-5 transition relative overflow-hidden ${
+  adType === "featured"
+    ? "border-yellow-500 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 shadow-[0_0_30px_rgba(234,179,8,0.25)] scale-[1.03]"
+    : "border-gray-700 bg-[#0b1120]"
+}`}
+    >
+  <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+  👑 BEST
+</div>
+      <h3 className="font-bold text-2xl text-yellow-400">
+  ⭐ Featured Ad
+</h3>
+
+      <p className="text-gray-400 mt-2">
+        Show at top of
+        homepage
+      </p>
+
+     <p className="text-green-400 font-bold mt-4 text-lg">
+  $5 / 7 Days
+</p>
+    </div>
+  </div>
+</div>
 
         <div className="space-y-3 mb-5">
   {[1, 2, 3, 4].map(

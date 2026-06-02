@@ -451,6 +451,81 @@ const fetchListings =
     ))}
   </div>
 </div>
+{/* ⭐ Featured Listings */}
+{listings.some(
+  (item) => item.featured
+) && (
+  <div className="mb-14">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6">
+      <h2 className="text-3xl md:text-4xl font-extrabold text-yellow-400">
+        ⭐ Featured Listings
+      </h2>
+
+      <span className="text-yellow-300 text-sm font-medium">
+  ⭐ Premium Ads
+</span>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {listings
+        .filter(
+          (item) =>
+            item.featured ===
+            true
+        )
+        .slice(0, 4)
+        .map((item) => (
+          <Link
+            href={`/listings/${item.id}`}
+            key={item.id}
+            className="group relative flex flex-col bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/40 rounded-[30px] p-4 hover:scale-[1.03] transition overflow-hidden min-h-[420px]"
+          >
+            <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
+              👑 FEATURED
+            </div>
+
+            <img
+              src={
+                item.imageUrl
+              }
+              alt={
+                item.title
+              }
+              className="w-full h-56 object-cover rounded-[22px]"
+            />
+
+            <h2 className="text-xl font-bold text-white mt-4">
+              {item.title}
+            </h2>
+
+            <p className="text-sm text-blue-400">
+              {
+                item.category
+              }
+            </p>
+
+            <p className="text-gray-400">
+              {
+                item.location
+              }
+            </p>
+
+            <p className="text-3xl font-extrabold text-green-400 mt-3">
+              {currencyMap[
+                item.country
+                  ?.trim()
+                  .toLowerCase()
+              ] || "Rs."}{" "}
+              {Number(
+                item.price
+              ).toLocaleString()}
+            </p>
+          </Link>
+        ))}
+    </div>
+  </div>
+)}
+
     <h1
   id="latest-listings"
   className="text-3xl md:text-4xl font-bold text-white mb-6"
@@ -666,9 +741,11 @@ return (
           className="w-full h-56 object-cover rounded-[22px] group-hover:scale-105 transition duration-500"
         />
 
-        <div className="absolute top-4 left-4 bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-semibold z-10">
-          Featured
-        </div>
+        {item.featured && (
+  <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
+    👑 Featured
+  </div>
+)}
 
 <button
   onClick={(e) =>
