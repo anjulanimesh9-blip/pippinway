@@ -46,11 +46,35 @@ setErrors({});
   );
 
 await setDoc(
-  doc(db, "users", userCredential.user.uid),
+  doc(
+    db,
+    "users",
+    userCredential
+      .user.uid
+  ),
   {
     email,
     phone,
     country,
+
+    // Membership
+    membership:
+      "free",
+
+    monthlyAdLimit:
+      10,
+
+    adsPostedThisMonth:
+      0,
+
+    featuredCredits:
+      0,
+
+    verifiedSeller:
+      false,
+
+    membershipStart:
+      new Date(),
   }
 );
 
@@ -131,7 +155,7 @@ await setDoc(
   <option value="United Kingdom">United Kingdom</option>
   <option value="Canada">Canada</option>
 </select>
-<div className="grid grid-cols-2 gap-3 mt-6">
+  <div className="grid grid-cols-2 gap-3 mt-6">
   <button className="bg-black hover:bg-gray-900 transition text-white w-full py-4 rounded-2xl">
     Create Account
   </button>

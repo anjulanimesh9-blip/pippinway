@@ -6,10 +6,12 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
+  doc,
   addDoc,
   collection,
-  doc,
   getDoc,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 import {
   ref,
@@ -192,7 +194,39 @@ try {
       downloadURL
     );
   }
+const user = auth.currentUser;
 
+if (!user) {
+  alert("Please login first");
+  return;
+}
+
+const userRef = doc(
+  db,
+  "users",
+  user.uid
+);
+
+const userSnap =
+  await getDoc(
+    userRef
+  );
+
+const userData =
+  userSnap.data();
+
+if (
+  userData
+    ?.adsPostedThisMonth >=
+  userData
+    ?.monthlyAdLimit
+) {
+  alert(
+    "You've reached your monthly limit.\nUpgrade to Seller Pro ⭐"
+  );
+
+  return;
+}
   await addDoc(
     collection(
       db,
@@ -218,11 +252,18 @@ try {
         featured:
   adType ===
   "featured",
+  
 
 adType,
     }
   );
-
+  await updateDoc(
+  userRef,
+  {
+    adsPostedThisMonth:
+      increment(1),
+  }
+);
   router.push(
     "/profile"
   );
@@ -498,7 +539,7 @@ className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blu
       </p>
 
      <p className="text-green-400 font-bold mt-4 text-lg">
-  $5 / 7 Days
+  $1 / 7 Days
 </p>
     </div>
   </div>
