@@ -6,6 +6,7 @@ import {
   getDocs,
   doc,
   getDoc,
+deleteDoc,
 } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,123 +20,174 @@ export default function ProfilePage() {
 
   const [myAds, setMyAds] =
     useState<any[]>([]);
-    const [favoriteAds,
-  setFavoriteAds] =
-  useState<any[]>([]);
-  const [menuOpen, setMenuOpen] =
-  useState(false);
+  const [favoriteAds,
+    setFavoriteAds] =
+    useState<any[]>([]);
+  const [menuOpen,
+    setMenuOpen] =
+    useState(false);
   const [userData,
-setUserData] =
-useState<any>(null);
+    setUserData] =
+    useState<any>(null);
+
   useEffect(() => {
-  const fetchMyAds =
+    const fetchMyAds =
+      async () => {
+        const querySnapshot =
+          await getDocs(
+            collection(
+              db,
+              "listings"
+            )
+          );
+
+        const ads:
+          any[] = [];
+
+        querySnapshot.forEach(
+          (doc) => {
+            const data =
+              doc.data();
+
+            if (
+              data.ownerEmail ===
+              user?.email
+            ) {
+              ads.push({
+                id: doc.id,
+                ...data,
+              });
+            }
+          }
+        );
+
+        setMyAds(ads);
+      };
+
+    const fetchUserData =
+      async () => {
+        const userRef =
+          doc(
+            db,
+            "users",
+            user!.uid
+          );
+
+        const userSnap =
+          await getDoc(
+            userRef
+          );
+
+        if (
+          userSnap.exists()
+        ) {
+          setUserData(
+            userSnap.data()
+          );
+        }
+      };
+
+    if (user) {
+      fetchMyAds();
+      fetchFavorites();
+      fetchUserData();
+    }
+  }, [user]);
+
+  const fetchFavorites =
     async () => {
-      const querySnapshot =
+      const favSnapshot =
         await getDocs(
           collection(
             db,
-            "listings"
+            "users",
+            user!.uid,
+            "favorites"
           )
         );
 
-      const ads:
+      const favAds:
         any[] = [];
 
-      querySnapshot.forEach(
-        (doc) => {
-          const data =
-            doc.data();
+      for (const fav of
+        favSnapshot.docs) {
 
-          if (
-            data.ownerEmail ===
-            user?.email
-          ) {
-            ads.push({
-              id: doc.id,
-              ...data,
-            });
-          }
+        const listingRef =
+          doc(
+            db,
+            "listings",
+            fav.id
+          );
+
+        const listingSnap =
+          await getDoc(
+            listingRef
+          );
+
+        if (
+          listingSnap.exists()
+        ) {
+          favAds.push({
+            id:
+              listingSnap.id,
+            ...listingSnap.data(),
+          });
         }
-      );
-
-      setMyAds(ads);
-    };
-
-  const fetchUserData =
-    async () => {
-      const userRef =
-        doc(
-          db,
-          "users",
-          user!.uid
-        );
-
-      const userSnap =
-        await getDoc(
-          userRef
-        );
-
-      if (
-        userSnap.exists()
-      ) {
-        setUserData(
-          userSnap.data()
-        );
       }
-    };
 
-  if (user) {
-    fetchMyAds();
-    fetchFavorites();
-    fetchUserData();
-  }
-}, [user]);
-  const fetchFavorites =
-  async () => {
-    const favSnapshot =
-      await getDocs(
-        collection(
-          db,
-          "users",
-          user!.uid,
-          "favorites"
-        )
+      setFavoriteAds(
+        favAds
       );
+    };
+const removeFavorite =
+async (listingId: string) => {
+  try {
+    await deleteDoc(
+      doc(
+        db,
+        "users",
+        user!.uid,
+        "favorites",
+        listingId
+      )
+    );
 
-    const favAds:
-      any[] = [];
-
-    for (const fav of
-      favSnapshot.docs) {
-
-      const listingRef =
+    setFavoriteAds(
+      favoriteAds.filter(
+        (ad) =>
+          ad.id !==
+          listingId
+      )
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+const handleDelete =
+  async (
+    id: string
+  ) => {
+    try {
+      await deleteDoc(
         doc(
           db,
           "listings",
-          fav.id
-        );
+          id
+        )
+      );
 
-      const listingSnap =
-        await getDoc(
-          listingRef
-        );
-
-      if (
-        listingSnap.exists()
-      ) {
-        favAds.push({
-          id:
-            listingSnap.id,
-          ...listingSnap.data(),
-        });
-      }
+      setMyAds(
+        myAds.filter(
+          (ad) =>
+            ad.id !== id
+        )
+      );
+    } catch (error) {
+      console.error(
+        error
+      );
     }
-
-    setFavoriteAds(
-      favAds
-    );
   };
-
   const handleLogout =
     async () => {
       await signOut(auth);
@@ -144,173 +196,306 @@ useState<any>(null);
 
   if (!user) {
     return (
-      <div className="p-10 text-center text-xl">
+      <div className="p-10 text-center text-xl text-white">
         Please login first
       </div>
     );
   }
 
+  const adLimit =
+    userData?.membership ===
+    "pro"
+      ? 30
+      : 10;
+
+  const adsUsed =
+    myAds.length;
+
+ const remainingAds =
+Math.max(
+  0,
+  adLimit - adsUsed
+);
+
+  const percentage =
+    (adsUsed /
+      adLimit) *
+    100;
+
   return (
-    <div className="min-h-screen bg-[#0B1120] text-white flex">
-{/* Mobile Header */}
-<div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#111827] border-b border-gray-800 flex items-center justify-between px-4 py-1">
-  <Image
-    src="/images/logo.png"
-    alt="Pippinway"
-    width={110}
-    height={35}
-    className="object-contain"
-  />
+    <div className="min-h-screen bg-[#020817] text-white flex">
 
-  <button
-    onClick={() =>
-      setMenuOpen(!menuOpen)
-    }
-    className="text-3xl leading-none"
-  >
-    ☰
-  </button>
-</div>
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#111827] border-b border-gray-800 flex items-center justify-between px-4 py-3">
+        <Image
+          src="/images/logo.png"
+          alt="Pippinway"
+          width={120}
+          height={40}
+        />
 
-{/* Sidebar */}
-<div
-  className={`fixed md:relative inset-y-0 top-0 left-0 z-50 h-screen w-64 md:w-72 bg-[#111827] p-6 flex flex-col border-r border-gray-800 transition-transform duration-300 ${
-    menuOpen
-      ? "translate-x-0"
-      : "-translate-x-full md:translate-x-0"
+        <button
+          onClick={() =>
+            setMenuOpen(
+              !menuOpen
+            )
+          }
+          className="text-3xl"
+        >
+          ☰
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed md:relative inset-y-0 left-0 z-50 h-screen w-72 bg-[#0f172a] border-r border-gray-800 p-6 transition-transform duration-300 ${
+          menuOpen
+            ? "translate-x-0"
+            : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <div className="mb-8">
+          <Image
+            src="/images/logo.png"
+            alt="logo"
+            width={180}
+            height={80}
+          />
+        </div>
+
+        <div className="space-y-3">
+
+          <button
+            onClick={() =>
+              router.push(
+                "/profile"
+              )
+            }
+            className="w-full bg-blue-600 hover:bg-blue-700 rounded-2xl p-4 text-left"
+          >
+            🏠 Dashboard
+          </button>
+
+          <button
+            onClick={() =>
+              router.push("/")
+            }
+            className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+          >
+            📦 My Listings
+          </button>
+
+          <button
+            onClick={() =>
+              router.push(
+                "/add-listing"
+              )
+            }
+            className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+          >
+            ➕ Add Listing
+          </button>
+
+          <button
+            onClick={
+              handleLogout
+            }
+            className="w-full bg-red-600 hover:bg-red-700 rounded-2xl p-4 text-left mt-8"
+          >
+            🚪 Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="flex-1 p-4 md:p-8 overflow-y-auto mt-20 md:mt-0">
+
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#0f172a] to-[#111827] border border-gray-800 rounded-[32px] p-6 shadow-xl mb-8">
+
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+
+            <div className="flex items-center gap-5">
+
+              <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold">
+                {user.email?.charAt(0).toUpperCase()}
+              </div>
+
+              <div>
+                <h1 className="text-3xl font-bold">
+                  Welcome back, Anjula! 👋
+                </h1>
+
+                <p className="text-gray-400 mt-2">
+                  {user.email}
+                </p>
+
+                <p className="text-gray-400">
+                  🌍 {userData?.country}
+                </p>
+              </div>
+            </div>
+
+            <div
+  className={`px-4 py-2 rounded-full border flex items-center gap-2 text-sm font-semibold shadow-lg ${
+    userData?.membership ===
+    "pro"
+      ? "bg-yellow-500/10 border-yellow-500 text-yellow-400"
+      : "bg-blue-500/10 border-blue-500 text-white"
   }`}
 >
 
-  <div className="mb-10">
-    <Image
-      src="/images/logo.png"
-      alt="Pippinway"
-      width={260}
-      height={120}
-      className="object-contain"
-    />
-  </div>
+       <div
+  className={`px-4 py-2 rounded-full border flex items-center gap-2 text-sm font-semibold shadow-lg ${
+    userData?.membership === "pro"
+      ? "bg-yellow-500/10 border-yellow-500 text-yellow-400"
+      : "bg-blue-500/10 border-blue-500 text-white"
+  }`}
+>
+  <div
+    className={`w-2.5 h-2.5 rounded-full ${
+      userData?.membership === "pro"
+        ? "bg-yellow-400"
+        : "bg-green-400"
+    }`}
+  />
 
-  <div className="flex flex-col gap-3">
-    <button
-      onClick={() => router.push("/profile")}
-      className="bg-blue-600 hover:bg-blue-700 rounded-2xl p-4 text-left"
-    >
-      🏠 Dashboard
-    </button>
-
-    <button
-      onClick={() => router.push("/")}
-      className="bg-[#1F2937] hover:bg-gray-700 rounded-2xl p-4 text-left"
-    >
-      📦 My Listings
-    </button>
-
-    <button
-      onClick={() => router.push("/add-listing")}
-      className="bg-[#1F2937] hover:bg-gray-700 rounded-2xl p-4 text-left"
-    >
-      ➕ Add Listing
-    </button>
-
-    <button
-      onClick={handleLogout}
-      className="bg-red-600 hover:bg-red-700 rounded-2xl p-4 text-left mt-10"
-    >
-      🚪 Logout
-    </button>
-  </div>
+  <span>
+    {userData?.membership === "pro"
+      ? "⭐ PRO MEMBER"
+      : "FREE MEMBER"}
+  </span>
 </div>
-     <div className="flex-1 p-4 md:p-8 overflow-y-auto mt-35 md:mt-0">
+            </div>
+          </div>
+        </div>
+             {/* Monthly Ad Balance */}
+<div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-8">
 
-        {/* Header */}
-        <div className="bg-[#111827] border border-gray-800 rounded-3xl shadow p-5 md:p-8 mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold">
-            Welcome back, Anjula! 👋
-          </h1>
+  {/* Left Main Card */}
+  <div className="xl:col-span-2 bg-gradient-to-r from-[#0f172a] to-[#111827] border border-blue-500/20 rounded-[32px] p-6 shadow-2xl relative overflow-hidden">
 
-          <p className="text-gray-500 mt-2">
-            {user.email}
+    <div className="absolute top-0 right-0 w-52 h-52 bg-blue-500/10 blur-[100px]" />
+
+    <div className="flex items-center justify-between relative z-10">
+
+      <div>
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          📊 Monthly Ad Balance
+        </h2>
+
+        <p className="text-gray-400 mt-1">
+          Your monthly ad usage
+        </p>
+
+        <div className="mt-6">
+          <h2 className="text-5xl font-bold text-white">
+            {adsUsed}
+            <span className="text-2xl text-gray-500">
+              {" "} / {adLimit}
+            </span>
+          </h2>
+
+          <p className="text-green-400 font-semibold mt-2 text-lg">
+            {remainingAds} Ads Remaining
           </p>
         </div>
-     {
-userData?.membership !==
-"pro" && (
+      </div>
 
-<div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500 rounded-[30px] p-6 mb-8 shadow-xl">
-  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-
-    <div>
-      <h2 className="text-3xl font-bold text-yellow-400">
-        ⭐Go Pro⭐
-      </h2>
-
-      <p className="text-gray-300 mt-2">
-        Get more power to sell faster
-      </p>
-
-      <div className="mt-4 space-y-2 text-sm text-gray-300">
-        <p>✅ 30 Ads / Month</p>
-        <p>✅ 10 Featured Ads FREE</p>
-        <p>✅ Verified Seller Badge</p>
-        <p>✅ Priority Listings</p>
+      <div className="hidden md:flex">
+        <img
+          src="/images/dashboard-box.png"
+          alt="dashboard"
+          className="w-64 object-contain"
+        />
       </div>
     </div>
 
-    <div className="text-center">
-      <h3 className="text-4xl font-bold text-green-400">
-        $5
-      </h3>
+    {/* Progress */}
+    <div className="mt-8 relative z-10">
+      <div className="w-full bg-[#1e293b] rounded-full h-4 overflow-hidden">
+        <div
+          className="bg-gradient-to-r from-green-400 to-green-500 h-4 rounded-full transition-all duration-700"
+          style={{
+            width: `${percentage}%`,
+          }}
+        />
+      </div>
 
-      <p className="text-gray-400">
-        / month
-      </p>
+      <div className="flex justify-between mt-3 text-sm text-gray-400">
+        <span>0</span>
+        <span>{adLimit / 2}</span>
+        <span>{adLimit}</span>
+      </div>
+    </div>
+  </div>
 
-      <a
-        href="https://wa.me/94716150773?text=Hi%20I%20want%20to%20upgrade%20to%20Seller%20Pro%20($5/month)"
-        target="_blank"
-      >
-        <button className="mt-4 w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-8 py-3 rounded-2xl transition">
-          Upgrade Now
-        </button>
-      </a>
+  {/* Right Side Small Card */}
+  <div className="bg-gradient-to-br from-[#111827] to-[#0f172a] border border-gray-800 rounded-[32px] p-6 shadow-2xl">
+
+    <h2 className="text-xl font-bold mb-5">
+      📈 Ad Usage This Month
+    </h2>
+
+    <div className="flex items-center gap-5">
+
+      <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-[10px] border-blue-500">
+        <span className="text-2xl font-bold">
+          {Math.round(percentage)}%
+        </span>
+      </div>
+
+      <div>
+        <h2 className="text-3xl font-bold">
+          {adsUsed}
+          <span className="text-gray-500 text-lg">
+            / {adLimit}
+          </span>
+        </h2>
+
+        <p className="text-green-400 font-semibold mt-2">
+          {remainingAds} Ads Remaining
+        </p>
+      </div>
     </div>
 
+    <div className="mt-6 w-full bg-[#1e293b] rounded-full h-3 overflow-hidden">
+      <div
+        className="bg-gradient-to-r from-blue-500 to-cyan-400 h-3 rounded-full"
+        style={{
+          width: `${percentage}%`,
+        }}
+      />
+    </div>
   </div>
 </div>
 
-)
-}
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
-            <h2 className="text-gray-500">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+
+          <div className="bg-[#0f172a] rounded-[22px] border border-gray-800 p-6 shadow-xl">
+            <p className="text-gray-400">
               Total Ads
-            </h2>
-
-            <p className="text-4xl font-bold mt-2 text-white">
-              {myAds.length}
             </p>
+            <h2 className="text-4xl font-bold mt-3">
+              {myAds.length}
+            </h2>
           </div>
 
-   
-
-          <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
-            <h2 className="text-gray-500">
-              Active Listings
-            </h2>
-
-            <p className="text-4xl font-bold mt-2 text-white">
-              {myAds.length}
+          <div className="bg-[#0f172a] rounded-[22px] border border-gray-800 p-6 shadow-xl">
+            <p className="text-gray-400">
+              Favorites
             </p>
+            <h2 className="text-4xl font-bold mt-3">
+              {favoriteAds.length}
+            </h2>
           </div>
 
-          <div className="rounded-3xl bg-[#111827] border border-gray-800 p-6 shadow-xl">
-            <h2 className="text-gray-500">
+          <div className="bg-[#0f172a] rounded-[22px] border border-gray-800 p-6 shadow-xl">
+            <p className="text-gray-400">
               Categories
-            </h2>
-
-            <p className="text-4xl font-bold mt-2 text-white">
+            </p>
+            <h2 className="text-4xl font-bold mt-3">
               {
                 new Set(
                   myAds.map(
@@ -319,83 +504,144 @@ userData?.membership !==
                   )
                 ).size
               }
+            </h2>
+          </div>
+
+          <div className="bg-[#0f172a] rounded-[22px] border border-gray-800 p-6 shadow-xl">
+            <p className="text-gray-400">
+              Plan
             </p>
+            <h2 className="text-xl font-bold mt-3 text-yellow-400">
+              {userData?.membership ===
+              "pro"
+                ? "PRO"
+                : "FREE"}
+            </h2>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-[#0F172A] border border-gray-700 rounded-3xl p-6 mb-8 flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <button
+            onClick={() =>
+              router.push(
+                "/add-listing"
+              )
+            }
+            className="bg-green-600 hover:bg-green-700 px-6 py-4 rounded-2xl w-full"
+          >
+            ➕ Add Listing
+          </button>
+
           <button
             onClick={() =>
               router.push("/")
             }
-            className="bg-black text-white px-6 py-3 rounded-xl w-full md:w-auto"
+            className="bg-[#111827] hover:bg-[#1f2937] px-6 py-4 rounded-2xl w-full"
           >
-            Home
-          </button>
-
-          <button
-            onClick={() =>
-             router.push("/add-listing")
-            }
-            className="bg-green-600 text-white px-6 py-3 rounded-xl w-full md:w-auto"
-          >
-            Add Listing
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-6 py-3 rounded-xl w-full md:w-auto"
-          >
-            Logout
+            🏠 Home
           </button>
         </div>
-        <div className="mt-8">       
-  <h2 className="text-3xl font-bold mb-6">
+{/* Seller Pro */}
+{userData?.membership !==
+"pro" && (
+  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/40 rounded-[32px] p-8 mb-8">
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+
+      <div>
+        <h2 className="text-3xl font-bold text-yellow-400">
+          ⭐ Upgrade to Seller Pro
+        </h2>
+
+        <p className="text-gray-300 mt-2">
+          Get more power to sell faster
+        </p>
+
+        <div className="mt-5 space-y-2 text-gray-300">
+          <p>
+            ✅ 30 Ads / Month
+          </p>
+          <p>
+            ✅ 10 Featured Ads FREE
+          </p>
+          <p>
+            ✅ Verified Seller Badge
+          </p>
+          <p>
+            ✅ Priority Listings
+          </p>
+        </div>
+      </div>
+
+      <div className="text-center">
+        <h2 className="text-5xl font-bold text-green-400">
+          $5
+        </h2>
+
+        <p className="text-gray-400">
+          / month
+        </p>
+
+        <button className="mt-4 bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold">
+          Upgrade Now
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Favorites */}
+<div className="bg-[#0f172a] border border-gray-800 rounded-[28px] p-5 mb-8 shadow-xl">
+  <h2 className="text-2xl font-bold mb-5 border-b border-gray-800 pb-3">
     My Favorites ❤️
   </h2>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 gap-4">
     {favoriteAds.length ===
     0 ? (
-      <p>
+      <p className="text-gray-400">
         No favorites yet
       </p>
     ) : (
       favoriteAds.map(
         (ad) => (
           <Link
-  key={ad.id}
-  href={`/listings/${ad.id}`}
-  className="group w-full bg-gradient-to-b from-[#0f172a] to-[#111827] border border-gray-800 rounded-[28px] overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300"
->
-            {ad.imageUrl ? (
-              <img
-                src={ad.imageUrl}
-                alt={ad.title}
-                className="w-full aspect-[16/10] object-cover transition duration-500 group-hover:scale-105"
-              />
-            ) : (
-              <div className="w-full h-52 bg-[#1F2937] flex items-center justify-center text-gray-500">
-                No Image
-              </div>
-            )}
+            key={ad.id}
+            href={`/listings/${ad.id}`}
+            className="bg-[#0f172a] border border-gray-800 rounded-[22px] overflow-hidden hover:scale-[1.02] transition"
+          >
+            <img
+              src={ad.imageUrl}
+              alt={ad.title}
+              className="w-full h-32 object-cover"
+            />
 
-            <div className="p-5 min-h-[140px] flex flex-col justify-between">
-              <h3 className="text-2xl font-bold text-white truncate">
+            <div className="p-3">
+              <h3 className="text-xl font-bold">
                 {ad.title}
               </h3>
 
-              <p className="text-gray-500 mt-2">
+              <p className="text-gray-400 mt-1">
                 {ad.location}
               </p>
 
-              <p className="text-3xl font-extrabold text-green-400">
+              <p className="text-green-400 text-xl font-bold mt-3">
                 Rs.{" "}
                 {Number(
                   ad.price
                 ).toLocaleString()}
               </p>
+              <button
+  onClick={(e) => {
+    e.preventDefault();
+    removeFavorite(
+      ad.id
+    );
+  }}
+  className="mt-3 w-full bg-red-600 hover:bg-red-700 py-2 rounded-xl text-sm font-medium transition"
+>
+  ❤️ Remove
+</button>
             </div>
           </Link>
         )
@@ -404,62 +650,69 @@ userData?.membership !==
   </div>
 </div>
 
+{/* My Ads */}
+<div className="bg-[#0f172a] border border-gray-800 rounded-[28px] p-5 shadow-xl">
+  <h2 className="text-2xl font-bold mb-5 border-b border-gray-800 pb-3">
+    My Ads
+  </h2>
 
-        {/* My Ads */}
-        
-        <div>
-          <h2 className="text-3xl font-bold mb-6">
-            My Ads
-          </h2>
+  <div className="grid grid-cols-4 gap-3">
+    {myAds.map((ad) => (
+      <div
+        key={ad.id}
+        className="bg-[#0f172a] border border-gray-800 rounded-[22px] overflow-hidden"
+      >
+        <img
+          src={ad.imageUrl}
+          alt={ad.title}
+          className="w-full h-32 object-cover"
+        />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myAds.length ===
-            0 ? (
-              <p>
-                No ads posted yet
-              </p>
-            ) : (
-              myAds.map((ad) => (
-                <Link
-  key={ad.id}
-  href={`/listings/${ad.id}`}
-  className="group w-full bg-gradient-to-b from-[#0f172a] to-[#111827] border border-gray-800 rounded-[28px] overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300"
+        <div className="p-3">
+          <h3 className="text-xl font-bold">
+            {ad.title}
+          </h3>
+
+          <p className="text-gray-400 mt-1">
+            {ad.location}
+          </p>
+
+          <p className="text-green-400 text-xl font-bold mt-3">
+            Rs.{" "}
+            {Number(
+              ad.price
+            ).toLocaleString()}
+          </p>
+
+          <div className="flex gap-3 mt-5">
+          <button
+  onClick={(e) => {
+    e.preventDefault();
+    router.push(
+      `/edit/${ad.id}`
+    );
+  }}
+  className="bg-blue-600 hover:bg-blue-700 py-2 rounded-xl w-full transition"
 >
-                {ad.imageUrl ? (
-  <img
-    src={ad.imageUrl}
-    alt={ad.title}
-    className="w-full aspect-[16/10] object-cover transition duration-500 group-hover:scale-105"
-    onError={(e) => {
-     (e.target as HTMLImageElement).style.display =
-"none";
-    }}
-  />
-) : (
-  <div className="w-full h-52 bg-[#1F2937] flex items-center justify-center text-gray-500">
-    No Image
-  </div>
-)}
-                  <div className="p-5 min-h-[140px] flex flex-col justify-between">
-                    <h3 className="text-2xl font-bold text-white truncate">
-                      {ad.title}
-                    </h3>
-
-                    <p className="text-gray-500 mt-2">
-                      {
-                        ad.location
-                      }
-                    </p>
-
-                    <p className="text-3xl font-extrabold text-green-400">
-                      Rs. {ad.price}
-                    </p>
-                  </div>
-                </Link>
-              ))
-            )}
+  ✏️ Edit
+</button>
+<button
+  onClick={(e) => {
+    e.preventDefault();
+    handleDelete(
+      ad.id
+    );
+  }}
+  className="bg-red-600 hover:bg-red-700 py-2 rounded-xl w-full transition"
+>
+  🗑 Delete
+</button>
           </div>
         </div>
+      </div>
+    ))}
+  </div>
+</div>
       </div>
     </div>
   );
