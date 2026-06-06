@@ -88,6 +88,13 @@ export default function ListingDetails() {
               ...docSnap.data(),
             };
 
+            if (
+  listingData.approved !==
+  true
+) {
+  router.push("/");
+  return;
+}
             setItem(
               listingData
             );
@@ -107,11 +114,13 @@ export default function ListingDetails() {
                   ...doc.data(),
                 }))
                 .filter(
-                  (ad: any) =>
-                    ad.category ===
-                      listingData.category &&
-                    ad.id !== slug
-                );
+  (ad: any) =>
+    ad.category ===
+      listingData.category &&
+    ad.id !== slug &&
+    ad.approved ===
+      true
+);
                 
 
             setRelatedAds(

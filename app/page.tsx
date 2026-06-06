@@ -54,8 +54,46 @@ useEffect(() => {
     setUser(currentUser);
   });
 }, []);
+const fetchListings =
+  async () => {
+    try {
+      const q = query(
+        collection(
+          db,
+          "listings"
+        ),
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
+
+      const querySnapshot =
+        await getDocs(q);
+
+      const data =
+        querySnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter(
+            (listing: any) =>
+              listing.approved ===
+              true
+          );
+
+      setListings(
+        data
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
 useEffect(() => {
   if (!user) return;
+  
 
   const fetchFavorites =
     async () => {
@@ -80,38 +118,6 @@ useEffect(() => {
   fetchFavorites();
 }, [user]);
 
-const fetchListings =
-  async () => {
-    const q = query(
-      collection(
-        db,
-        "listings"
-      ),
-      orderBy(
-        "createdAt",
-        "desc"
-      )
-    );
-
-    const querySnapshot =
-      await getDocs(q);
-
-    const data:
-      any[] = [];
-
-    querySnapshot.forEach(
-      (doc) => {
-        data.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      }
-    );
-
-    setListings(
-      data
-    );
-  };
 
   const toggleFavorite =
   async (

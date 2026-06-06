@@ -249,12 +249,15 @@ if (
           ?.email,
       createdAt:
         new Date(),
-        featured:
+featured:
   adType ===
   "featured",
-  
+
+approved:
+  false,
 
 adType,
+
     }
   );
   await updateDoc(
