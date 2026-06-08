@@ -472,15 +472,17 @@ useEffect(() => {
 </span>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {listings
-        .filter(
-          (item) =>
-            item.featured ===
-            true
-        )
-        .slice(0, 4)
-        .map((item) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+     {listings
+  .filter(
+    (item) =>
+      item.featured === true
+  )
+  .sort(
+    () => Math.random() - 0.5
+  )
+  .slice(0, 8)
+  .map((item) => (
           <Link
             href={`/listings/${item.id}`}
             key={item.id}

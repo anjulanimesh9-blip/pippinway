@@ -119,43 +119,108 @@ export default function AdminListingsPage() {
         );
       }
     };
+    const approveAllAds =
+  async () => {
+    const ok = confirm(
+      "Approve all pending ads?"
+    );
+
+    if (!ok) return;
+
+    try {
+      const pendingAds =
+        listings.filter(
+          (listing) =>
+            !listing.approved
+        );
+
+      await Promise.all(
+        pendingAds.map(
+          async (listing) =>
+            updateDoc(
+              doc(
+                db,
+                "listings",
+                listing.id
+              ),
+              {
+                approved:
+                  true,
+              }
+            )
+        )
+      );
+
+      alert(
+        "All ads approved!"
+      );
+
+      fetchListings();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const toggleFeatured =
-    async (
-      listingId: string,
-      currentValue: boolean
-    ) => {
-      try {
-        await updateDoc(
-          doc(
-            db,
-            "listings",
-            listingId
-          ),
-          {
-            featured:
-              !currentValue,
-          }
-        );
+  async (
+    listingId: string,
+    currentValue: boolean
+  ) => {
+    try {
+      await updateDoc(
+        doc(
+          db,
+          "listings",
+          listingId
+        ),
+        {
+          featured:
+            !currentValue,
 
-        setListings(
-          (prev) =>
-            prev.map(
-              (item) =>
-                item.id ===
-                listingId
-                  ? {
-                      ...item,
-                      featured:
-                        !currentValue,
-                    }
-                  : item
-            )
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    };
+          featuredExpiryDate:
+            !currentValue
+              ? new Date(
+                  Date.now() +
+                    7 *
+                      24 *
+                      60 *
+                      60 *
+                      1000
+                )
+              : null,
+        }
+      );
+
+      setListings(
+        (prev) =>
+          prev.map(
+            (item) =>
+              item.id ===
+              listingId
+                ? {
+                    ...item,
+                    featured:
+                      !currentValue,
+
+                    featuredExpiryDate:
+                      !currentValue
+                        ? new Date(
+                            Date.now() +
+                              7 *
+                                24 *
+                                60 *
+                                60 *
+                                1000
+                          )
+                        : null,
+                  }
+                : item
+          )
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const filteredListings =
     listings.filter(
@@ -250,6 +315,12 @@ export default function AdminListingsPage() {
       <h2 className="text-3xl font-bold mb-6 text-yellow-400">
   ⏳ Pending Approval
 </h2>
+  <button
+    onClick={approveAllAds}
+    className="bg-green-600 hover:bg-green-700 px-5 py-3 rounded-xl font-bold"
+  >
+    ✅ Approve All
+  </button>
 
 <div className="bg-[#111827] rounded-3xl overflow-hidden border border-gray-800 mb-10">
 
@@ -349,6 +420,172 @@ export default function AdminListingsPage() {
     </tbody>
   </table>
 </div>
+{/* Featured Ads */}
+<h2 className="text-3xl font-bold mb-6 mt-10 text-yellow-400">
+  ⭐ Featured Ads
+</h2>
+
+<div className="bg-[#111827] rounded-3xl overflow-hidden border border-yellow-600 mb-10">
+
+  <table className="w-full">
+
+    <thead className="bg-[#0f172a] text-left">
+      <tr>
+        <th className="p-4">
+          Image
+        </th>
+
+        <th className="p-4">
+          Title
+        </th>
+
+        <th className="p-4">
+          Location
+        </th>
+
+        <th className="p-4">
+          Price
+        </th>
+
+        <th className="p-4">
+          Expires
+        </th>
+
+        <th className="p-4">
+          Actions
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      {filteredListings
+        .filter(
+          (listing) =>
+            listing.featured === true
+        )
+        .map((listing) => {
+
+          const featuredDate =
+  listing
+    .featuredExpiryDate
+    ?.seconds
+    ? new Date(
+        listing
+          .featuredExpiryDate
+          .seconds * 1000
+      )
+    : null;
+
+let daysLeft = 0;
+
+if (featuredDate) {
+  const diff =
+    featuredDate.getTime() -
+    Date.now();
+
+  daysLeft =
+    Math.ceil(
+      diff /
+        (
+          1000 *
+          60 *
+          60 *
+          24
+        )
+    );
+
+  // auto remove featured
+  if (daysLeft <= 0) {
+    updateDoc(
+      doc(
+        db,
+        "listings",
+        listing.id
+      ),
+      {
+        featured: false,
+        featuredExpiryDate:
+          null,
+      }
+    );
+  }
+}
+
+          return (
+            <tr
+              key={listing.id}
+              className="border-t border-gray-800"
+            >
+
+              <td className="p-4">
+                <img
+                  src={
+                    listing.image ||
+                    listing.imageUrl ||
+                    listing.photo ||
+                    listing.imageUrls?.[0] ||
+                    "/logo.png"
+                  }
+                  alt={listing.title}
+                  className="w-24 h-20 object-cover rounded-xl"
+                />
+              </td>
+
+              <td className="p-4 font-bold">
+                {listing.title}
+              </td>
+
+              <td className="p-4 text-gray-400">
+                {listing.location}
+              </td>
+
+              <td className="p-4 text-green-400 font-bold">
+                Rs. {listing.price}
+              </td>
+
+              <td className="p-4 text-yellow-400 font-bold">
+  {daysLeft > 0 ? (
+    <>⏳ {daysLeft} Days Left</>
+  ) : (
+    <span className="text-red-500">
+      Expired
+    </span>
+  )}
+</td>
+
+              <td className="p-4 flex gap-2">
+
+                <button
+                  onClick={() =>
+                    router.push(
+                      `/listings/${listing.id}`
+                    )
+                  }
+                  className="bg-blue-600 px-4 py-2 rounded-xl"
+                >
+                  View
+                </button>
+
+                <button
+                  onClick={() =>
+                    toggleFeatured(
+                      listing.id,
+                      true
+                    )
+                  }
+                  className="bg-red-600 px-4 py-2 rounded-xl"
+                >
+                  Remove Featured
+                </button>
+
+              </td>
+            </tr>
+          );
+        })}
+    </tbody>
+  </table>
+</div>
 
         {/* Published Ads */}
       <h2 className="text-3xl font-bold mb-6 text-green-400">
@@ -388,6 +625,7 @@ export default function AdminListingsPage() {
     </thead>
 
     <tbody>
+      
 
       {filteredListings
         .filter(

@@ -209,6 +209,16 @@ return (
         >
           📦 Listings
         </button>
+        <button
+  onClick={() =>
+    router.push(
+      "/admin/pro-users"
+    )
+  }
+  className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+>
+  ⭐ Pro Requests
+</button>
 
       </div>
     </div>

@@ -6,7 +6,8 @@ import {
   getDocs,
   doc,
   getDoc,
-deleteDoc,
+  deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -29,6 +30,17 @@ export default function ProfilePage() {
   const [userData,
     setUserData] =
     useState<any>(null);
+    const featuredAdsUsed =
+  myAds.filter(
+    (ad) =>
+      ad.featured ===
+      true
+  ).length;
+
+const featuredAdsRemaining =
+  (userData?.featuredCredits ||
+    0) -
+  featuredAdsUsed;
 
   useEffect(() => {
     const fetchMyAds =
@@ -78,13 +90,63 @@ export default function ProfilePage() {
             userRef
           );
 
-        if (
-          userSnap.exists()
-        ) {
-          setUserData(
-            userSnap.data()
-          );
+    if (
+  userSnap.exists()
+) {
+
+  const data =
+    userSnap.data();
+
+  // PRO expiry check
+  if (
+    data.membership ===
+      "pro" &&
+    data.proExpiryDate
+  ) {
+
+    const expiry =
+      data.proExpiryDate.toDate();
+
+    const now =
+      new Date();
+
+    if (
+      now > expiry
+    ) {
+
+      await updateDoc(
+        doc(
+          db,
+          "users",
+          user!.uid
+        ),
+        {
+          membership:
+            "free",
+
+          monthlyAdLimit:
+            10,
+
+          featuredCredits:
+            0,
+
+          proApproved:
+            false,
+
+          proRequest:
+            false,
         }
+      );
+
+      data.membership =
+        "free";
+    }
+  }
+
+  setUserData(
+    data
+  );
+}
       };
 
     if (user) {
@@ -186,6 +248,35 @@ const handleDelete =
       console.error(
         error
       );
+    }
+  };
+  const requestProSeller =
+  async () => {
+    try {
+      await updateDoc(
+        doc(
+          db,
+          "users",
+          user!.uid
+        ),
+        {
+          proRequest:
+            true,
+        }
+      );
+
+      setUserData({
+        ...userData,
+        proRequest:
+          true,
+      });
+
+      alert(
+        "Pro Seller request sent! Waiting for admin approval."
+      );
+
+    } catch (error) {
+      console.log(error);
     }
   };
   const handleLogout =
@@ -308,7 +399,7 @@ Math.max(
       </div>
 
       {/* Main */}
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto mt-20 md:mt-0">
+      <div className="flex- p-6 md:p-8 overflow-y-auto mt-32 md:mt-0">
 
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0f172a] to-[#111827] border border-gray-800 rounded-[32px] p-6 shadow-xl mb-8">
@@ -366,110 +457,113 @@ Math.max(
       : "FREE MEMBER"}
   </span>
 </div>
+{userData?.membership ===
+  "pro" &&
+  userData?.proExpiryDate && (
+    <p className="text-yellow-400 text-sm mt-2 font-medium">
+      Expires on:{" "}
+      {new Date(
+        userData.proExpiryDate.seconds *
+          1000
+      ).toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      )}
+    </p>
+)}
             </div>
           </div>
         </div>
-             {/* Monthly Ad Balance */}
-<div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-8">
+      {/* Featured Ads */}
+<div className="bg-gradient-to-r from-[#0f172a] to-[#111827] border border-yellow-500/20 rounded-[32px] p-6 shadow-2xl mb-8">
 
-  {/* Left Main Card */}
-  <div className="xl:col-span-2 bg-gradient-to-r from-[#0f172a] to-[#111827] border border-blue-500/20 rounded-[32px] p-6 shadow-2xl relative overflow-hidden">
+  <div className="flex items-center justify-between mb-5">
+    <div>
+      <h2 className="text-3xl font-bold text-yellow-400">
+        ⭐ Featured Ads
+      </h2>
 
-    <div className="absolute top-0 right-0 w-52 h-52 bg-blue-500/10 blur-[100px]" />
-
-    <div className="flex items-center justify-between relative z-10">
-
-      <div>
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          📊 Monthly Ad Balance
-        </h2>
-
-        <p className="text-gray-400 mt-1">
-          Your monthly ad usage
-        </p>
-
-        <div className="mt-6">
-          <h2 className="text-5xl font-bold text-white">
-            {adsUsed}
-            <span className="text-2xl text-gray-500">
-              {" "} / {adLimit}
-            </span>
-          </h2>
-
-          <p className="text-green-400 font-semibold mt-2 text-lg">
-            {remainingAds} Ads Remaining
-          </p>
-        </div>
-      </div>
-
-      <div className="hidden md:flex">
-        <img
-          src="/images/dashboard-box.png"
-          alt="dashboard"
-          className="w-64 object-contain"
-        />
-      </div>
+      <p className="text-gray-400 mt-1">
+        Your featured listings
+      </p>
     </div>
 
-    {/* Progress */}
-    <div className="mt-8 relative z-10">
-      <div className="w-full bg-[#1e293b] rounded-full h-4 overflow-hidden">
-        <div
-          className="bg-gradient-to-r from-green-400 to-green-500 h-4 rounded-full transition-all duration-700"
-          style={{
-            width: `${percentage}%`,
-          }}
-        />
-      </div>
-
-      <div className="flex justify-between mt-3 text-sm text-gray-400">
-        <span>0</span>
-        <span>{adLimit / 2}</span>
-        <span>{adLimit}</span>
-      </div>
-    </div>
-  </div>
-
-  {/* Right Side Small Card */}
-  <div className="bg-gradient-to-br from-[#111827] to-[#0f172a] border border-gray-800 rounded-[32px] p-6 shadow-2xl">
-
-    <h2 className="text-xl font-bold mb-5">
-      📈 Ad Usage This Month
-    </h2>
-
-    <div className="flex items-center gap-5">
-
-      <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-[10px] border-blue-500">
-        <span className="text-2xl font-bold">
-          {Math.round(percentage)}%
+    <div>
+      <h2 className="text-4xl font-bold text-yellow-400">
+        {featuredAdsUsed}
+        <span className="text-gray-500 text-xl">
+          {" "} / {userData?.featuredCredits}
         </span>
-      </div>
+      </h2>
 
-      <div>
-        <h2 className="text-3xl font-bold">
-          {adsUsed}
-          <span className="text-gray-500 text-lg">
-            / {adLimit}
-          </span>
-        </h2>
-
-        <p className="text-green-400 font-semibold mt-2">
-          {remainingAds} Ads Remaining
-        </p>
-      </div>
-    </div>
-
-    <div className="mt-6 w-full bg-[#1e293b] rounded-full h-3 overflow-hidden">
-      <div
-        className="bg-gradient-to-r from-blue-500 to-cyan-400 h-3 rounded-full"
-        style={{
-          width: `${percentage}%`,
-        }}
-      />
+      <p className="text-green-400 text-sm mt-1">
+        {featuredAdsRemaining} Remaining
+      </p>
     </div>
   </div>
-</div>
 
+  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    {myAds
+      .filter((ad) => ad.featured === true)
+      .map((ad) => (
+        <div
+          key={ad.id}
+          className="bg-[#111827] border border-yellow-500 rounded-[20px] overflow-hidden"
+        >
+          <img
+            src={
+              ad.imageUrls?.[0] ||
+              ad.imageUrl ||
+              "/logo.png"
+            }
+            alt={ad.title}
+            className="w-full h-44 object-cover rounded-t-[22px]"
+          />
+
+          <div className="p-4">
+            <h3 className="font-bold truncate">
+              {ad.title}
+            </h3>
+
+            <p className="text-red-400 text-xs mt-1">
+  ⏳ Expires in{" "}
+  {ad.featuredExpiryDate
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(
+            ad.featuredExpiryDate.seconds *
+              1000
+          ).getTime() -
+            Date.now()) /
+            (1000 *
+              60 *
+              60 *
+              24)
+        )
+      )
+    : 0}{" "}
+  days
+</p>
+          </div>
+        </div>
+      ))}
+
+    {myAds.filter(
+      (ad) => ad.featured === true
+    ).length === 0 && (
+      <div className="col-span-full text-center text-gray-500 py-10">
+        No Featured Ads Yet ⭐
+      </div>
+    )}
+  </div>
+</div> 
+
+  
         {/* Stats */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
 
@@ -481,7 +575,29 @@ Math.max(
               {myAds.length}
             </h2>
           </div>
+<div className="bg-[#111827] rounded-[30px] p-6 border border-gray-800">
+  <p className="text-gray-400">
+    Featured Ads
+  </p>
 
+  <h2 className="text-3xl font-bold text-yellow-400 mt-2">
+    {featuredAdsUsed}
+    <span className="text-gray-500 text-xl">
+      {" "}
+      /{" "}
+      {
+        userData?.featuredCredits
+      }
+    </span>
+  </h2>
+
+  <p className="text-green-400 text-sm mt-2">
+    {
+      featuredAdsRemaining
+    }{" "}
+    Remaining
+  </p>
+</div>
           <div className="bg-[#0f172a] rounded-[22px] border border-gray-800 p-6 shadow-xl">
             <p className="text-gray-400">
               Favorites
@@ -582,9 +698,24 @@ Math.max(
           / month
         </p>
 
-        <button className="mt-4 bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold">
-          Upgrade Now
-        </button>
+        {userData?.proRequest ? (
+
+  <button className="mt-4 bg-gray-700 text-white px-8 py-4 rounded-2xl font-bold cursor-not-allowed">
+    ⏳ Waiting Approval
+  </button>
+
+) : (
+
+  <button
+    onClick={
+      requestProSeller
+    }
+    className="mt-4 bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold"
+  >
+    ⭐ Request Pro Seller
+  </button>
+
+)}
       </div>
     </div>
   </div>
@@ -596,11 +727,14 @@ Math.max(
     My Favorites ❤️
   </h2>
 
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     {favoriteAds.length ===
     0 ? (
       <p className="text-gray-400">
         No favorites yet
+
+
+
       </p>
     ) : (
       favoriteAds.map(
@@ -613,10 +747,10 @@ Math.max(
             <img
               src={ad.imageUrl}
               alt={ad.title}
-              className="w-full h-32 object-cover"
+              className="w-full h-44 object-cover rounded-t-[22px]"
             />
 
-            <div className="p-3">
+            <div className="p-4">
               <h3 className="text-xl font-bold">
                 {ad.title}
               </h3>
@@ -656,7 +790,7 @@ Math.max(
     My Ads
   </h2>
 
-  <div className="grid grid-cols-4 gap-3">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {myAds.map((ad) => (
       <div
         key={ad.id}
@@ -665,10 +799,10 @@ Math.max(
         <img
           src={ad.imageUrl}
           alt={ad.title}
-          className="w-full h-32 object-cover"
+          className="w-full h-44 object-cover rounded-t-[22px]"
         />
 
-        <div className="p-3">
+        <div className="p-4">
           <h3 className="text-xl font-bold">
             {ad.title}
           </h3>
@@ -684,7 +818,7 @@ Math.max(
             ).toLocaleString()}
           </p>
 
-          <div className="flex gap-3 mt-5">
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
           <button
   onClick={(e) => {
     e.preventDefault();

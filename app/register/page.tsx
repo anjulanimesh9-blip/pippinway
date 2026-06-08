@@ -49,29 +49,30 @@ await setDoc(
   doc(
     db,
     "users",
-    userCredential
-      .user.uid
+    userCredential.user.uid
   ),
   {
     email,
     phone,
     country,
 
+    // Role
+    role: "user",
+
     // Membership
-    membership:
-      "free",
+    membership: "free",
 
-    monthlyAdLimit:
-      10,
+    // Pro Seller Request
+    proRequest: false,
+    proApproved: false,
 
-    adsPostedThisMonth:
-      0,
+    // Limits
+    monthlyAdLimit: 10,
+    adsPostedThisMonth: 0,
+    featuredCredits: 0,
 
-    featuredCredits:
-      0,
-
-    verifiedSeller:
-      false,
+    // Seller
+    verifiedSeller: false,
 
     membershipStart:
       new Date(),
