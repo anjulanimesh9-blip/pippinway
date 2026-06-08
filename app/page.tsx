@@ -676,71 +676,24 @@ return (
   matchCountry
 );
 })
-.sort((a, b) => {
-  if (
-    sortBy ===
-    "newest"
-  ) {
-    return (
-      (b.createdAt
-        ?.seconds ||
-        0) -
-      (a.createdAt
-        ?.seconds ||
-        0)
-    );
-  }
 
-  if (
-    sortBy ===
-    "oldest"
-  ) {
-    return (
-      (a.createdAt
-        ?.seconds ||
-        0) -
-      (b.createdAt
-        ?.seconds ||
-        0)
-    );
-  }
+.map((item, index) => (
+  <>
+    {index === 8 && (
+      <div className="col-span-1 sm:col-span-2 lg:col-span-4 my-2">
+        <img
+          src="/images/banner-ad.jpg"
+          alt="Banner Ad"
+          className="w-full h-[90px] md:h-[170px] object-cover rounded-[20px]"
+        />
+      </div>
+    )}
 
-  if (
-    sortBy ===
-    "low-high"
-  ) {
-    return (
-      Number(
-        a.price
-      ) -
-      Number(
-        b.price
-      )
-    );
-  }
-
-  if (
-    sortBy ===
-    "high-low"
-  ) {
-    return (
-      Number(
-        b.price
-      ) -
-      Number(
-        a.price
-      )
-    );
-  }
-
-  return 0;
-})
-.map((item) => (
-  <Link
-    href={`/listings/${item.id}`}
-    key={item.id}
-    className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block hover:scale-[1.03] hover:border-blue-500 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-300 overflow-hidden"
-  >
+    <Link
+      href={`/listings/${item.id}`}
+      key={item.id}
+      className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block hover:scale-[1.03] hover:border-blue-500 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-300 overflow-hidden"
+    >
     {item.imageUrl ? (
       <>
         <img
@@ -813,6 +766,7 @@ return (
       {item.description}
     </p>
   </Link>
+  </>
 ))
 }
         </div> 
