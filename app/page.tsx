@@ -473,14 +473,11 @@ useEffect(() => {
     </div>
 
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-     {listings
-  .filter(
-    (item) =>
-      item.featured === true
-  )
-  .sort(
-    () => Math.random() - 0.5
-  )
+  {[...listings]
+ .filter(
+  (item) => item.featured === true
+)
+  .sort(() => 0.5 - Math.random())
   .slice(0, 8)
   .map((item) => (
           <Link
@@ -640,137 +637,277 @@ useEffect(() => {
     </button>
   ))}
 </div>
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {listings
-.filter((item) => {
-  const matchCountry =
-  selectedCountry === ""
-    ? true
-    : item.country ===
-      selectedCountry;
-  const matchCategory =
-    selectedCategory === "All"
-      ? true
-      : item.category ===
-        selectedCategory;
+{/* Prepare filtered listings */}
+{(() => {
+  const filteredListings = [...listings]
+    .filter((item) => {
+      const matchCountry =
+        selectedCountry === ""
+          ? true
+          : item.country === selectedCountry;
 
-  const matchSearch =
-    item.title
-      ?.toLowerCase()
-      .includes(
-        search.toLowerCase()
+      const matchCategory =
+        selectedCategory === "All"
+          ? true
+          : item.category ===
+              selectedCategory;
+
+      const matchSearch =
+        item.title
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
+
+      const matchLocation =
+        item.location
+          ?.toLowerCase()
+          .includes(
+            locationFilter.toLowerCase()
+          );
+
+      return (
+        matchCategory &&
+        matchSearch &&
+        matchLocation &&
+        matchCountry
       );
-
-  const matchLocation =
-    item.location
-      ?.toLowerCase()
-      .includes(
-        locationFilter.toLowerCase()
+    })
+    .sort((a, b) => {
+      // newest always top
+      return (
+        (b.createdAt?.seconds ||
+          0) -
+        (a.createdAt?.seconds ||
+          0)
       );
+    });
 
-        
-return (
-  matchCategory &&
-  matchSearch &&
-  matchLocation &&
-  matchCountry
-);
-})
+  // featured ads
+  const featuredAds =
+    filteredListings.filter(
+      (item) =>
+        item.featured === true
+    );
 
-.map((item, index) => (
-  <>
-    {index === 8 && (
-      <div className="col-span-1 sm:col-span-2 lg:col-span-4 my-2">
-        <img
-          src="/images/banner-ad.jpg"
-          alt="Banner Ad"
-          className="w-full h-[90px] md:h-[170px] object-cover rounded-[20px]"
-        />
-      </div>
-    )}
+  // normal ads
+  const normalAds =
+    filteredListings.filter(
+      (item) =>
+        !item.featured
+    );
 
-    <Link
-      href={`/listings/${item.id}`}
-      key={item.id}
-      className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block hover:scale-[1.03] hover:border-blue-500 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-300 overflow-hidden"
-    >
-    {item.imageUrl ? (
-      <>
-        <img
-          src={item.imageUrl}
-          alt={item.title}
-          className="w-full h-56 object-cover rounded-[22px] group-hover:scale-105 transition duration-500"
-        />
+  // keep newest order
+  const mixedListings = [
+    ...normalAds,
+  ];
 
-        {item.featured && (
-  <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
-    👑 Featured
-  </div>
-)}
+  // insert featured randomly
+  featuredAds
+    .sort(
+      () =>
+        Math.random() - 0.5
+    )
+    .slice(0, 4)
+    .forEach((ad) => {
+      const randomIndex =
+        Math.floor(
+          Math.random() *
+            mixedListings.length
+        );
 
-<button
-  onClick={(e) =>
+      mixedListings.splice(
+        randomIndex,
+        0,
+        ad
+      );
+    });
+
+  return (
+    <>
+      {/* First 8 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {mixedListings
+          .slice(0, 8)
+          .map((item) => (
+            <Link
+              href={`/listings/${item.id}`}
+              key={item.id}
+              className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block"
+            >
+              {item.featured && (
+                <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
+                  👑 Featured
+                </div>
+              )}
+  <button
+  onClick={(e) => {
     toggleFavorite(
       e,
       item.id
-    )
-  }
-  className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white w-10 h-10 rounded-full z-10 flex items-center justify-center"
+    );
+  }}
+  className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition"
 >
-  {favorites.includes(
-    item.id
-  )
-    ? "❤️"
-    : "🤍"}
+  {favorites.includes(item.id) ? (
+    <span className="text-red-500 text-lg">
+      ❤️
+    </span>
+  ) : (
+    <span className="text-white text-lg">
+      🤍
+    </span>
+  )}
 </button>
-      </>
-    ) : (
-      <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
-        No Image
+
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-56 object-cover rounded-[22px]"
+                />
+              ) : (
+                <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
+                  No Image
+                </div>
+              )}
+
+              <h2 className="text-xl font-bold text-white mt-4">
+                {item.title}
+              </h2>
+
+              <p className="text-sm text-blue-600">
+                {item.category}
+              </p>
+
+              <p className="text-gray-500">
+                {item.location}
+              </p>
+
+              <p className="text-gray-500 text-xs mt-2">
+                🕒{" "}
+                {item.createdAt
+                  ? new Date(
+                      item.createdAt.seconds *
+                        1000
+                    ).toLocaleDateString(
+                      "en-GB"
+                    )
+                  : "Recently"}
+              </p>
+
+              <p className="text-3xl font-extrabold text-green-400 mt-2">
+                {currencyMap[
+                  item.country
+                    ?.trim()
+                    ?.toLowerCase()
+                ] || "Rs."}{" "}
+                {Number(
+                  item.price
+                ).toLocaleString()}
+              </p>
+            </Link>
+          ))}
       </div>
-    )}
 
-    <h2 className="text-xl font-bold text-white mt-4">
-      {item.title}
-    </h2>
+      {/* Banner */}
+      <div className="my-5">
+        <img
+          src="/images/banner-ad.jpg"
+          alt="Banner"
+          className="w-full h-[90px] md:h-[120px] object-cover rounded-[20px]"
+        />
+      </div>
 
-    <p className="text-sm text-blue-600 mb-2">
-      {item.category}
-    </p>
+      {/* Remaining cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {mixedListings
+          .slice(8)
+          .map((item) => (
+            <Link
+              href={`/listings/${item.id}`}
+              key={item.id}
+              className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block"
+            >
+              {item.featured && (
+                <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
+                  👑 Featured
+                </div>
+              )}
+  <button
+  onClick={(e) => {
+    toggleFavorite(
+      e,
+      item.id
+    );
+  }}
+  className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition"
+>
+  {favorites.includes(item.id) ? (
+    <span className="text-red-500 text-lg">
+      ❤️
+    </span>
+  ) : (
+    <span className="text-white text-lg">
+      🤍
+    </span>
+  )}
+</button>
 
-    <p className="text-gray-600 mb-2">
-      {item.location}
-    </p>
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-56 object-cover rounded-[22px]"
+                />
+              ) : (
+                <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
+                  No Image
+                </div>
+              )}
 
-    <p className="text-gray-500 text-xs mt-2">
-      🕒{" "}
-      {item.createdAt
-        ? new Date(
-            item.createdAt.seconds * 1000
-          ).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : "Recently"}
-    </p>
+              <h2 className="text-xl font-bold text-white mt-4">
+                {item.title}
+              </h2>
 
-<p className="text-3xl font-extrabold text-green-400 mt-2">
-  {currencyMap[
-    item.country?.trim().toLowerCase()
-  ] || "Rs."}{" "}
-  {Number(item.price).toLocaleString()}
-</p>
+              <p className="text-sm text-blue-600">
+                {item.category}
+              </p>
 
-    <p className="text-gray-400 text-sm mt-1 line-clamp-2 min-h-[40px]">
-      {item.description}
-    </p>
-  </Link>
-  </>
-))
-}
-        </div> 
-      </section>
+              <p className="text-gray-500">
+                {item.location}
+              </p>
+
+              <p className="text-gray-500 text-xs mt-2">
+                🕒{" "}
+                {item.createdAt
+                  ? new Date(
+                      item.createdAt.seconds *
+                        1000
+                    ).toLocaleDateString(
+                      "en-GB"
+                    )
+                  : "Recently"}
+              </p>
+
+              <p className="text-3xl font-extrabold text-green-400 mt-2">
+                {currencyMap[
+                  item.country
+                    ?.trim()
+                    ?.toLowerCase()
+                ] || "Rs."}{" "}
+                {Number(
+                  item.price
+                ).toLocaleString()}
+              </p>
+            </Link>
+          ))}
+      </div>
+    </>
+  );
+})()}
+
+</section>
       <footer className="mt-32 border-t border-gray-800 bg-[#020817]">
   <div className="max-w-7xl mx-auto px-4 py-14">
 
