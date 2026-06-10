@@ -7,6 +7,12 @@ import {
   deleteDoc,
   getDocs,
   collection,
+  addDoc,
+onSnapshot,
+orderBy,
+query,
+serverTimestamp,
+setDoc,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import {
@@ -21,6 +27,14 @@ export default function ListingDetails() {
 
   const [relatedAds, setRelatedAds] =
     useState<any[]>([]);
+    const [showChat, setShowChat] =
+  useState(false);
+
+  const [message, setMessage] =
+  useState("");
+
+const [messages, setMessages] =
+  useState<any[]>([]);
 
     const [showDeleteModal, setShowDeleteModal] =
   useState(false);
@@ -64,11 +78,127 @@ export default function ListingDetails() {
 
       router.push("/");
     };
+    const sendMessage =
+  async () => {
+
+    console.log("clicked");
+
+    console.log(currentUser);
+
+    console.log(item);
+
+    if (!currentUser?.email) {
+      alert("Please login");
+      return;
+    }
+
+    if (!message.trim()) {
+      alert("Type message");
+      return;
+    }
+
+   const sellerEmail =
+  item?.ownerEmail ||
+  item?.email;
+
+    if (!sellerEmail) {
+      alert("Seller not found");
+      return;
+    }
+
+    const buyerEmail =
+      currentUser.email;
+
+    const chatId = [
+      buyerEmail,
+      sellerEmail,
+      slug,
+    ]
+      .sort()
+      .join("_");
+
+    console.log(chatId);
+
+    await setDoc(
+      doc(db, "chats", chatId),
+      {
+        buyerEmail,
+        sellerEmail,
+        listingId: slug,
+        lastMessage:
+          message,
+        updatedAt:
+          serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    await addDoc(
+      collection(
+        db,
+        "chats",
+        chatId,
+        "messages"
+      ),
+      {
+        text: message,
+        sender:
+          buyerEmail,
+        createdAt:
+          serverTimestamp(),
+      }
+    );
+
+    setMessage("");
+  };
+  useEffect(() => {
+  if (!item || !currentUser?.email)
+    return;
+
+  const chatId = [
+    currentUser.email,
+    item.ownerEmail,
+    slug,
+  ]
+    .sort()
+    .join("_");
+
+  const q = query(
+    collection(
+      db,
+      "chats",
+      chatId,
+      "messages"
+    ),
+    orderBy(
+      "createdAt",
+      "asc"
+    )
+  );
+
+  const unsubscribe =
+    onSnapshot(
+      q,
+      (snapshot) => {
+        setMessages(
+          snapshot.docs.map(
+            (doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })
+          )
+        );
+      }
+    );
+
+  return () =>
+    unsubscribe();
+}, [item, slug]);
 
   useEffect(() => {
     if (!slug) return;
 
-    const fetchListing =
+       const fetchListing =
       async () => {
         try {
           const docRef = doc(
@@ -236,7 +366,7 @@ export default function ListingDetails() {
           {item.description}
         </p>
 
-        <div className="mt-14 grid grid-cols-2 gap-4 w-full mb-6">
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-6">
           <a
             href={`https://wa.me/${item.phone}`}
             target="_blank"
@@ -252,6 +382,14 @@ export default function ListingDetails() {
           >
             Call Seller
           </a>
+   <button
+  onClick={() =>
+    setShowChat(true)
+  }
+  className="bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:scale-105 transition text-white py-4 rounded-[24px] font-semibold text-sm text-center shadow-lg w-full flex items-center justify-center"
+>
+  💬 Chat Seller
+</button>
         </div>
 
         {currentUser?.email ===
@@ -353,8 +491,67 @@ export default function ListingDetails() {
             )
           )}
         </div>
+               {showChat && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-end justify-end p-5">
+
+            <div className="w-[380px] h-[550px] bg-[#0f172a] border border-white/10 rounded-[30px] shadow-2xl flex flex-col overflow-hidden">
+
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#111827]">
+                <h2 className="text-lg font-bold text-white">
+                  💬 Chat Seller
+                </h2>
+
+                <button
+                  onClick={() =>
+                    setShowChat(false)
+                  }
+                  className="text-gray-400 hover:text-white text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+             {/* Messages */}
+<div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0b1120]">
+  {messages.map((msg) => (
+    <div
+      key={msg.id}
+      className={`max-w-[80%] p-3 rounded-[20px] ${
+        msg.sender === currentUser?.email
+          ? "bg-blue-600 ml-auto"
+          : "bg-gray-700"
+      }`}
+    >
+      {msg.text}
+    </div>
+  ))}
+</div>
+{/* Input */}
+<div className="p-4 border-t border-white/10 bg-[#111827] flex gap-2">
+  <input
+    type="text"
+    value={message}
+    onChange={(e) =>
+      setMessage(e.target.value)
+    }
+    placeholder="Type message..."
+    className="flex-1 bg-[#0f172a] border border-white/10 rounded-[18px] px-4 py-3 text-white outline-none"
+  />
+
+  <button
+    onClick={sendMessage}
+    className="bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 rounded-[18px] font-semibold"
+  >
+    Send
+  </button>
+</div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
   );
 }
+
