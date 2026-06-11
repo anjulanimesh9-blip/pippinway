@@ -8,6 +8,12 @@ import {
   getDoc,
   deleteDoc,
   updateDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,7 +42,54 @@ export default function ProfilePage() {
       ad.featured ===
       true
   ).length;
+  const [showMessages, setShowMessages] =
+  useState(false);
+  const [chatRooms, setChatRooms] =
+  useState<any[]>([]);
 
+const [selectedChat, setSelectedChat] =
+  useState<any>(null);
+
+const [chatMessages, setChatMessages] =
+  useState<any[]>([]);
+
+const [replyMessage, setReplyMessage] =
+  useState("");
+useEffect(() => {
+  if (!selectedChat)
+    return;
+
+  const q = query(
+    collection(
+      db,
+      "chats",
+      selectedChat.id,
+      "messages"
+    ),
+    orderBy(
+      "createdAt",
+      "asc"
+    )
+  );
+
+  const unsubscribe =
+    onSnapshot(
+      q,
+      (snapshot) => {
+        setChatMessages(
+          snapshot.docs.map(
+            (doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })
+          )
+        );
+      }
+    );
+
+  return () =>
+    unsubscribe();
+}, [selectedChat]);
 const featuredAdsRemaining =
   (userData?.featuredCredits ||
     0) -
@@ -72,6 +125,28 @@ const featuredAdsRemaining =
             }
           }
         );
+        const fetchChats = async () => {
+  const snapshot =
+    await getDocs(
+      collection(db, "chats")
+    );
+
+  const chats =
+    snapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter(
+        (chat: any) =>
+          chat.sellerEmail ===
+          user?.email
+      );
+
+  setChatRooms(chats);
+};
+
+fetchChats();
 
         setMyAds(ads);
       };
@@ -395,6 +470,14 @@ Math.max(
           >
             🚪 Logout
           </button>
+   <button
+  onClick={() =>
+    setShowMessages(true)
+  }
+  className="flex items-center gap-3 px-5 py-4 rounded-2xl text-white hover:bg-[#1f2937] transition w-full text-left"
+>
+  💬 Messages
+</button>
         </div>
       </div>
 
@@ -562,6 +645,190 @@ Math.max(
     )}
   </div>
 </div> 
+{showMessages && (
+  <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
+
+    <div className="w-[700px] h-full bg-[#0f172a] border-l border-white/10 shadow-2xl flex flex-col">
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 border-b border-white/10">
+        <h2 className="text-xl font-bold text-white">
+          💬 Messages
+        </h2>
+
+        <button
+          onClick={() =>
+            setShowMessages(false)
+          }
+          className="text-gray-400 hover:text-white text-2xl"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* LEFT CHAT LIST */}
+        <div className="w-[240px] border-r border-white/10 overflow-y-auto bg-[#0b1220]">
+
+          {chatRooms.map(
+            (chat: any) => (
+              <div
+                key={chat.id}
+                onClick={() =>
+                  setSelectedChat(chat)
+                }
+                className={`p-4 border-b border-white/10 cursor-pointer transition ${
+                  selectedChat?.id === chat.id
+                    ? "bg-blue-600/20"
+                    : "hover:bg-[#1a2235]"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
+                    B
+                  </div>
+
+                  <div className="flex-1 overflow-hidden">
+                    <p className="font-semibold text-sm">
+                      Buyer
+                    </p>
+
+                    <p className="text-xs text-gray-400 truncate">
+                      {chat.lastMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+
+        {/* RIGHT CHAT */}
+        <div className="flex-1 flex flex-col">
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+            {!selectedChat ? (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                Select a chat
+              </div>
+            ) : (
+              chatMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${
+                    msg.sender === user?.email
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[75%] px-5 py-3 rounded-[22px] shadow-lg ${
+                      msg.sender === user?.email
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-br-md"
+                        : "bg-[#374151] text-white rounded-bl-md"
+                    }`}
+                  >
+                    <p>{msg.text}</p>
+
+                    <p className="text-[11px] opacity-70 mt-2 text-right">
+                      {msg.createdAt?.seconds
+                        ? new Date(
+                            msg.createdAt.seconds * 1000
+                          ).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )
+                        : ""}
+                    </p>
+
+                    <p className="text-[10px] text-gray-300 mt-1">
+                      {msg.sender ===
+                      user?.email
+                        ? "You"
+                        : "Buyer"}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* INPUT */}
+          {selectedChat && (
+            <div className="border-t border-white/10 p-4 flex gap-3 bg-[#111827]">
+
+              <input
+                value={replyMessage}
+                onChange={(e) =>
+                  setReplyMessage(
+                    e.target.value
+                  )
+                }
+                placeholder="Type message..."
+                className="flex-1 bg-[#0f172a] border border-white/10 rounded-full px-5 py-3 text-white outline-none"
+              />
+
+              <button
+                onClick={async () => {
+                  if (
+                    !replyMessage.trim()
+                  )
+                    return;
+
+                  await addDoc(
+                    collection(
+                      db,
+                      "chats",
+                      selectedChat.id,
+                      "messages"
+                    ),
+                    {
+                      text:
+                        replyMessage,
+                      sender:
+                        user?.email,
+                      createdAt:
+                        serverTimestamp(),
+                    }
+                  );
+
+                  await setDoc(
+                    doc(
+                      db,
+                      "chats",
+                      selectedChat.id
+                    ),
+                    {
+                      lastMessage:
+                        replyMessage,
+                      updatedAt:
+                        serverTimestamp(),
+                    },
+                    {
+                      merge: true,
+                    }
+                  );
+
+                  setReplyMessage("");
+                }}
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:scale-105 transition px-6 rounded-full text-white font-semibold"
+              >
+                Send
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
   
         {/* Stats */}

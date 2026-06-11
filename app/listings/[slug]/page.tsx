@@ -97,14 +97,20 @@ const [messages, setMessages] =
       return;
     }
 
-   const sellerEmail =
+const sellerEmail =
   item?.ownerEmail ||
-  item?.email;
+  item?.email ||
+  item?.userEmail ||
+  item?.postedBy;
 
-    if (!sellerEmail) {
-      alert("Seller not found");
-      return;
-    }
+console.log(item);
+
+if (!sellerEmail) {
+  alert(
+    "Seller email missing in listing"
+  );
+  return;
+}
 
     const buyerEmail =
       currentUser.email;

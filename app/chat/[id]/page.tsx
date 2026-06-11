@@ -73,8 +73,14 @@ const [messages, setMessages] =
           return;
 
         const sellerEmail =
-          listingSnap.data()
-            .ownerEmail;
+  listingSnap.data()
+    .ownerEmail ||
+  listingSnap.data()
+    .email ||
+  listingSnap.data()
+    .userEmail ||
+  listingSnap.data()
+    .postedBy;
 
         const buyerEmail =
           currentUser.email;
@@ -158,8 +164,14 @@ const [messages, setMessages] =
         return;
 
       const sellerEmail =
-        listingSnap.data()
-          .ownerEmail;
+  listingSnap.data()
+    .ownerEmail ||
+  listingSnap.data()
+    .email ||
+  listingSnap.data()
+    .userEmail ||
+  listingSnap.data()
+    .postedBy;
 
       const buyerEmail =
         currentUser?.email;
