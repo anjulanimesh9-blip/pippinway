@@ -46,8 +46,12 @@ export default function ProfilePage() {
   useState(false);
   const [chatRooms, setChatRooms] =
   useState<any[]>([]);
+  const [unreadCount, setUnreadCount] =
+  useState(0);
 
 const [selectedChat, setSelectedChat] =
+  useState<any>(null);
+  const [popupChat, setPopupChat] =
   useState<any>(null);
 
 const [chatMessages, setChatMessages] =
@@ -55,7 +59,75 @@ const [chatMessages, setChatMessages] =
 
 const [replyMessage, setReplyMessage] =
   useState("");
+
 useEffect(() => {
+  if (!user?.email) return;
+
+  const q = query(
+    collection(db, "chats"),
+    orderBy("updatedAt", "desc")
+  );
+
+  const unsubscribe =
+    onSnapshot(
+      q,
+      (snapshot) => {
+        const chats =
+          snapshot.docs
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            .filter(
+              (chat: any) =>
+                chat.sellerEmail ===
+                  user?.email ||
+                chat.buyerEmail ===
+                  user?.email
+            );
+
+        setChatRooms(chats);
+
+        const unread =
+          chats.filter(
+            (chat: any) =>
+              chat.lastSender !==
+              user?.email
+          ).length;
+
+        setUnreadCount(
+          unread
+        );
+
+        // only select latest chat
+        // DON'T auto open
+        const latestChat =
+          chats.find(
+            (chat: any) =>
+              chat.lastSender !==
+              user?.email
+          );
+
+if (
+  latestChat &&
+  !showMessages
+) {
+  setPopupChat(
+    latestChat
+  );
+
+  setSelectedChat(
+    latestChat
+  );
+}
+      }
+    );
+
+  return () =>
+    unsubscribe();
+}, [user, showMessages]);
+
+ useEffect(() => {
   if (!selectedChat)
     return;
 
@@ -137,15 +209,14 @@ const featuredAdsRemaining =
         id: doc.id,
         ...doc.data(),
       }))
-      .filter(
-        (chat: any) =>
-          chat.sellerEmail ===
-          user?.email
-      );
+     .filter(
+  (chat: any) =>
+    chat.sellerEmail === user?.email ||
+    chat.buyerEmail === user?.email
+);
 
   setChatRooms(chats);
 };
-
 fetchChats();
 
         setMyAds(ads);
@@ -461,7 +532,21 @@ Math.max(
           >
             ➕ Add Listing
           </button>
+<button
+  onClick={() => {
+    setShowMessages(true);
+    setUnreadCount(0);
+  }}
+  className="relative flex items-center gap-3 px-5 py-4 rounded-2xl text-white hover:bg-[#1f2937] transition w-full text-left"
+>
+  💬 Messages
 
+  {unreadCount > 0 && (
+    <span className="absolute top-2 right-3 bg-red-600 text-white text-xs font-bold min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-2">
+      {unreadCount}
+    </span>
+  )}
+</button>
           <button
             onClick={
               handleLogout
@@ -470,14 +555,7 @@ Math.max(
           >
             🚪 Logout
           </button>
-   <button
-  onClick={() =>
-    setShowMessages(true)
-  }
-  className="flex items-center gap-3 px-5 py-4 rounded-2xl text-white hover:bg-[#1f2937] transition w-full text-left"
->
-  💬 Messages
-</button>
+  
         </div>
       </div>
 
@@ -645,26 +723,55 @@ Math.max(
     )}
   </div>
 </div> 
+{popupChat && !showMessages && (
+  <div className="fixed bottom-5 right-5 z-50 w-[320px] bg-[#111827] border border-white/10 rounded-[24px] shadow-2xl overflow-hidden">
+
+    <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
+      <div>
+        <p className="font-semibold">
+          New Message
+        </p>
+
+        <p className="text-xs opacity-80">
+          {popupChat.buyerEmail ===
+          user?.email
+            ? popupChat.sellerEmail
+            : popupChat.buyerEmail}
+        </p>
+      </div>
+
+      <button
+        onClick={() =>
+          setPopupChat(null)
+        }
+        className="text-xl"
+      >
+        ×
+      </button>
+    </div>
+
+    <div className="p-4 text-white">
+      <p className="text-sm text-gray-300 mb-3">
+        {popupChat.lastMessage}
+      </p>
+
+      <button
+        onClick={() => {
+          setShowMessages(true);
+          setPopupChat(null);
+        }}
+        className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-full font-semibold"
+      >
+        Open Chat
+      </button>
+    </div>
+  </div>
+)}
+
 {showMessages && (
   <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
 
     <div className="w-[700px] h-full bg-[#0f172a] border-l border-white/10 shadow-2xl flex flex-col">
-
-      {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-white/10">
-        <h2 className="text-xl font-bold text-white">
-          💬 Messages
-        </h2>
-
-        <button
-          onClick={() =>
-            setShowMessages(false)
-          }
-          className="text-gray-400 hover:text-white text-2xl"
-        >
-          ×
-        </button>
-      </div>
 
       <div className="flex flex-1 overflow-hidden">
 
@@ -673,27 +780,55 @@ Math.max(
 
           {chatRooms.map(
             (chat: any) => (
-              <div
-                key={chat.id}
-                onClick={() =>
-                  setSelectedChat(chat)
-                }
-                className={`p-4 border-b border-white/10 cursor-pointer transition ${
-                  selectedChat?.id === chat.id
-                    ? "bg-blue-600/20"
-                    : "hover:bg-[#1a2235]"
-                }`}
-              >
-                <div className="flex items-center gap-3">
+<div
+  key={chat.id}
+  onClick={() => {
+    setSelectedChat(chat);
+
+    if (
+      chat.lastSender !==
+      user?.email
+    ) {
+      setUnreadCount(
+        (prev) =>
+          Math.max(
+            0,
+            prev - 1
+          )
+      );
+    }
+  }}
+  className={`p-4 border-b border-white/10 cursor-pointer transition ${
+    selectedChat?.id ===
+    chat.id
+      ? "bg-blue-600/20"
+      : "hover:bg-[#1a2235]"
+  }`}
+>
+             <div className="flex items-center gap-3">
 
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">
                     B
                   </div>
 
                   <div className="flex-1 overflow-hidden">
-                    <p className="font-semibold text-sm">
-                      Buyer
-                    </p>
+                    <div className="flex justify-between items-center">
+  <p className="font-semibold text-sm">
+    {chat.sellerEmail ===
+    user?.email
+      ? chat.buyerEmail
+      : chat.sellerEmail}
+  </p>
+
+  {chat.lastSender !==
+    user?.email && (
+    <span className="bg-red-600 text-white text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+      1
+    </span>
+  )}
+</div>
+
+
 
                     <p className="text-xs text-gray-400 truncate">
                       {chat.lastMessage}
@@ -704,9 +839,39 @@ Math.max(
             )
           )}
         </div>
+        
 
-        {/* RIGHT CHAT */}
-        <div className="flex-1 flex flex-col">
+{/* RIGHT CHAT */}
+<div className="flex-1 flex flex-col">
+
+  {/* Header */}
+  <div className="h-[70px] border-b border-white/10 flex items-center px-5 bg-[#111827]">
+
+    <button
+      onClick={() => {
+  setSelectedChat(null);
+  setShowMessages(false);
+}}
+      className="mr-4 text-xl hover:text-blue-400"
+    >
+      ←
+    </button>
+
+    <div>
+      <p className="font-semibold">
+        {selectedChat
+          ? selectedChat.sellerEmail ===
+            user?.email
+            ? selectedChat.buyerEmail
+            : selectedChat.sellerEmail
+          : "Chat"}
+      </p>
+
+      <p className="text-xs text-gray-400">
+        Active Chat
+      </p>
+    </div>
+  </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
@@ -763,17 +928,63 @@ Math.max(
           {/* INPUT */}
           {selectedChat && (
             <div className="border-t border-white/10 p-4 flex gap-3 bg-[#111827]">
+<input
+  value={replyMessage}
+  onChange={(e) =>
+    setReplyMessage(
+      e.target.value
+    )
+  }
+  onKeyDown={async (e) => {
+    if (
+      e.key === "Enter" &&
+      replyMessage.trim()
+    ) {
+      await addDoc(
+        collection(
+          db,
+          "chats",
+          selectedChat.id,
+          "messages"
+        ),
+        {
+          text:
+            replyMessage,
+          sender:
+            user?.email,
+          createdAt:
+            serverTimestamp(),
+        }
+      );
 
-              <input
-                value={replyMessage}
-                onChange={(e) =>
-                  setReplyMessage(
-                    e.target.value
-                  )
-                }
-                placeholder="Type message..."
-                className="flex-1 bg-[#0f172a] border border-white/10 rounded-full px-5 py-3 text-white outline-none"
-              />
+      await setDoc(
+        doc(
+          db,
+          "chats",
+          selectedChat.id
+        ),
+        {
+          lastMessage:
+            replyMessage,
+
+          lastSender:
+            user?.email,
+
+          updatedAt:
+            serverTimestamp(),
+        },
+        {
+          merge: true,
+        }
+      );
+
+      setReplyMessage("");
+    }
+  }}
+  placeholder="Type message..."
+  className="flex-1 bg-[#0f172a] border border-white/10 rounded-full px-5 py-3 text-white outline-none"
+/>
+             
 
               <button
                 onClick={async () => {
@@ -799,22 +1010,26 @@ Math.max(
                     }
                   );
 
-                  await setDoc(
-                    doc(
-                      db,
-                      "chats",
-                      selectedChat.id
-                    ),
-                    {
-                      lastMessage:
-                        replyMessage,
-                      updatedAt:
-                        serverTimestamp(),
-                    },
-                    {
-                      merge: true,
-                    }
-                  );
+               await setDoc(
+  doc(
+    db,
+    "chats",
+    selectedChat.id
+  ),
+  {
+    lastMessage:
+      replyMessage,
+
+    lastSender:
+      user?.email,
+
+    updatedAt:
+      serverTimestamp(),
+  },
+  {
+    merge: true,
+  }
+);
 
                   setReplyMessage("");
                 }}

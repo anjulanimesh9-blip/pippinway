@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
 import { db, auth } from "./firebase";
@@ -16,8 +16,63 @@ import {
   getDoc,
 } from "firebase/firestore";
 
+function getCreatedAtMs(createdAt: any): number {
+  if (!createdAt) return 0;
+  if (typeof createdAt.seconds === "number") {
+    return (
+      createdAt.seconds * 1000 +
+      (createdAt.nanoseconds || 0) / 1e6
+    );
+  }
+  if (createdAt instanceof Date) {
+    return createdAt.getTime();
+  }
+  if (typeof createdAt.toDate === "function") {
+    return createdAt.toDate().getTime();
+  }
+  return 0;
+}
 
+function randomIndexFromSeed(
+  seed: number,
+  max: number
+): number {
+  const x = Math.sin(seed) * 10000;
+  return Math.floor(
+    (x - Math.floor(x)) * (max + 1)
+  );
+}
 
+function listingMatchesFilters(
+  item: any,
+  selectedCountry: string,
+  selectedCategory: string,
+  search: string,
+  locationFilter: string
+) {
+  const matchCountry =
+    selectedCountry === "" ||
+    item.country === selectedCountry;
+
+  const matchCategory =
+    selectedCategory === "All" ||
+    item.category?.trim() === selectedCategory.trim();
+
+  const matchSearch = item.title
+    ?.toLowerCase()
+    .includes(search.toLowerCase());
+
+  const matchLocation = item.location
+    ?.toLowerCase()
+    .includes(locationFilter.toLowerCase());
+
+  return (
+    matchCategory &&
+    matchSearch &&
+    matchLocation &&
+    matchCountry
+  );
+}
 
 export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -33,6 +88,67 @@ export default function Home() {
   const [favorites, setFavorites] =
   useState<string[]>([]);
 
+  const [pageLoadId] = useState(() =>
+    Math.random()
+  );
+
+  const filteredListings = useMemo(
+    () =>
+      listings.filter((item) =>
+        listingMatchesFilters(
+          item,
+          selectedCountry,
+          selectedCategory,
+          search,
+          locationFilter
+        )
+      ),
+    [
+      listings,
+      selectedCountry,
+      selectedCategory,
+      search,
+      locationFilter,
+    ]
+  );
+
+  const featuredListings = useMemo(
+    () =>
+      filteredListings.filter(
+        (item) => item.featured === true
+      ),
+    [filteredListings]
+  );
+
+  const mixedListings = useMemo(() => {
+    const normalAds = filteredListings
+      .filter((item) => !item.featured)
+      .sort(
+        (a, b) =>
+          getCreatedAtMs(b.createdAt) -
+          getCreatedAtMs(a.createdAt)
+      );
+
+    const featuredAds =
+      featuredListings.slice(0, 4);
+
+    const mixed = [...normalAds];
+
+    featuredAds.forEach((ad, index) => {
+      const seed =
+        pageLoadId * 1000 +
+        index +
+        ad.id.length;
+      const randomIndex =
+        randomIndexFromSeed(
+          seed,
+          mixed.length
+        );
+      mixed.splice(randomIndex, 0, ad);
+    });
+
+    return mixed;
+  }, [filteredListings, featuredListings, pageLoadId]);
 
   const currencyMap: any = {
   singapore: "SGD $",
@@ -458,9 +574,7 @@ useEffect(() => {
   </div>
 </div>
 {/* ⭐ Featured Listings */}
-{listings.some(
-  (item) => item.featured
-) && (
+{featuredListings.length > 0 && (
   <div className="mb-14">
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6">
       <h2 className="text-3xl md:text-4xl font-extrabold text-yellow-400">
@@ -473,11 +587,7 @@ useEffect(() => {
     </div>
 
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-  {[...listings]
- .filter(
-  (item) => item.featured === true
-)
-  .sort(() => 0.5 - Math.random())
+  {featuredListings
   .slice(0, 8)
   .map((item) => (
           <Link
@@ -637,94 +747,7 @@ useEffect(() => {
     </button>
   ))}
 </div>
-{/* Prepare filtered listings */}
-{(() => {
-  const filteredListings = [...listings]
-    .filter((item) => {
-      const matchCountry =
-        selectedCountry === ""
-          ? true
-          : item.country === selectedCountry;
-
-      const matchCategory =
-        selectedCategory === "All"
-          ? true
-          : item.category ===
-              selectedCategory;
-
-      const matchSearch =
-        item.title
-          ?.toLowerCase()
-          .includes(
-            search.toLowerCase()
-          );
-
-      const matchLocation =
-        item.location
-          ?.toLowerCase()
-          .includes(
-            locationFilter.toLowerCase()
-          );
-
-      return (
-        matchCategory &&
-        matchSearch &&
-        matchLocation &&
-        matchCountry
-      );
-    })
-    .sort((a, b) => {
-      // newest always top
-      return (
-        (b.createdAt?.seconds ||
-          0) -
-        (a.createdAt?.seconds ||
-          0)
-      );
-    });
-
-  // featured ads
-  const featuredAds =
-    filteredListings.filter(
-      (item) =>
-        item.featured === true
-    );
-
-  // normal ads
-  const normalAds =
-    filteredListings.filter(
-      (item) =>
-        !item.featured
-    );
-
-  // keep newest order
-  const mixedListings = [
-    ...normalAds,
-  ];
-
-  // insert featured randomly
-  featuredAds
-    .sort(
-      () =>
-        Math.random() - 0.5
-    )
-    .slice(0, 4)
-    .forEach((ad) => {
-      const randomIndex =
-        Math.floor(
-          Math.random() *
-            mixedListings.length
-        );
-
-      mixedListings.splice(
-        randomIndex,
-        0,
-        ad
-      );
-    });
-
-  return (
-    <>
+<>
       {/* First 8 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {mixedListings
@@ -903,9 +926,7 @@ useEffect(() => {
             </Link>
           ))}
       </div>
-    </>
-  );
-})()}
+</>
 
 </section>
       <footer className="mt-32 border-t border-gray-800 bg-[#020817]">

@@ -125,19 +125,24 @@ if (!sellerEmail) {
 
     console.log(chatId);
 
-    await setDoc(
-      doc(db, "chats", chatId),
-      {
-        buyerEmail,
-        sellerEmail,
-        listingId: slug,
-        lastMessage:
-          message,
-        updatedAt:
-          serverTimestamp(),
-      },
-      { merge: true }
-    );
+  await setDoc(
+  doc(db, "chats", chatId),
+  {
+    buyerEmail,
+    sellerEmail,
+    listingId: slug,
+
+    lastMessage:
+      message,
+
+    lastSender:
+      buyerEmail,
+
+    updatedAt:
+      serverTimestamp(),
+  },
+  { merge: true }
+);  
 
     await addDoc(
       collection(
