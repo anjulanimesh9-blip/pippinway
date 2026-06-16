@@ -123,11 +123,12 @@ useEffect(() => {
     user.uid as string
   ])          );
 
-const latestUnreadAny =
-  latestUnread as any;
+const latestUnreadAny: any =
+  latestUnread;
 
 if (
-  latestUnreadAny?.lastMessage &&
+  latestUnreadAny &&
+  latestUnreadAny.lastMessage &&
   latestUnreadAny.lastMessage !==
     lastMessageId
 ) {
@@ -142,7 +143,6 @@ if (
   setShowPopup(
     true
   );
-
 
   setTimeout(() => {
     setShowPopup(false);
