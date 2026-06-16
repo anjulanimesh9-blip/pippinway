@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import React, {
+  useState,
+} from "react";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -15,15 +17,26 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
-  const [errors, setErrors] =
-  useState<any>({});
+const [errors, setErrors] = useState({
+  email: false,
+  password: false,
+  phone: false,
+  country: false,
+});
   const [successMessage, setSuccessMessage] =
   useState("");
   const router = useRouter();
 
-  const handleRegister = async (e: any) => {
+  const handleRegister = async (
+  e: React.FormEvent
+) => {
     e.preventDefault();
-    const newErrors: any = {};
+  const newErrors = {
+  email: false,
+  password: false,
+  phone: false,
+  country: false,
+};
 
 if (!email) newErrors.email = true;
 if (!password)
@@ -40,7 +53,12 @@ if (
   return;
 }
 
-setErrors({});
+setErrors({
+  email: false,
+  password: false,
+  phone: false,
+  country: false,
+});
 
     try {
     const userCredential =
