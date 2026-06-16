@@ -929,9 +929,11 @@ Math.max(
   </p>
 {chat.lastSender !==
   user?.email &&
- !chat.readBy?.[
-   user?.uid
- ] && (
+ !(user?.uid
+   ? chat.readBy?.[
+       user.uid
+     ]
+   : false) && (
   <span className="bg-red-600 text-white text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
     1
   </span>
