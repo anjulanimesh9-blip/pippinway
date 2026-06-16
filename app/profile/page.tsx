@@ -113,15 +113,16 @@ useEffect(() => {
 
         setChatRooms(chats);
 
-        const latestUnread =
-          chats.find(
-            (chat: any) =>
-              chat.lastSender !==
-                user?.email &&
-             !(user?.uid &&
-  chat.readBy?.[
-    user.uid as string
-  ])          );
+        const latestUnread: any =
+  chats.find(
+    (chat: any) =>
+      chat.lastSender !==
+      user?.email &&
+      !(user?.uid &&
+        chat.readBy?.[
+          user.uid as string
+        ])
+  );
 
 const latestUnreadAny: any =
   latestUnread;
