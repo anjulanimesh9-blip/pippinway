@@ -8,10 +8,17 @@ import {
   useRef,
 } from "react";
 import { useRouter } from "next/navigation";
+import {
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import { auth } from "../firebase";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] =
     useState(false);
+    const [user, setUser] =
+  useState<any>(null);
 
   const router =
     useRouter();
@@ -20,7 +27,45 @@ export default function Navbar() {
     useRef<HTMLDivElement>(
       null
     );
+useEffect(() => {
+  const unsubscribe =
+    onAuthStateChanged(
+      auth,
+      async (
+        currentUser
+      ) => {
+        if (
+          !currentUser
+        ) {
+          setUser(null);
+          return;
+        }
 
+        await currentUser.reload();
+
+        if (
+          !currentUser.emailVerified
+        ) {
+          await signOut(
+            auth
+          );
+
+          setUser(
+            null
+          );
+
+          return;
+        }
+
+        setUser(
+          currentUser
+        );
+      }
+    );
+
+  return () =>
+    unsubscribe();
+}, []);
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (
@@ -75,27 +120,42 @@ export default function Navbar() {
   </Link>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex gap-6 text-white font-medium">
-          <Link href="/">
-            Home
-          </Link>
+        <div className="hidden md:flex gap-6 text-white font-medium items-center">
+  <Link href="/">
+    Home
+  </Link>
 
-          <Link href="/add-listing">
-            Add Listing
-          </Link>
+  <Link href="/add-listing">
+    Add Listing
+  </Link>
 
-          <Link href="/login">
-            Login
-          </Link>
+  {user ? (
+    <>
+      <Link href="/profile">
+        Profile
+      </Link>
 
-          <Link href="/register">
-            Register
-          </Link>
+      <button
+        onClick={() =>
+          signOut(auth)
+        }
+        className="hover:text-red-400 transition"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <>
+      <Link href="/login">
+        Login
+      </Link>
 
-          <Link href="/profile">
-            Profile
-          </Link>
-        </div>
+      <Link href="/register">
+        Register
+      </Link>
+    </>
+  )}
+</div>
 
         {/* Mobile Menu Button */}
         <button
@@ -111,83 +171,79 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Dropdown */}
-      {menuOpen && (
-        <div
-          ref={menuRef}
-          className="md:hidden bg-[#0b1120]/95 backdrop-blur-xl border-t border-blue-900/30 flex flex-col p-4 gap-4 text-white animate-in slide-in-from-top duration-300"
+     {/* Mobile Dropdown */}
+{menuOpen && (
+  <div
+    ref={menuRef}
+    className="md:hidden bg-[#0b1120]/95 backdrop-blur-xl border-t border-blue-900/30 flex flex-col p-4 gap-4 text-white animate-in slide-in-from-top duration-300"
+  >
+    <button
+      className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/");
+      }}
+    >
+      Home
+    </button>
+
+    <button
+      className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/add-listing");
+      }}
+    >
+      Add Listing
+    </button>
+
+    {user ? (
+      <>
+        <button
+          className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+          onClick={() => {
+            setMenuOpen(false);
+            router.push("/profile");
+          }}
         >
-          <button
-            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
-            onClick={() => {
-              setMenuOpen(
-                false
-              );
-              router.push(
-                "/"
-              );
-            }}
-          >
-            Home
-          </button>
+          Profile
+        </button>
 
-          <button
-            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
-            onClick={() => {
-              setMenuOpen(
-                false
-              );
-              router.push(
-                "/add-listing"
-              );
-            }}
-          >
-            Add Listing
-          </button>
+        <button
+          className="text-left py-2 px-3 rounded-xl hover:bg-red-500/10 text-red-400 transition"
+          onClick={async () => {
+            await signOut(auth);
+            setMenuOpen(false);
+          }}
+        >
+          Logout
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+          onClick={() => {
+            setMenuOpen(false);
+            router.push("/login");
+          }}
+        >
+          Login
+        </button>
 
-          <button
-            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
-            onClick={() => {
-              setMenuOpen(
-                false
-              );
-              router.push(
-                "/login"
-              );
-            }}
-          >
-            Login
-          </button>
-
-          <button
-            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
-            onClick={() => {
-              setMenuOpen(
-                false
-              );
-              router.push(
-                "/register"
-              );
-            }}
-          >
-            Register
-          </button>
-
-          <button
-            className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
-            onClick={() => {
-              setMenuOpen(
-                false
-              );
-              router.push(
-                "/profile"
-              );
-            }}
-          >
-            Profile
-          </button>
-        </div>
-      )}
+        <button
+          className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+          onClick={() => {
+            setMenuOpen(false);
+            router.push("/register");
+          }}
+        >
+          Register
+        </button>
+      </>
+    )}
+  </div>
+)} 
     </nav>
   );
 }

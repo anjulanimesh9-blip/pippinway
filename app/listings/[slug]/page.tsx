@@ -141,10 +141,8 @@ if (!sellerEmail) {
     updatedAt:
       serverTimestamp(),
 
-    readBy: {
-      [currentUser!.uid]:
-        true,
-    },
+    [`readBy.${currentUser!.uid}`]:
+      true,
   },
   { merge: true }
 );  

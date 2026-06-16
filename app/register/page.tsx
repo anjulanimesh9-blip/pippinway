@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -14,6 +17,8 @@ export default function RegisterPage() {
   const [country, setCountry] = useState("");
   const [errors, setErrors] =
   useState<any>({});
+  const [successMessage, setSuccessMessage] =
+  useState("");
   const router = useRouter();
 
   const handleRegister = async (e: any) => {
@@ -44,7 +49,9 @@ setErrors({});
     email,
     password
   );
-
+await sendEmailVerification(
+  userCredential.user
+);
 await setDoc(
   doc(
     db,
@@ -79,15 +86,66 @@ await setDoc(
   }
 );
 
-      alert("Account created successfully!");
-      router.push("/profile");
-    } catch (error: any) {
-      alert(error.message);
-    }
-  };
+  setSuccessMessage(
+  "Your account has been created successfully. Please open your email and click the verification link before login."
+);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020817] px-4">
+setTimeout(() => {
+  router.push("/login");
+}, 2500);
+    } catch (error: any) {
+      setSuccessMessage(
+  "❌ something went wrong. please try again."
+);  }
+  };
+  
+ return (
+  <>
+ {successMessage && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+    <div
+      className={`w-full max-w-md rounded-[30px] border shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300 ${
+        successMessage.startsWith("❌")
+          ? "bg-[#1a0f12] border-red-500/30"
+          : "bg-[#0f172a] border-green-500/30"
+      }`}
+    >
+      <div className="text-5xl mb-4">
+        {successMessage.startsWith("❌")
+          ? "❌"
+          : "📩"}
+      </div>
+
+      <h2 className="text-2xl font-bold text-white mb-3">
+        {successMessage.startsWith("❌")
+          ? "Something Went Wrong"
+          : "Verify Your Email"}
+      </h2>
+
+      <p
+        className={`text-sm md:text-base leading-relaxed ${
+          successMessage.startsWith("❌")
+            ? "text-red-300"
+            : "text-gray-300"
+        }`}
+      >
+        {successMessage}
+      </p>
+
+      {!successMessage.startsWith(
+        "❌"
+      ) && (
+        <p className="text-xs text-gray-500 mt-4">
+          Please check Inbox,
+          Spam or Promotions
+          folder.
+        </p>
+      )}
+    </div>
+  </div>
+)}
+
+      <div className="min-h-screen flex items-start md:items-center justify-center bg-[#020817] px-4 pt-10 md:pt-0">
       <div className="w-full max-w-md bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-2xl">
        
         <h1 className="text-3xl font-bold mb-6 text-center text-white">
@@ -172,7 +230,8 @@ await setDoc(
 </div>
           
         </form>
-      </div>
+           </div>
     </div>
-  );
+  </>
+);
 }

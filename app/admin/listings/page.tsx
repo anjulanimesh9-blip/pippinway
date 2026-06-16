@@ -10,6 +10,17 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useRouter } from "next/navigation";
+import {
+  onAuthStateChanged,
+} from "firebase/auth";
+
+import {
+  getDoc,
+} from "firebase/firestore";
+
+import {
+  auth,
+} from "../../firebase";
 
 export default function AdminListingsPage() {
   const router = useRouter();
@@ -22,39 +33,105 @@ export default function AdminListingsPage() {
 
   const [search, setSearch] =
     useState("");
-
-  useEffect(() => {
-    fetchListings();
-  }, []);
-
-  const fetchListings =
-    async () => {
-      try {
-        const querySnapshot =
-          await getDocs(
-            collection(
-              db,
-              "listings"
-            )
-          );
-
-        const listingsData =
-          querySnapshot.docs.map(
-            (doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            })
-          );
-
-        setListings(
-          listingsData
+    const fetchListings =
+  async () => {
+    try {
+      const querySnapshot =
+        await getDocs(
+          collection(
+            db,
+            "listings"
+          )
         );
 
-        setLoading(false);
-      } catch (error) {
-        console.log(error);
+      const listingsData =
+        querySnapshot.docs.map(
+          (doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })
+        );
+
+      setListings(
+        listingsData
+      );
+
+      setLoading(
+        false
+      );
+
+    } catch (
+      error
+    ) {
+      console.log(
+        error
+      );
+    }
+  };
+useEffect(() => {
+  const unsubscribe =
+    onAuthStateChanged(
+      auth,
+      async (user) => {
+
+        // not logged in
+        if (!user) {
+          router.push(
+            "/login"
+          );
+          return;
+        }
+
+        try {
+          const userRef =
+            doc(
+              db,
+              "users",
+              user.uid
+            );
+
+          const userSnap =
+            await getDoc(
+              userRef
+            );
+
+          if (
+            !userSnap.exists()
+          ) {
+            router.push("/");
+            return;
+          }
+
+          const userData =
+            userSnap.data();
+
+          // block non-admins
+          if (
+            userData.role !==
+            "admin"
+          ) {
+            router.push("/");
+            return;
+          }
+
+          // admin only
+          fetchListings();
+          setLoading(false);
+
+        } catch (error) {
+          console.log(
+            error
+          );
+
+          router.push("/");
+        }
       }
-    };
+    );
+
+  return () =>
+    unsubscribe();
+}, []);
+ 
 
   const deleteListing =
     async (

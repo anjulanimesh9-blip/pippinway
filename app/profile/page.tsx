@@ -643,9 +643,9 @@ Math.max(
       </div>
 
       {/* Main */}
-      <div className="flex- p-6 md:p-8 overflow-y-auto mt-32 md:mt-0">
-
-        {/* Header */}
+      <div className="flex-1 w-full p-6 md:p-8 overflow-y-auto mt-32 md:mt-0">
+  <div className="w-full max-w-[1600px] mx-auto">
+           {/* Header */}
         <div className="bg-gradient-to-r from-[#0f172a] to-[#111827] border border-gray-800 rounded-[32px] p-6 shadow-xl mb-8">
 
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -669,6 +669,7 @@ Math.max(
                   🌍 {userData?.country}
                 </p>
               </div>
+            </div>
             </div>
 
             <div
@@ -765,10 +766,10 @@ Math.max(
               "/logo.png"
             }
             alt={ad.title}
-            className="w-full h-44 object-cover rounded-t-[22px]"
+            className="w-full h-32 object-cover rounded-t-[22px]"
           />
 
-          <div className="p-4">
+          <div className="p-3">
             <h3 className="font-bold truncate">
               {ad.title}
             </h3>
@@ -1348,10 +1349,10 @@ await setDoc(
             <img
               src={ad.imageUrl}
               alt={ad.title}
-              className="w-full h-44 object-cover rounded-t-[22px]"
+              className="w-full h-32 object-cover rounded-t-[22px]"
             />
 
-            <div className="p-4">
+            <div className="p-3">
               <h3 className="text-xl font-bold">
                 {ad.title}
               </h3>
@@ -1360,7 +1361,7 @@ await setDoc(
                 {ad.location}
               </p>
 
-              <p className="text-green-400 text-xl font-bold mt-3">
+              <p className="text-green-400 text-lg font-bold mt-2">
                 Rs.{" "}
                 {Number(
                   ad.price
@@ -1391,8 +1392,7 @@ await setDoc(
     My Ads
   </h2>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    {myAds.map((ad) => (
+  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-4">    {myAds.map((ad) => (
       <div
         key={ad.id}
         className="bg-[#0f172a] border border-gray-800 rounded-[22px] overflow-hidden"
@@ -1400,10 +1400,10 @@ await setDoc(
         <img
           src={ad.imageUrl}
           alt={ad.title}
-          className="w-full h-44 object-cover rounded-t-[22px]"
+          className="w-full h-32 object-cover rounded-t-[22px]"
         />
 
-        <div className="p-4">
+        <div className="p-3">
           <h3 className="text-xl font-bold">
             {ad.title}
           </h3>
@@ -1412,7 +1412,7 @@ await setDoc(
             {ad.location}
           </p>
 
-          <p className="text-green-400 text-xl font-bold mt-3">
+          <p className="text-green-400 text-lg font-bold mt-2">
             Rs.{" "}
             {Number(
               ad.price

@@ -87,6 +87,8 @@ export default function Home() {
   useState("newest");
   const [favorites, setFavorites] =
   useState<string[]>([]);
+  const [currentFeaturedIndex, setCurrentFeaturedIndex] =
+  useState(0);
 
   const [pageLoadId] = useState(() =>
     Math.random()
@@ -112,43 +114,63 @@ export default function Home() {
     ]
   );
 
-  const featuredListings = useMemo(
-    () =>
-      filteredListings.filter(
-        (item) => item.featured === true
-      ),
-    [filteredListings]
-  );
+ const featuredListings = useMemo(
+  () =>
+    listings.filter(
+      (item) =>
+        item.featured === true &&
+        item.approved === true
+    ),
+  [listings]
+);
 
   const mixedListings = useMemo(() => {
-    const normalAds = filteredListings
-      .filter((item) => !item.featured)
-      .sort(
-        (a, b) =>
-          getCreatedAtMs(b.createdAt) -
-          getCreatedAtMs(a.createdAt)
+  const normalAds = filteredListings
+    .filter((item) => !item.featured)
+    .sort(
+      (a, b) =>
+        getCreatedAtMs(b.createdAt) -
+        getCreatedAtMs(a.createdAt)
+    );
+
+  // rotating featured ads
+  const rotatingFeatured =
+    [...featuredListings, ...featuredListings]
+      .slice(
+        currentFeaturedIndex,
+        currentFeaturedIndex + 4
       );
 
-    const featuredAds =
-      featuredListings.slice(0, 4);
+  const mixed = [...normalAds];
 
-    const mixed = [...normalAds];
-
-    featuredAds.forEach((ad, index) => {
+  rotatingFeatured.forEach(
+    (ad, index) => {
       const seed =
         pageLoadId * 1000 +
         index +
         ad.id.length;
+
       const randomIndex =
         randomIndexFromSeed(
           seed,
           mixed.length
         );
-      mixed.splice(randomIndex, 0, ad);
-    });
 
-    return mixed;
-  }, [filteredListings, featuredListings, pageLoadId]);
+      mixed.splice(
+        randomIndex,
+        0,
+        ad
+      );
+    }
+  );
+
+  return mixed;
+}, [
+  filteredListings,
+  featuredListings,
+  currentFeaturedIndex,
+  pageLoadId,
+]);
 
   const currencyMap: any = {
   singapore: "SGD $",
@@ -206,6 +228,19 @@ const fetchListings =
       console.log(error);
     }
   };
+  useEffect(() => {
+  if (featuredListings.length <= 1) return;
+
+  const interval = setInterval(() => {
+    setCurrentFeaturedIndex((prev) =>
+      prev + 1 >= featuredListings.length
+        ? 0
+        : prev + 1
+    );
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [featuredListings]);
 
 useEffect(() => {
   if (!user) return;
@@ -586,58 +621,49 @@ useEffect(() => {
 </span>
     </div>
 
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-  {featuredListings
-  .slice(0, 8)
-  .map((item) => (
-          <Link
-            href={`/listings/${item.id}`}
-            key={item.id}
-            className="group relative flex flex-col bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/40 rounded-[30px] p-4 hover:scale-[1.03] transition overflow-hidden min-h-[420px]"
-          >
-            <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
-              👑 FEATURED
-            </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 transition-all duration-700">
+  {[...featuredListings, ...featuredListings]
+    .slice(
+      currentFeaturedIndex,
+      currentFeaturedIndex + 8
+    )
+    .map((item, index) => (
+      <Link
+        href={`/listings/${item.id}`}
+        key={`${item.id}-${index}`}
+        className="group relative flex flex-col bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/40 rounded-[30px] p-4 hover:scale-[1.03] transition overflow-hidden min-h-[420px]"
+      >
+        <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
+          👑 FEATURED
+        </div>
 
-            <img
-              src={
-                item.imageUrl
-              }
-              alt={
-                item.title
-              }
-              className="w-full h-56 object-cover rounded-[22px]"
-            />
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="w-full h-56 object-cover rounded-[22px]"
+        />
 
-            <h2 className="text-xl font-bold text-white mt-4">
-              {item.title}
-            </h2>
+        <h2 className="text-xl font-bold text-white mt-4">
+          {item.title}
+        </h2>
 
-            <p className="text-sm text-blue-400">
-              {
-                item.category
-              }
-            </p>
+        <p className="text-sm text-blue-400">
+          {item.category}
+        </p>
 
-            <p className="text-gray-400">
-              {
-                item.location
-              }
-            </p>
+        <p className="text-gray-400">
+          {item.location}
+        </p>
 
-            <p className="text-3xl font-extrabold text-green-400 mt-3">
-              {currencyMap[
-                item.country
-                  ?.trim()
-                  .toLowerCase()
-              ] || "Rs."}{" "}
-              {Number(
-                item.price
-              ).toLocaleString()}
-            </p>
-          </Link>
-        ))}
-    </div>
+        <p className="text-3xl font-extrabold text-green-400 mt-3">
+          {currencyMap[
+            item.country?.trim().toLowerCase()
+          ] || "Rs."}{" "}
+          {Number(item.price).toLocaleString()}
+        </p>
+      </Link>
+    ))}
+</div>
   </div>
 )}
 
