@@ -123,22 +123,26 @@ useEffect(() => {
     user.uid as string
   ])          );
 
-       if (
-  latestUnread?.lastMessage &&
-  latestUnread.lastMessage !==
+const latestUnreadAny =
+  latestUnread as any;
+
+if (
+  latestUnreadAny?.lastMessage &&
+  latestUnreadAny.lastMessage !==
     lastMessageId
 ) {
   setPopupChat(
-    latestUnread as any
+    latestUnreadAny
   );
 
   setLastMessageId(
-    latestUnread.lastMessage
+    latestUnreadAny.lastMessage
   );
 
   setShowPopup(
     true
   );
+
 
   setTimeout(() => {
     setShowPopup(false);
