@@ -124,34 +124,29 @@ useEffect(() => {
         ])
   );
 
-const latestUnreadAny: any =
-  latestUnread;
+const latestUnreadAny =
+  latestUnread as any;
 
 if (
   latestUnreadAny &&
-  latestUnreadAny?.["lastMessage"] &&
-  latestUnreadAny?.["lastMessage"] !==
+  latestUnreadAny.lastMessage &&
+  latestUnreadAny.lastMessage !==
     lastMessageId
 ) {
   setPopupChat(
     latestUnreadAny
   );
 
- setLastMessageId(
-  latestUnreadAny?.[
-    "lastMessage"
-  ] || ""
-);
-
-  setShowPopup(
-    true
+  setLastMessageId(
+    latestUnreadAny.lastMessage
   );
+
+  setShowPopup(true);
 
   setTimeout(() => {
     setShowPopup(false);
   }, 5000);
-}
-      }
+}    }
     );
 
   return () =>
