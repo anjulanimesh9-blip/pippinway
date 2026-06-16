@@ -129,17 +129,19 @@ const latestUnreadAny: any =
 
 if (
   latestUnreadAny &&
-  latestUnreadAny.lastMessage &&
-  latestUnreadAny.lastMessage !==
+  latestUnreadAny?.["lastMessage"] &&
+  latestUnreadAny?.["lastMessage"] !==
     lastMessageId
 ) {
   setPopupChat(
     latestUnreadAny
   );
 
-  setLastMessageId(
-    latestUnreadAny.lastMessage
-  );
+ setLastMessageId(
+  latestUnreadAny?.[
+    "lastMessage"
+  ] || ""
+);
 
   setShowPopup(
     true
