@@ -79,11 +79,10 @@ const unreadCount =
     (chat: any) =>
       chat.lastSender !==
         user?.email &&
-      !(user?.uid
-  ? chat.readBy?.[
-      user.uid
-    ]
-  : false)
+      !(user?.uid &&
+        chat.readBy?.[
+          user.uid as string
+        ])
   ).length;
 
 useEffect(() => {
@@ -119,37 +118,32 @@ useEffect(() => {
             (chat: any) =>
               chat.lastSender !==
                 user?.email &&
-             !(user?.uid
-  ? chat.readBy?.[
-      user.uid
-    ]
-  : false)
-          );
+             !(user?.uid &&
+  chat.readBy?.[
+    user.uid as string
+  ])          );
 
-        if (
-          latestUnread &&
-          latestUnread.lastMessage !==
-            lastMessageId
-        ) {
-          setPopupChat(
-            latestUnread
-          );
+       if (
+  latestUnread?.lastMessage &&
+  latestUnread.lastMessage !==
+    lastMessageId
+) {
+  setPopupChat(
+    latestUnread as any
+  );
 
-          setLastMessageId(
-            latestUnread.lastMessage
-          );
+  setLastMessageId(
+    latestUnread.lastMessage
+  );
 
-          setShowPopup(
-            true
-          );
+  setShowPopup(
+    true
+  );
 
-          // auto hide popup
-          setTimeout(() => {
-            setShowPopup(
-              false
-            );
-          }, 5000);
-        }
+  setTimeout(() => {
+    setShowPopup(false);
+  }, 5000);
+}
       }
     );
 
@@ -608,17 +602,16 @@ Math.max(
   onClick={() => {
   setShowMessages(true);
 
-  const latestUnread =
-    chatRooms.find(
-      (chat: any) =>
-        chat.lastSender !==
-          user?.email &&
-       !(user?.uid
-  ? chat.readBy?.[
-      user.uid
-    ]
-  : false)
-    );
+const latestUnread: any =
+  chatRooms.find(
+    (chat: any) =>
+      chat.lastSender !==
+        user?.email &&
+      !(user?.uid &&
+        chat.readBy?.[
+          user.uid as string
+        ])
+  );
 
   if (latestUnread) {
     setSelectedChat(
@@ -929,11 +922,10 @@ Math.max(
   </p>
 {chat.lastSender !==
   user?.email &&
- !(user?.uid
-   ? chat.readBy?.[
-       user.uid
-     ]
-   : false) && (
+!(user?.uid &&
+  chat.readBy?.[
+    user.uid as string
+  ]) && (
   <span className="bg-red-600 text-white text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
     1
   </span>
@@ -1090,12 +1082,12 @@ await setDoc(
     updatedAt:
       serverTimestamp(),
 
-    readBy: {
-      [user!.uid]:
-        true,
-      [otherUserId]:
-        false,
-    },
+  readBy: {
+  [user!.uid]: true,
+  ...(otherUserId
+    ? { [otherUserId]: false }
+    : {}),
+},
   },
   {
     merge: true,
