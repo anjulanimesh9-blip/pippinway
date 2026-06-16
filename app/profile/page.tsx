@@ -79,9 +79,11 @@ const unreadCount =
     (chat: any) =>
       chat.lastSender !==
         user?.email &&
-      !chat.readBy?.[
-        user?.uid
-      ]
+      !(user?.uid
+  ? chat.readBy?.[
+      user.uid
+    ]
+  : false)
   ).length;
 
 useEffect(() => {
@@ -117,9 +119,11 @@ useEffect(() => {
             (chat: any) =>
               chat.lastSender !==
                 user?.email &&
-              !chat.readBy?.[
-                user?.uid
-              ]
+             !(user?.uid
+  ? chat.readBy?.[
+      user.uid
+    ]
+  : false)
           );
 
         if (
@@ -609,9 +613,11 @@ Math.max(
       (chat: any) =>
         chat.lastSender !==
           user?.email &&
-        !chat.readBy?.[
-          user?.uid
-        ]
+       !(user?.uid
+  ? chat.readBy?.[
+      user.uid
+    ]
+  : false)
     );
 
   if (latestUnread) {
