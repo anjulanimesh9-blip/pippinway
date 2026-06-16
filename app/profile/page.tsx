@@ -42,23 +42,47 @@ export default function ProfilePage() {
       ad.featured ===
       true
   ).length;
-  const [showMessages, setShowMessages] =
+ const [showMessages,
+  setShowMessages] =
   useState(false);
-  const [chatRooms, setChatRooms] =
-  useState<any[]>([]);
-  const [unreadCount, setUnreadCount] =
-  useState(0);
 
-const [selectedChat, setSelectedChat] =
-  useState<any>(null);
-  const [popupChat, setPopupChat] =
-  useState<any>(null);
-
-const [chatMessages, setChatMessages] =
+const [chatRooms,
+  setChatRooms] =
   useState<any[]>([]);
 
-const [replyMessage, setReplyMessage] =
+const [selectedChat,
+  setSelectedChat] =
+  useState<any>(null);
+
+const [chatMessages,
+  setChatMessages] =
+  useState<any[]>([]);
+
+const [replyMessage,
+  setReplyMessage] =
   useState("");
+
+const [popupChat,
+  setPopupChat] =
+  useState<any>(null);
+
+const [showPopup,
+  setShowPopup] =
+  useState(false);
+
+const [lastMessageId,
+  setLastMessageId] =
+  useState("");
+
+const unreadCount =
+  chatRooms.filter(
+    (chat: any) =>
+      chat.lastSender !==
+        user?.email &&
+      !chat.readBy?.[
+        user?.uid
+      ]
+  ).length;
 
 useEffect(() => {
   if (!user?.email) return;
@@ -88,56 +112,84 @@ useEffect(() => {
 
         setChatRooms(chats);
 
-        const unread =
-          chats.filter(
-            (chat: any) =>
-              chat.lastSender !==
-              user?.email
-          ).length;
-
-        setUnreadCount(
-          unread
-        );
-
-        // only select latest chat
-        // DON'T auto open
-        const latestChat =
+        const latestUnread =
           chats.find(
             (chat: any) =>
               chat.lastSender !==
-              user?.email
+                user?.email &&
+              !chat.readBy?.[
+                user?.uid
+              ]
           );
 
-if (
-  latestChat &&
-  !showMessages
-) {
-  setPopupChat(
-    latestChat
-  );
+        if (
+          latestUnread &&
+          latestUnread.lastMessage !==
+            lastMessageId
+        ) {
+          setPopupChat(
+            latestUnread
+          );
 
-  setSelectedChat(
-    latestChat
-  );
-}
+          setLastMessageId(
+            latestUnread.lastMessage
+          );
+
+          setShowPopup(
+            true
+          );
+
+          // auto hide popup
+          setTimeout(() => {
+            setShowPopup(
+              false
+            );
+          }, 5000);
+        }
       }
     );
 
   return () =>
     unsubscribe();
-}, [user, showMessages]);
+}, [user?.uid]);
+
 
  useEffect(() => {
-  if (!selectedChat)
+  if (!selectedChat || !user?.uid)
     return;
 
-  const q = query(
+  const markAsRead =
+  async () => {
+    await updateDoc(
+      doc(
+        db,
+        "chats",
+        selectedChat.id
+      ),
+      {
+        [`readBy.${user!.uid}`]:
+          true,
+      }
+    );
+  };
+
+  markAsRead();
+}, [selectedChat]);
+
+useEffect(() => {
+  if (!selectedChat?.id)
+    return;
+
+  const messagesRef =
     collection(
       db,
       "chats",
       selectedChat.id,
       "messages"
-    ),
+    );
+
+  const q = query(
+    messagesRef,
     orderBy(
       "createdAt",
       "asc"
@@ -148,20 +200,36 @@ if (
     onSnapshot(
       q,
       (snapshot) => {
-        setChatMessages(
+        const msgs =
           snapshot.docs.map(
             (doc) => ({
               id: doc.id,
               ...doc.data(),
             })
-          )
+          );
+
+        setChatMessages(
+          msgs
+        );
+
+        // auto mark read
+        updateDoc(
+          doc(
+            db,
+            "chats",
+            selectedChat.id
+          ),
+          {
+            [`readBy.${user!.uid}`]:
+              true,
+          }
         );
       }
     );
 
   return () =>
     unsubscribe();
-}, [selectedChat]);
+}, [selectedChat?.id]);
 const featuredAdsRemaining =
   (userData?.featuredCredits ||
     0) -
@@ -534,9 +602,24 @@ Math.max(
           </button>
 <button
   onClick={() => {
-    setShowMessages(true);
-    setUnreadCount(0);
-  }}
+  setShowMessages(true);
+
+  const latestUnread =
+    chatRooms.find(
+      (chat: any) =>
+        chat.lastSender !==
+          user?.email &&
+        !chat.readBy?.[
+          user?.uid
+        ]
+    );
+
+  if (latestUnread) {
+    setSelectedChat(
+      latestUnread
+    );
+  }
+}}
   className="relative flex items-center gap-3 px-5 py-4 rounded-2xl text-white hover:bg-[#1f2937] transition w-full text-left"
 >
   💬 Messages
@@ -723,13 +806,14 @@ Math.max(
     )}
   </div>
 </div> 
-{popupChat && !showMessages && (
+{popupChat &&
+ showPopup && (
   <div className="fixed bottom-5 right-5 z-50 w-[320px] bg-[#111827] border border-white/10 rounded-[24px] shadow-2xl overflow-hidden">
 
     <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
       <div>
         <p className="font-semibold">
-          New Message
+          🔔 1 New Message
         </p>
 
         <p className="text-xs opacity-80">
@@ -756,10 +840,32 @@ Math.max(
       </p>
 
       <button
-        onClick={() => {
-          setShowMessages(true);
-          setPopupChat(null);
-        }}
+       onClick={async () => {
+  if (!popupChat) return;
+
+  setShowMessages(
+    true
+  );
+
+  setSelectedChat(
+    popupChat
+  );
+
+  // mark read
+  await updateDoc(
+    doc(
+      db,
+      "chats",
+      popupChat.id
+    ),
+    {
+      [`readBy.${user!.uid}`]:
+        true,
+    }
+  );
+
+  setShowPopup(false);
+}}
         className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-full font-semibold"
       >
         Open Chat
@@ -782,22 +888,17 @@ Math.max(
             (chat: any) => (
 <div
   key={chat.id}
-  onClick={() => {
-    setSelectedChat(chat);
+  onClick={async () => {
+  setSelectedChat(chat);
 
-    if (
-      chat.lastSender !==
-      user?.email
-    ) {
-      setUnreadCount(
-        (prev) =>
-          Math.max(
-            0,
-            prev - 1
-          )
-      );
+  await updateDoc(
+    doc(db, "chats", chat.id),
+    {
+      [`readBy.${user!.uid}`]:
+        true,
     }
-  }}
+  );
+}}
   className={`p-4 border-b border-white/10 cursor-pointer transition ${
     selectedChat?.id ===
     chat.id
@@ -819,13 +920,15 @@ Math.max(
       ? chat.buyerEmail
       : chat.sellerEmail}
   </p>
-
-  {chat.lastSender !==
-    user?.email && (
-    <span className="bg-red-600 text-white text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
-      1
-    </span>
-  )}
+{chat.lastSender !==
+  user?.email &&
+ !chat.readBy?.[
+   user?.uid
+ ] && (
+  <span className="bg-red-600 text-white text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+    1
+  </span>
+)}
 </div>
 
 
@@ -956,27 +1059,40 @@ Math.max(
             serverTimestamp(),
         }
       );
+const otherUserId =
+  selectedChat.buyerEmail ===
+  user?.email
+    ? selectedChat.sellerUid
+    : selectedChat.buyerUid;
 
-      await setDoc(
-        doc(
-          db,
-          "chats",
-          selectedChat.id
-        ),
-        {
-          lastMessage:
-            replyMessage,
+await setDoc(
+  doc(
+    db,
+    "chats",
+    selectedChat.id
+  ),
+  {
+    lastMessage:
+      replyMessage,
 
-          lastSender:
-            user?.email,
+    lastSender:
+      user?.email,
 
-          updatedAt:
-            serverTimestamp(),
-        },
-        {
-          merge: true,
-        }
-      );
+    updatedAt:
+      serverTimestamp(),
+
+    readBy: {
+      [user!.uid]:
+        true,
+      [otherUserId]:
+        false,
+    },
+  },
+  {
+    merge: true,
+  }
+);
+      
 
       setReplyMessage("");
     }
@@ -1025,6 +1141,9 @@ Math.max(
 
     updatedAt:
       serverTimestamp(),
+
+   [`readBy.${user!.uid}`]:
+  true,
   },
   {
     merge: true,
