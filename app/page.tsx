@@ -119,7 +119,8 @@ export default function Home() {
     listings.filter(
       (item) =>
         item.featured === true &&
-        item.approved === true
+        item.approved === true &&
+        item.expired !== true
     ),
   [listings]
 );
@@ -210,16 +211,16 @@ const fetchListings =
         await getDocs(q);
 
       const data =
-        querySnapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .filter(
-            (listing: any) =>
-              listing.approved ===
-              true
-          );
+  querySnapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    .filter(
+      (listing: any) =>
+        listing.approved === true &&
+        listing.expired !== true
+    );
 
       setListings(
         data

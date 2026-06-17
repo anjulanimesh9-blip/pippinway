@@ -45,20 +45,47 @@ export default function AdminListingsPage() {
         );
 
       const listingsData =
-        querySnapshot.docs.map(
-          (doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })
-        );
+  querySnapshot.docs.map(
+    (doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })
+  );
 
-      setListings(
-        listingsData
-      );
+// Auto expire normal ads
+for (const listing of listingsData) {
 
-      setLoading(
-        false
-      );
+  const expiryDate =
+    listing.expiryDate?.seconds
+      ? new Date(
+          listing.expiryDate.seconds * 1000
+        )
+      : null;
+
+  if (
+    listing.adType === "free" &&
+    expiryDate &&
+    expiryDate < new Date()
+  ) {
+    await updateDoc(
+      doc(
+        db,
+        "listings",
+        listing.id
+      ),
+      {
+        approved: false,
+        expired: true,
+      }
+    );
+
+    listing.approved = false;
+    listing.expired = true;
+  }
+}
+
+setListings(listingsData);
+setLoading(false);
 
     } catch (
       error
@@ -207,9 +234,10 @@ useEffect(() => {
     try {
       const pendingAds =
         listings.filter(
-          (listing) =>
-            !listing.approved
-        );
+  (listing) =>
+    !listing.approved &&
+    listing.expired !== true
+)
 
       await Promise.all(
         pendingAds.map(
@@ -430,10 +458,11 @@ useEffect(() => {
     <tbody>
 
       {filteredListings
-        .filter(
-          (listing) =>
-            !listing.approved
-        )
+       .filter(
+  (listing) =>
+    !listing.approved &&
+    listing.expired !== true
+)
         .map((listing) => (
 
           <tr
@@ -538,9 +567,9 @@ useEffect(() => {
 
       {filteredListings
         .filter(
-          (listing) =>
-            listing.featured === true
-        )
+  (listing) =>
+    listing.featured === true
+)
         .map((listing) => {
 
           const featuredDate =
@@ -705,12 +734,12 @@ if (featuredDate) {
       
 
       {filteredListings
-        .filter(
-          (listing) =>
-            listing.approved ===
-            true
-        )
-        .map((listing) => (
+  .filter(
+    (listing) =>
+      listing.approved === true &&
+      listing.expired !== true
+  )
+  .map((listing) => (
 
           <tr
             key={listing.id}

@@ -41,6 +41,18 @@ export default function AddListing() {
     useState("");
   const [phone, setPhone] =
     useState("");
+    const countryCodes: any = {
+  Singapore: "+65",
+  India: "+91",
+  Thailand: "+66",
+  Zimbabwe: "+263",
+  USA: "+1",
+  Maldives: "+960",
+  "Sri Lanka": "+94",
+  "South Africa": "+27",
+  "United Kingdom": "+44",
+  Canada: "+1",
+};
   const [category, setCategory] =
     useState("");
   const [
@@ -60,6 +72,8 @@ export default function AddListing() {
     const [adType,
   setAdType] =
   useState("free");
+  const [previewImage, setPreviewImage] =
+  useState<string | null>(null);
 
     useEffect(() => {
   const unsubscribe =
@@ -142,17 +156,9 @@ export default function AddListing() {
         newErrors.description =
           true;
 
-      if (
-        images.length !==
-        4
-      ) {
-        newErrors.image =
-          true;
-
-        alert(
-          "Please upload exactly 4 photos"
-        );
-      }
+    if (images.length !== 4) {
+  newErrors.image = true;
+}
 
       setErrors(
         newErrors
@@ -253,10 +259,19 @@ featured:
   adType ===
   "featured",
 
-approved:
-  false,
+approved: false,
 
 adType,
+
+expiryDate:
+  adType === "free"
+    ? new Date(
+        Date.now() +
+        30 * 24 * 60 * 60 * 1000
+      )
+    : null,
+
+expired: false,
 
     }
   );
@@ -312,40 +327,63 @@ adType,
             type="text"
             placeholder="Title"
             value={title}
-            onChange={(
-              e
-            ) =>
-              setTitle(
-                e.target
-                  .value
-              )
-            }
-            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
+           onChange={(e) => {
+  setTitle(e.target.value);
+
+  if (e.target.value.trim()) {
+    setErrors((prev: any) => ({
+      ...prev,
+      title: false,
+    }));
+  }
+}}
+           className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-4 transition ${
+  errors.title
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
           />
 
           <input
             type="text"
             placeholder="Price"
             value={price}
-            onChange={(
-              e
-            ) =>
-              setPrice(
-                e.target
-                  .value
-              )
-            }
-            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
-          />
+           onChange={(e) => {
+  setPrice(e.target.value);
+
+  if (e.target.value.trim()) {
+    setErrors((prev: any) => ({
+      ...prev,
+      price: false,
+    }));
+  }
+}}
+            className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-4 transition ${
+  errors.price
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
+            />
 
          <select
   value={country}
-  onChange={(e) =>
-    setCountry(
-      e.target.value
-    )
-  }
-  className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
+onChange={(e) => {
+  const selectedCountry = e.target.value;
+
+  setCountry(selectedCountry);
+  setPhone(countryCodes[selectedCountry] || "");
+
+  setErrors((prev: any) => ({
+    ...prev,
+    country: false,
+  }));
+
+ }}
+  className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-4 transition ${
+  errors.country
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
 >
   <option value="">
     Select Country
@@ -388,41 +426,64 @@ adType,
             value={
               location
             }
-            onChange={(
-              e
-            ) =>
-              setLocation(
-                e.target
-                  .value
-              )
-            }
-            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
-          />
+          onChange={(e) => {
+  setLocation(e.target.value);
 
-          <input
-            type="text"
-            placeholder="WhatsApp Number"
-            value={phone}
-            onChange={(
-              e
-            ) =>
-              setPhone(
-                e.target
-                  .value
-              )
-            }
-            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
-          />
+  if (e.target.value.trim()) {
+    setErrors((prev: any) => ({
+      ...prev,
+      location: false,
+    }));
+  }
+}}
+ className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-4 transition ${
+  errors.location
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
+            />
+
+       <input
+  type="text"
+  placeholder="WhatsApp Number (e.g. +91 9876543210)"
+  value={phone}
+  onChange={(e) => {
+  setPhone(e.target.value);
+
+  if (e.target.value.trim()) {
+    setErrors((prev: any) => ({
+      ...prev,
+      phone: false,
+    }));
+  }
+}}
+  className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-1 transition ${
+  errors.phone
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
+/>
+
+<p className="text-xs text-gray-400 mb-4 ml-2">
+  Example: +91 9876543210
+</p>
 
           <select
   value={category}
-  onChange={(e) =>
-    setCategory(
-      e.target.value
-    )
-  }
-  className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 transition"
->
+  onChange={(e) => {
+  setCategory(e.target.value);
+
+  setErrors((prev: any) => ({
+    ...prev,
+    category: false,
+  }));
+}}
+  className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-4 transition ${
+  errors.category
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
+  >
   <option value="">
     Select Category
   </option>
@@ -477,15 +538,21 @@ adType,
             value={
               description
             }
-            onChange={(
-              e
-            ) =>
-              setDescription(
-                e.target
-                  .value
-              )
-            }
-            className="w-full bg-[#0b1120] border border-blue-900/30 focus:border-blue-500 outline-none text-white p-4 rounded-[24px] mb-4 h-36 transition"
+           onChange={(e) => {
+  setDescription(e.target.value);
+
+  if (e.target.value.trim()) {
+    setErrors((prev: any) => ({
+      ...prev,
+      description: false,
+    }));
+  }
+}}
+        className={`w-full bg-[#0b1120] outline-none text-white p-4 rounded-[24px] mb-4 h-36 transition ${
+  errors.description
+    ? "border border-red-500"
+    : "border border-blue-900/30 focus:border-blue-500"
+}`}
           />
           <div className="mb-5">
   <label className="block text-lg font-bold mb-3">
@@ -547,56 +614,90 @@ className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blu
     </div>
   </div>
 </div>
+<div className="space-y-3 mb-5">
+  {[1, 2, 3, 4].map((num, index) => (
+    <div
+      key={num}
+      className={`relative bg-[#0b1120] rounded-[24px] p-5 ${
+        errors.image
+          ? "border border-red-500"
+          : "border border-blue-900/30"
+      }`}
+    >
+      <label className="block text-sm text-gray-300 mb-2">
+        Photo {num}
+      </label>
 
-        <div className="space-y-3 mb-5">
-  {[1, 2, 3, 4].map(
-    (num, index) => (
-      <div
-        key={num}
-        className="bg-[#0b1120] border border-blue-900/30 rounded-[24px] p-5"
-      >
-        <label className="block text-sm text-gray-300 mb-2">
-          Photo {num}
-        </label>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (!e.target.files?.[0]) return;
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            if (
-              !e.target
-                .files?.[0]
-            )
-              return;
+          const newImages = [...images];
+          newImages[index] = e.target.files[0];
 
-            const newImages =
-              [...images];
+          setImages([...newImages]);
 
-            newImages[
-              index
-            ] =
-              e.target
-                .files[0];
+          if (
+            newImages.filter(Boolean).length === 4
+          ) {
+            setErrors((prev: any) => ({
+              ...prev,
+              image: false,
+            }));
+          }
+        }}
+        className="w-full text-sm"
+      />
 
-            setImages(
-              newImages
-            );
-          }}
-          className="w-full text-sm"
-        />
+      {images[index] && (
+        <div className="relative mt-3 overflow-hidden rounded-xl border border-green-500">
 
-        {images[index] && (
-          <p className="text-green-400 text-xs mt-2">
-            ✅{" "}
-            {
-              images[
-                index
-              ].name
+          {index === 0 && (
+            <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded z-10">
+              ⭐ Cover Photo
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              const newImages = [...images];
+              newImages[index] = undefined as any;
+              setImages([...newImages]);
+            }}
+            className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full z-10"
+          >
+            ✕
+          </button>
+
+          <img
+            src={URL.createObjectURL(images[index])}
+            alt={`Photo ${num}`}
+            onClick={() =>
+              setPreviewImage(
+                URL.createObjectURL(images[index])
+              )
             }
-          </p>
-        )}
-      </div>
-    )
+            className="w-full h-40 object-cover cursor-pointer"
+          />
+
+          <div className="p-2 bg-black/30">
+            <p className="text-green-400 text-xs truncate">
+              ✅ {images[index].name}
+            </p>
+          </div>
+
+        </div>
+      )}
+    </div>
+  ))}
+
+  {errors.image && (
+    <p className="text-red-500 text-sm mt-2 text-center">
+      Please upload exactly 4 photos
+    </p>
   )}
 </div>
 
@@ -609,6 +710,18 @@ className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blu
     ? "Uploading..."
     : "Post Listing"}
 </button>
+{previewImage && (
+  <div
+    className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+    onClick={() => setPreviewImage(null)}
+  >
+    <img
+      src={previewImage}
+      alt="Preview"
+      className="max-w-[90%] max-h-[90%] rounded-xl"
+    />
+  </div>
+)}
         </form>
       </div>
     </div>

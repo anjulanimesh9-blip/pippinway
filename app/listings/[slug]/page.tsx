@@ -233,8 +233,8 @@ if (!sellerEmail) {
             };
 
             if (
-  listingData.approved !==
-  true
+  listingData.approved !== true ||
+  listingData.expired === true
 ) {
   router.push("/");
   return;
@@ -262,8 +262,8 @@ if (!sellerEmail) {
     ad.category ===
       listingData.category &&
     ad.id !== slug &&
-    ad.approved ===
-      true
+    ad.approved === true &&
+    ad.expired !== true
 );
                 
 
