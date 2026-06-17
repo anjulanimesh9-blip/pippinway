@@ -526,7 +526,23 @@ Math.max(
     (adsUsed /
       adLimit) *
     100;
+const currencyMap: any = {
+  "Sri Lanka": "LKR",
+  Zimbabwe: "USD",
+  USA: "USD",
+  Canada: "CAD",
+  "United Kingdom": "GBP",
+  India: "INR",
+  Thailand: "THB",
+  Singapore: "SGD",
+  Maldives: "MVR",
+  "South Africa": "ZAR",
+};
 
+const userCurrency =
+  currencyMap[
+    userData?.country
+  ] || "";
   return (
     <div className="min-h-screen bg-[#020817] text-white flex">
 
@@ -1364,11 +1380,9 @@ await setDoc(
               </p>
 
               <p className="text-green-400 text-lg font-bold mt-2">
-                Rs.{" "}
-                {Number(
-                  ad.price
-                ).toLocaleString()}
-              </p>
+  {currencyMap[ad.country] || ""}{" "}
+  {Number(ad.price).toLocaleString()}
+</p>
               <button
   onClick={(e) => {
     e.preventDefault();
@@ -1415,10 +1429,8 @@ await setDoc(
           </p>
 
           <p className="text-green-400 text-lg font-bold mt-2">
-            Rs.{" "}
-            {Number(
-              ad.price
-            ).toLocaleString()}
+           {userCurrency}{" "}
+{Number(ad.price).toLocaleString()}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-2 mt-4">
