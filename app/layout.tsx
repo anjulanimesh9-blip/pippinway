@@ -15,23 +15,36 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.pippinway.com"),
 
-  title: "Pippinway - Buy, Sell & Shop Smarter",
+  title: {
+    default: "Pippinway - Buy, Sell & Shop Smarter",
+    template: "%s | Pippinway",
+  },
 
   description:
-    "Buy and sell electronics, vehicles, property, fashion and more across Sri Lanka, Zimbabwe, UK, USA, Canada, India and other countries.",
+    "Buy and sell electronics, vehicles, property, fashion and more across Sri Lanka, Zimbabwe, UK, USA, Canada, India, South Africa, Singapore, Thailand and Maldives.",
 
   keywords: [
     "Pippinway",
     "Marketplace",
     "Buy and Sell",
     "Classified Ads",
+    "Online Marketplace",
     "Sri Lanka",
     "Zimbabwe",
     "UK",
     "USA",
     "Canada",
     "India",
+    "South Africa",
+    "Singapore",
+    "Thailand",
+    "Maldives",
   ],
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 
   alternates: {
     canonical: "https://www.pippinway.com",
@@ -40,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pippinway - Buy, Sell & Shop Smarter",
     description:
-      "Global marketplace for buying and selling products, vehicles, property and more.",
+      "Global marketplace for buying and selling electronics, vehicles, property, fashion and more.",
     url: "https://www.pippinway.com",
     siteName: "Pippinway",
     images: [
@@ -48,9 +61,18 @@ export const metadata: Metadata = {
         url: "/icon.png",
         width: 1024,
         height: 1024,
+        alt: "Pippinway Logo",
       },
     ],
     type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Pippinway - Buy, Sell & Shop Smarter",
+    description:
+      "Global marketplace for buying and selling products and services.",
+    images: ["/icon.png"],
   },
 };
 
@@ -64,7 +86,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+      </body>
     </html>
   );
 }
