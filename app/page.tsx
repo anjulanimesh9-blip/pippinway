@@ -93,7 +93,13 @@ export default function Home() {
   const [pageLoadId] = useState(() =>
     Math.random()
   );
+const bannerImages = [
+  "/images/banner-ad-1.jpg",
+  "/images/banner-ad-2.jpg",
+  "/images/banner-ad-3.jpg",
+];
 
+const [currentBanner, setCurrentBanner] = useState(0);
   const filteredListings = useMemo(
     () =>
       listings.filter((item) =>
@@ -242,30 +248,37 @@ const fetchListings =
 
   return () => clearInterval(interval);
 }, [featuredListings]);
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentBanner((prev) =>
+      prev === bannerImages.length - 1
+        ? 0
+        : prev + 1
+    );
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, []);
 
 useEffect(() => {
   if (!user) return;
-  
 
-  const fetchFavorites =
-    async () => {
-      const snapshot =
-        await getDocs(
-          collection(
-            db,
-            "users",
-            user.uid,
-            "favorites"
-          )
-        );
+  const fetchFavorites = async () => {
+    const snapshot = await getDocs(
+      collection(
+        db,
+        "users",
+        user.uid,
+        "favorites"
+      )
+    );
 
-      const favs =
-        snapshot.docs.map(
-          (doc) => doc.id
-        );
+    const favs = snapshot.docs.map(
+      (doc) => doc.id
+    );
 
-      setFavorites(favs);
-    };
+    setFavorites(favs);
+  };
 
   fetchFavorites();
 }, [user]);
@@ -861,13 +874,13 @@ useEffect(() => {
       </div>
 
       {/* Banner */}
-      <div className="my-5">
-        <img
-          src="/images/banner-ad.jpg"
-          alt="Banner"
-          className="w-full h-[90px] md:h-[120px] object-cover rounded-[20px]"
-        />
-      </div>
+ <div className="my-5">
+  <img
+    src={bannerImages[currentBanner]}
+    alt="Banner"
+    className="w-full h-[90px] md:h-[120px] object-cover rounded-[20px]"
+  />
+</div>
 
       {/* Remaining cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
