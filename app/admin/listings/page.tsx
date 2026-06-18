@@ -44,7 +44,7 @@ export default function AdminListingsPage() {
           )
         );
 
-      const listingsData =
+      const listingsData: any[] =
   querySnapshot.docs.map(
     (doc) => ({
       id: doc.id,
@@ -53,7 +53,7 @@ export default function AdminListingsPage() {
   );
 
 // Auto expire normal ads
-for (const listing of listingsData) {
+for (const listing of listingsData as any[]) {
 
   const expiryDate =
     listing.expiryDate?.seconds
