@@ -396,12 +396,21 @@ useEffect(() => {
 
       {/* Buttons */}
       <div className="flex flex-wrap gap-4 mt-10">
-        <Link
-          href="/add-listing"
-          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5 rounded-[24px] font-semibold hover:scale-105 transition flex items-center gap-3"
-        >
-          ➕ Post Ad
-        </Link>
+     {user ? (
+  <Link
+    href="/add-listing"
+    className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5 rounded-[24px] font-semibold hover:scale-105 transition flex items-center gap-3"
+  >
+    ➕ Post Ad
+  </Link>
+) : (
+  <Link
+    href="/login"
+    className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5 rounded-[24px] font-semibold hover:scale-105 transition flex items-center gap-3"
+  >
+    🔒 Login to Post Ad
+  </Link>
+)}
 
         <button
           onClick={() =>

@@ -25,11 +25,15 @@ import {
 } from "../firebase";
 import {
   onAuthStateChanged,
+  User,
 } from "firebase/auth";
 
 export default function AddListing() {
   const router =
     useRouter();
+
+const [checkingAuth, setCheckingAuth] =
+  useState(true);
 
   const [title, setTitle] =
     useState("");
@@ -74,6 +78,22 @@ export default function AddListing() {
   useState("free");
   const [previewImage, setPreviewImage] =
   useState<string | null>(null);
+  useEffect(() => {
+  const unsubscribe =
+    onAuthStateChanged(
+      auth,
+      (currentUser) => {
+  if (!currentUser) {
+    router.push("/login");
+    return;
+  }
+
+  setCheckingAuth(false);
+}
+    );
+
+  return () => unsubscribe();
+}, [router]);
 
     useEffect(() => {
   const unsubscribe =
@@ -119,6 +139,13 @@ export default function AddListing() {
   return () =>
     unsubscribe();
 }, []);
+if (checkingAuth) {
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      Loading...
+    </div>
+  );
+}
   const handleSubmit =
     async (
       e: any
