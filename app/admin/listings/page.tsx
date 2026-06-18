@@ -572,16 +572,25 @@ useEffect(() => {
 )
         .map((listing) => {
 
-          const featuredDate =
-  listing
-    .featuredExpiryDate
-    ?.seconds
-    ? new Date(
-        listing
-          .featuredExpiryDate
-          .seconds * 1000
-      )
-    : null;
+         let featuredDate = null;
+
+if (listing.featuredExpiryDate) {
+  if (listing.featuredExpiryDate.toDate) {
+    featuredDate =
+      listing.featuredExpiryDate.toDate();
+  } else if (
+    listing.featuredExpiryDate.seconds
+  ) {
+    featuredDate = new Date(
+      listing.featuredExpiryDate.seconds *
+        1000
+    );
+  } else {
+    featuredDate = new Date(
+      listing.featuredExpiryDate
+    );
+  }
+}
 
 let daysLeft = 0;
 
