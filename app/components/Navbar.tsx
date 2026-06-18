@@ -128,7 +128,14 @@ useEffect(() => {
   <Link href="/add-listing">
     Add Listing
   </Link>
-
+  <a
+  href="https://www.facebook.com/profile.php?id=61589186823471"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center gap-2 hover:text-blue-400 transition"
+>
+  📘 Facebook
+</a>
   {user ? (
     <>
       <Link href="/profile">
@@ -196,6 +203,14 @@ useEffect(() => {
     >
       Add Listing
     </button>
+  <a
+  href="https://www.facebook.com/profile.php?id=61589186823471"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center gap-2 hover:text-blue-400 transition"
+>
+  📘 Facebook
+</a>
 
     {user ? (
       <>
@@ -240,6 +255,7 @@ useEffect(() => {
         >
           Register
         </button>
+        
       </>
     )}
   </div>
