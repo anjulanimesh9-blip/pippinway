@@ -1428,10 +1428,10 @@ await setDoc(
             {ad.location}
           </p>
 
-          <p className="text-green-400 text-lg font-bold mt-2">
-           {userCurrency}{" "}
-{Number(ad.price).toLocaleString()}
-          </p>
+       <p className="text-green-400 text-lg font-bold mt-2">
+  {currencyMap[ad.country] || ""}{" "}
+  {Number(ad.price).toLocaleString()}
+</p>
 
           <div className="flex flex-col sm:flex-row gap-2 mt-4">
           <button
