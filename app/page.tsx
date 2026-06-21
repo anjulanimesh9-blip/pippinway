@@ -55,8 +55,13 @@ function listingMatchesFilters(
     item.country === selectedCountry;
 
   const matchCategory =
-    selectedCategory === "All" ||
-    item.category?.trim() === selectedCategory.trim();
+  selectedCategory === "All" ||
+  item.category
+    ?.trim()
+    .toLowerCase() ===
+  selectedCategory
+    .trim()
+    .toLowerCase();
 
   const matchSearch = item.title
     ?.toLowerCase()
@@ -98,7 +103,8 @@ const bannerImages = [
   "/images/banner-ad-2.jpg",
   "/images/banner-ad-3.jpg",
 ];
-
+const [showCategoryModal, setShowCategoryModal] =
+  useState(false);
 const [currentBanner, setCurrentBanner] = useState(0);
   const filteredListings = useMemo(
     () =>
@@ -119,64 +125,47 @@ const [currentBanner, setCurrentBanner] = useState(0);
       locationFilter,
     ]
   );
-
- const featuredListings = useMemo(
+  const featuredListings = useMemo(
   () =>
-    listings.filter(
-      (item) =>
-        item.featured === true &&
-        item.approved === true &&
-        item.expired !== true
+    filteredListings.filter(
+      (item) => item.featured === true
     ),
-  [listings]
+  [filteredListings]
 );
 
-  const mixedListings = useMemo(() => {
-  const normalAds = filteredListings
-    .filter((item) => !item.featured)
-    .sort(
-      (a, b) =>
-        getCreatedAtMs(b.createdAt) -
-        getCreatedAtMs(a.createdAt)
-    );
+const mixedListings = useMemo(() => {
+  const normalAds = filteredListings.filter(
+    (item) => !item.featured
+  );
 
-  // rotating featured ads
-  const rotatingFeatured =
-    [...featuredListings, ...featuredListings]
-      .slice(
-        currentFeaturedIndex,
-        currentFeaturedIndex + 4
-      );
+  const featuredAds = [...featuredListings];
+
+  // rotate featured ads
+  if (featuredAds.length > 1) {
+    const shift =
+      currentFeaturedIndex %
+      featuredAds.length;
+
+    featuredAds.push(
+      ...featuredAds.splice(0, shift)
+    );
+  }
 
   const mixed = [...normalAds];
 
-  rotatingFeatured.forEach(
-    (ad, index) => {
-      const seed =
-        pageLoadId * 1000 +
-        index +
-        ad.id.length;
+  featuredAds.forEach((ad) => {
+    const randomPosition = Math.floor(
+      Math.random() * (mixed.length + 1)
+    );
 
-      const randomIndex =
-        randomIndexFromSeed(
-          seed,
-          mixed.length
-        );
-
-      mixed.splice(
-        randomIndex,
-        0,
-        ad
-      );
-    }
-  );
+    mixed.splice(randomPosition, 0, ad);
+  });
 
   return mixed;
 }, [
   filteredListings,
   featuredListings,
   currentFeaturedIndex,
-  pageLoadId,
 ]);
 
   const currencyMap: any = {
@@ -212,6 +201,7 @@ const fetchListings =
           "desc"
         )
       );
+      
 
       const querySnapshot =
         await getDocs(q);
@@ -239,15 +229,20 @@ const fetchListings =
   if (featuredListings.length <= 1) return;
 
   const interval = setInterval(() => {
-    setCurrentFeaturedIndex((prev) =>
-      prev + 1 >= featuredListings.length
-        ? 0
-        : prev + 1
+    setCurrentFeaturedIndex(
+      (prev) =>
+        (prev + 1) %
+        featuredListings.length
     );
   }, 5000);
 
   return () => clearInterval(interval);
 }, [featuredListings]);
+
+useEffect(() => {
+  setCurrentFeaturedIndex(0);
+}, [selectedCategory]);
+
 useEffect(() => {
   const interval = setInterval(() => {
     setCurrentBanner((prev) =>
@@ -337,31 +332,22 @@ useEffect(() => {
       ]);
     }
   };
+  const hour = new Date().getHours();
+
+const greeting =
+  hour < 12
+    ? "🌅 Good Morning"
+    : hour < 17
+    ? "☀️ Good Afternoon"
+    : "🌙 Good Evening";
   return (
     <main className="min-h-screen bg-[#020817]">
       <Navbar />
-      <section className="w-full max-w-[1600px] mx-auto py-8 px-4 overflow-visible md:overflow-visible md:overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-4 pt-6 flex flex-col md:flex-row gap-3 md:gap-0 justify-between items-start md:items-center">
-  {user ? (
-    <>
-      <p className="font-semibold text-gray-300">
-        Welcome, {user.email}
-      </p>
-
-      <button
-        onClick={() => signOut(auth)}
-        className="bg-black text-white px-4 py-2 rounded-xl w-fit"
-      >
-        Logout
-      </button>
-    </>
-  ) : (
-    <p>Not logged in</p>
-  )}
-</div>
+      <section className="w-full max-w-[1600px] mx-auto py-8 px-4 overflow-visible md:overflow-visible md:overflow-visible relative">
+      
 
 {/* Hero Banner */}
-<div className="relative w-full rounded-[28px] md:rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-visible md:overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.08)]">
+<div className="hidden md:block relative w-full rounded-[45px] border border-blue-900/30 bg-gradient-to-br from-[#050b18] via-[#0b1120] to-[#111827] p-6 md:p-10 overflow-visible md:overflow-visible shadow-[0_0_80px_rgba(59,130,246,0.08)]">
 
   {/* Glow */}
   <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 blur-[140px]" />
@@ -372,19 +358,19 @@ useEffect(() => {
     {/* LEFT SIDE */}
     <div className="flex flex-col justify-between h-full max-w-[620px]">
 
-      <span className="inline-flex w-fit bg-blue-600 text-white px-5 py-3 rounded-full text-sm font-semibold">
+      <span className="inline-flex w-fit bg-blue-600 text-white px-5 py-3 rounded-full text-xs font-semibold">
         🚀 #1 Marketplace
       </span>
 
       <div className="mt-8">
-        <h1 className="text-3xl sm:text-3xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
+        <h1 className="text-lg md:text-3xl sm:text-lg md:text-3xl md:text-7xl xl:text-8xl font-extrabold leading-[1.05] text-white">
           Buy, Sell &
           <span className="text-blue-500 block">
             Shop Smarter
           </span>
         </h1>
 
-        <p className="text-gray-300 text-xl mt-6 max-w-xl leading-9">
+        <p className="text-gray-300 text-lg md:text-lg mt-6 max-w-xl leading-9">
           Discover electronics, vehicles,
           property, fashion and more on
           <span className="text-blue-400 font-semibold">
@@ -446,9 +432,9 @@ useEffect(() => {
         ].map((item) => (
           <div
             key={item.title}
-            className="bg-[#0f172a] border border-white/10 rounded-[32px] p-4 md:p-8 text-center"
+            className="bg-[#0f172a] border border-white/10 hover:border-blue-500/40 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] rounded-[32px] p-2 md:p-8 text-center"
           >
-            <h3 className="text-3xl md:text-4xl font-bold text-white">
+            <h3 className="text-lg md:text-3xl md:text-4xl font-bold text-white">
               {item.title}
             </h3>
 
@@ -461,13 +447,13 @@ useEffect(() => {
     </div>
 
     {/* RIGHT SIDE */}
-    <div className="bg-[#07101f] border border-blue-900/40 rounded-[40px] overflow-visible md:overflow-hidden relative min-h-[580px] md:min-h-[860px] flex items-center justify-center">
+    <div className="bg-[#07101f] border border-blue-900/40 rounded-[40px] overflow-visible md:overflow-visible relative min-h-[580px] md:min-h-[860px] flex items-center justify-center">
 
       <div className="absolute inset-0 opacity-15 md:opacity-30">
         <img
           src="/images/world-map.png"
           alt=""
-          className="w-full h-full object-cover opacity-80"
+          className="w-full h-full object-contain bg-[#0f172a] opacity-80"
         />
       </div>
 
@@ -479,7 +465,7 @@ useEffect(() => {
           className="w-[100px] md:w-[250px] lg:w-[320px] mx-auto mt-0 md:mt-0"
         />
 
-        <h2 className="text-center text-white text-3xl md:text-4xl font-extrabold tracking-wide mt-5">
+        <h2 className="text-center text-white text-lg md:text-3xl md:text-4xl font-extrabold tracking-wide mt-5">
           WE SERVE IN
         </h2>
 
@@ -500,13 +486,13 @@ useEffect(() => {
 ].map((country) => (
   <div
     key={country.name}
-    className="bg-white/5 border border-white/10 rounded-[22px] md:rounded-[28px] py-2 px-4 md:p-6 text-sm md:text-lg text-center text-white font-semibold hover:border-blue-500 transition"
+    className="bg-white/5 border border-white/10 hover:border-blue-500/40 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] rounded-[22px] md:rounded-[28px] py-2 px-4 md:p-6 text-xs md:text-lg text-center text-white font-semibold hover:border-blue-500 transition"
   >
     <div className="flex items-center justify-center gap-2 md:gap-3">
   <img
   src={country.flag}
   alt={country.name}
-  className="w-9 h-7 object-cover rounded shadow-sm"
+  className="w-9 h-7 object-contain bg-[#0f172a] rounded shadow-sm"
 />
 
       <span>
@@ -519,7 +505,7 @@ useEffect(() => {
 
         <div className="grid grid-cols-3 gap-2 mt-6 border-t border-white/10 pt-8">
           <div className="text-center">
-            <div className="text-3xl md:text-4xl">
+            <div className="text-lg md:text-3xl md:text-4xl">
               🔒
             </div>
             <h3 className="block text-white text-lg py-3 px-4 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition">
@@ -528,7 +514,7 @@ useEffect(() => {
           </div>
 
           <div className="text-center">
-            <div className="text-3xl md:text-4xl">
+            <div className="text-lg md:text-3xl md:text-4xl">
               ⚡
             </div>
             <h3 className="text-white font-bold mt-2">
@@ -537,7 +523,7 @@ useEffect(() => {
           </div>
 
           <div className="text-center">
-            <div className="text-3xl md:text-4xl">
+            <div className="text-lg md:text-3xl md:text-4xl">
               🤝
             </div>
             <h3 className="text-white font-bold mt-2">
@@ -550,155 +536,7 @@ useEffect(() => {
 
   </div>
 </div>
-
- <div className="mb-8">
-    {/* Categories */}
-<div className="mb-14 mt-6">
-  <div className="flex items-center justify-between mb-6">
-    <h2 className="text-3xl md:text-4xl font-extrabold tracking-wide text-white">
-      Shop by Category
-    </h2>
-
-    <button className="text-blue-400 hover:text-blue-300">
-      View All →
-    </button>
-  </div>
-
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-{[
-  {
-    name: "Cars",
-    icon: "🚗",
-  },
-  {
-    name: "Motorbikes",
-    icon: "🏍️",
-  },
-  {
-    name: "Property",
-    icon: "🏠",
-  },
-  {
-    name: "Electronics",
-    icon: "📱",
-  },
-  {
-    name: "Fashion",
-    icon: "👕",
-  },
-  {
-    name: "Jobs",
-    icon: "💼",
-  },
-  {
-    name: "Services",
-    icon: "🛠️",
-  },
-  {
-    name: "Animals",
-    icon: "🐶",
-  },
-  {
-    name: "Furniture",
-    icon: "🛋️",
-  },
-  {
-    name: "Education",
-    icon: "📚",
-  },
-  {
-    name: "Other",
-    icon: "📦",
-  },
-].map((cat) => (
-      <button
-        key={cat.name}
-        onClick={() =>
-          setSelectedCategory(
-            cat.name
-          )
-        }
-        className="bg-[#0f172a] border border-gray-800 hover:border-blue-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition rounded-[24px] p-4 min-h-[120px] flex flex-col items-center justify-center text-center shadow-lg"
-      >
-        <div className="text-5xl mb-3">
-          {cat.icon}
-        </div>
-
-        <h3 className="text-white font-semibold text-lg">
-          {cat.name}
-        </h3>
-      </button>
-    ))}
-  </div>
-</div>
-{/* ⭐ Featured Listings */}
-{featuredListings.length > 0 && (
-  <div className="mb-14">
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6">
-      <h2 className="text-3xl md:text-4xl font-extrabold text-yellow-400">
-        ⭐ Featured Listings
-      </h2>
-
-      <span className="text-yellow-300 text-sm font-medium">
-  ⭐ Premium Ads
-</span>
-    </div>
-
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 transition-all duration-700">
-  {[...featuredListings, ...featuredListings]
-    .slice(
-      currentFeaturedIndex,
-      currentFeaturedIndex + 8
-    )
-    .map((item, index) => (
-      <Link
-        href={`/listings/${item.id}`}
-        key={`${item.id}-${index}`}
-        className="group relative flex flex-col bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/40 rounded-[30px] p-4 hover:scale-[1.03] transition overflow-hidden min-h-[420px]"
-      >
-        <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
-          👑 FEATURED
-        </div>
-
-        <img
-          src={item.imageUrl}
-          alt={item.title}
-          className="w-full h-56 object-cover rounded-[22px]"
-        />
-
-        <h2 className="text-xl font-bold text-white mt-4">
-          {item.title}
-        </h2>
-
-        <p className="text-sm text-blue-400">
-          {item.category}
-        </p>
-
-        <p className="text-gray-400">
-          {item.location}
-        </p>
-
-        <p className="text-3xl font-extrabold text-green-400 mt-3">
-          {currencyMap[
-            item.country?.trim().toLowerCase()
-          ] || "Rs."}{" "}
-          {Number(item.price).toLocaleString()}
-        </p>
-      </Link>
-    ))}
-</div>
-  </div>
-)}
-
-    <h1
-  id="latest-listings"
-  className="text-3xl md:text-4xl font-bold text-white mb-6"
->
-  Latest Listings
-</h1>
-
-  </div>
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-stretch">
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 items-stretch">
     <select
     
   value={selectedCountry}
@@ -747,7 +585,8 @@ useEffect(() => {
       e.target.value
     )
   }
-  className="bg-[#111827] border border-gray-700 text-white px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
+ className="bg-[#111827] border border-gray-700 text-white px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
+
 >
   <option value="newest">
     Newest First
@@ -766,60 +605,67 @@ useEffect(() => {
   </option>
 </select>
 </div>
-  <div className="flex gap-3 mb-8 flex-wrap">
-  {[
-  "All",
-  "Cars",
-  "Motorbikes",
-  "Property",
-  "Electronics",
-  "Fashion",
-  "Jobs",
-  "Services",
-  "Animals",
-  "Furniture",
-  "Education",
-  "Other",
-].map((cat) => (
-    <button
-      key={cat}
-      onClick={() =>
-        setSelectedCategory(cat)
-      }
-      className={`px-4 py-2 rounded-xl border ${
-        selectedCategory === cat
-          ? "bg-black text-white"
-          : "bg-white"
-      }`}
-    >
-      {cat}
-    </button>
-  ))}
-</div>
-<>
+  
+ <div className="mb-8">
+   </div>
+
+    {/* Categories */}
+<select
+  value={selectedCategory}
+  onChange={(e) =>
+    setSelectedCategory(e.target.value)
+  }
+  className="bg-[#111827] border border-gray-700 text-white px-5 py-3 rounded-2xl outline-none focus:border-blue-500 w-full h-[56px]"
+>
+  <option value="All">🌍 All Categories</option>
+  <option value="Cars">🚗 Cars</option>
+  <option value="Motorbikes">🏍️ Motorbikes</option>
+  <option value="Property">🏠 Property</option>
+  <option value="Electronics">📱 Electronics</option>
+  <option value="Fashion">👕 Fashion</option>
+  <option value="Jobs">💼 Jobs</option>
+  <option value="Services">🛠️ Services</option>
+  <option value="Animals">🐶 Animals</option>
+  <option value="Furniture">🛋️ Furniture</option>
+  <option value="Education">📚 Education</option>
+  <option value="Other">📦 Other</option>
+</select>
+
+    <h1
+  id="latest-listings"
+  className="text-lg md:text-3xl md:text-4xl font-bold text-white mb-6"
+>
+  Latest Listings
+</h1>
+
       {/* First 8 cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="flex flex-col gap-2">
         {mixedListings
           .slice(0, 8)
           .map((item) => (
             <Link
               href={`/listings/${item.id}`}
               key={item.id}
-              className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block"
-            >
-              {item.featured && (
-                <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
-                  👑 Featured
-                </div>
-              )}
-  <button
+              className={`group relative overflow-visible rounded-lg p-2 flex flex-row gap-3 items-start min-h-[90px]
+${
+  item.featured
+    ? "bg-yellow-500/5 border border-yellow-500"
+    : "bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10"
+}`}
+              >
+{item.featured && (
+  <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg z-30">
+    👑 FEATURED
+  </div>
+)}
+   <button
   onClick={(e) => {
     toggleFavorite(
       e,
       item.id
     );
   }}
-  className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition"
+  className="absolute top-2 right-2 z-20 bg-black/50 hover:bg-black/70 rounded-full p-2 transition"
 >
   {favorites.includes(item.id) ? (
     <span className="text-red-500 text-lg">
@@ -830,33 +676,39 @@ useEffect(() => {
       🤍
     </span>
   )}
+     
 </button>
 
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="w-full h-56 object-cover rounded-[22px]"
-                />
-              ) : (
-                <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
+       {item.imageUrl ? (
+  <div className="relative w-[100px] h-[75px] flex-shrink-0 overflow-hidden rounded-md">
+    <img
+      src={item.imageUrl}
+      alt={item.title}
+      className="w-full h-full object-cover"
+    />
+
+ 
+  </div>
+) : (
+                <div className="w-full h-40 md:h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
                   No Image
                 </div>
               )}
+<div className="flex flex-col justify-between flex-1 min-w-0">
 
-              <h2 className="text-xl font-bold text-white mt-4">
-                {item.title}
-              </h2>
+  <h2 className="font-semibold text-white text-[13px] leading-4 line-clamp-1">
+    {item.title}
+  </h2>
 
-              <p className="text-sm text-blue-600">
-                {item.category}
-              </p>
+  <p className="text-blue-400 text-[11px]">
+    {item.category}
+  </p>
 
-              <p className="text-gray-500">
-                {item.location}
-              </p>
+  <p className="text-gray-400 text-[11px]">
+    {item.location}
+  </p>
 
-              <p className="text-gray-500 text-xs mt-2">
+              <p className="text-gray-500 text-[11px]">
                 🕒{" "}
                 {item.createdAt
                   ? new Date(
@@ -868,7 +720,7 @@ useEffect(() => {
                   : "Recently"}
               </p>
 
-              <p className="text-3xl font-extrabold text-green-400 mt-2">
+              <p className="text-green-400 font-bold text-[14px]">
                 {currencyMap[
                   item.country
                     ?.trim()
@@ -878,44 +730,52 @@ useEffect(() => {
                   item.price
                 ).toLocaleString()}
               </p>
+              </div>
             </Link>
           ))}
       </div>
-
+    
       {/* Banner */}
  <div className="my-5">
+
   <img
     src={bannerImages[currentBanner]}
     alt="Banner"
-    className="w-full h-[90px] md:h-[120px] object-cover rounded-[20px]"
+    className="w-full h-[90px] md:h-[120px] object-contain bg-[#0f172a] rounded-[20px]"
   />
 </div>
 
       {/* Remaining cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="flex flex-col gap-2">
         {mixedListings
           .slice(8)
           .map((item) => (
             <Link
               href={`/listings/${item.id}`}
               key={item.id}
-              className="group relative min-h-[380px] flex flex-col bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[30px] p-4 block"
+              className={`group relative overflow-visible rounded-lg p-2 flex flex-row gap-3 items-start min-h-[90px]
+${
+  item.featured
+    ? "bg-yellow-500/5 border border-yellow-500"
+    : "bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10"
+}`}
             >
-              {item.featured && (
-                <div className="absolute top-4 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full font-bold z-10">
-                  👑 Featured
-                </div>
-              )}
-  <button
+{item.featured && (
+  <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg z-30">
+    👑 FEATURED
+  </div>
+)}
+        <button
   onClick={(e) => {
     toggleFavorite(
       e,
       item.id
     );
   }}
-  className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition"
+  className="absolute top-2 right-2 z-20 bg-black/50 hover:bg-black/70 rounded-full p-2 transition"
 >
   {favorites.includes(item.id) ? (
+    
     <span className="text-red-500 text-lg">
       ❤️
     </span>
@@ -926,31 +786,33 @@ useEffect(() => {
   )}
 </button>
 
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="w-full h-56 object-cover rounded-[22px]"
-                />
-              ) : (
-                <div className="w-full h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
+             {item.imageUrl ? (
+ <div className="w-[100px] h-[75px] flex-shrink-0 overflow-visible rounded-md">
+  <img
+    src={item.imageUrl}
+    alt={item.title}
+    className="w-full h-full object-cover"
+  />
+</div>
+) : (
+                <div className="w-full h-40 md:h-56 bg-[#1e293b] rounded-2xl flex items-center justify-center text-gray-500">
                   No Image
                 </div>
               )}
-
-              <h2 className="text-xl font-bold text-white mt-4">
+<div className="flex flex-col justify-between flex-1 min-w-0">
+              <h2 className="font-semibold text-white text-[13px] leading-4 line-clamp-1">
                 {item.title}
               </h2>
 
-              <p className="text-sm text-blue-600">
+              <p className="text-blue-400 text-[11px]">
                 {item.category}
               </p>
 
-              <p className="text-gray-500">
+              <p className="text-gray-400 text-[11px]">
                 {item.location}
               </p>
 
-              <p className="text-gray-500 text-xs mt-2">
+              <p className="text-gray-500 text-[11px]">
                 🕒{" "}
                 {item.createdAt
                   ? new Date(
@@ -962,7 +824,7 @@ useEffect(() => {
                   : "Recently"}
               </p>
 
-              <p className="text-3xl font-extrabold text-green-400 mt-2">
+              <p className="text-green-400 font-bold text-[14px]">
                 {currencyMap[
                   item.country
                     ?.trim()
@@ -972,10 +834,10 @@ useEffect(() => {
                   item.price
                 ).toLocaleString()}
               </p>
+              </div>
             </Link>
           ))}
       </div>
-</>
 
 </section>
       <footer className="mt-32 border-t border-gray-800 bg-[#020817]">
@@ -987,11 +849,10 @@ useEffect(() => {
       <div>
         <img
           src="/images/logo.png"
-          alt="Pippinway"
           className="w-[220px] mb-4"
         />
 
-        <p className="text-gray-400 leading-7 text-sm md:text-base">
+        <p className="text-gray-400 leading-7 text-xs md:text-lg">
           Buy, sell and explore products
           worldwide with Pippinway —
           trusted, fast and easy.
@@ -1000,11 +861,11 @@ useEffect(() => {
 
       {/* Quick Links */}
       <div>
-        <h3 className="text-white font-bold text-xl mb-4">
+        <h3 className="text-white font-bold text-lg md:text-lg mb-4">
           Quick Links
         </h3>
 
-        <div className="text-white text-lg py-3 px-4 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition">
+        <div className="flex flex-col gap-3 text-gray-400 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition">
           <Link href="/">
             Home
           </Link>
@@ -1025,11 +886,11 @@ useEffect(() => {
 
       {/* Categories */}
       <div>
-        <h3 className="text-white font-bold text-xl mb-4">
+        <h3 className="text-white font-bold text-lg md:text-lg mb-4">
           Categories
         </h3>
 
-        <div className="flex flex-col gap-3 text-gray-400">
+        <div className="flex flex-row md:flex-col gap-3 text-gray-400">
           <span>Cars</span>
           <span>Property</span>
           <span>Electronics</span>
@@ -1040,7 +901,7 @@ useEffect(() => {
 
       {/* Countries */}
       <div>
-        <h3 className="text-white font-bold text-xl mb-4">
+        <h3 className="text-white font-bold text-lg md:text-lg mb-4">
           Available Countries
         </h3>
 
@@ -1055,7 +916,7 @@ useEffect(() => {
           ].map((country) => (
             <span
               key={country}
-              className="bg-[#111827] border border-gray-700 text-gray-300 px-3 py-2 rounded-xl text-sm"
+              className="bg-[#111827] border border-gray-700 text-gray-300 px-3 py-2 rounded-xl text-xs"
             >
               {country}
             </span>
@@ -1064,11 +925,36 @@ useEffect(() => {
       </div>
     </div>
 
-    <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-400 text-base">
+    <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-400 text-lg">
       © 2026 Pippinway.com — All Rights Reserved
     </div>
   </div>
 </footer>
+<Link
+  href="/add-listing"
+  style={{
+    position: "fixed",
+    bottom: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 99999,
+  }}
+  className="
+    md:hidden
+    bg-yellow-400
+    text-black
+    font-bold
+    px-8
+    py-4
+    rounded-full
+    shadow-2xl
+    flex
+    items-center
+    gap-2
+  "
+>
+  ➕ Post Ad
+</Link>
     </main>
   );
 }
