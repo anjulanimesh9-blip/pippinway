@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { FaBell } from "react-icons/fa";
+import useNotifications from "../hooks/useNotifications";
 import {
   useState,
   useEffect,
@@ -20,13 +22,23 @@ export default function Navbar() {
     const [user, setUser] =
   useState<any>(null);
 
+const [showNotifications, setShowNotifications] = useState(false);
+
+// Temporary demo count
+
   const router =
     useRouter();
+
+    const {
+  notifications,
+  unreadCount,
+} = useNotifications();
 
   const menuRef =
     useRef<HTMLDivElement>(
       null
     );
+
 useEffect(() => {
   const unsubscribe =
     onAuthStateChanged(
@@ -138,6 +150,81 @@ useEffect(() => {
 </a>
   {user ? (
     <>
+    <div className="relative">
+
+  <button
+    onClick={() =>
+      setShowNotifications((v) => !v)
+    }
+    className="relative rounded-full p-2 transition hover:bg-white/10"
+  >
+    <FaBell className="text-xl text-white" />
+
+    {unreadCount > 0 && (
+      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white">
+        {unreadCount}
+      </span>
+    )}
+  </button>
+
+  {showNotifications && (
+    <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A] shadow-2xl">
+
+      <div className="border-b border-white/10 p-4 font-bold">
+        Notifications
+      </div>
+
+     <div className="divide-y divide-white/5">
+
+  {notifications.length === 0 ? (
+    <div className="p-6 text-center text-sm text-gray-400">
+      No notifications
+    </div>
+  ) : (
+    notifications.slice(0, 5).map((item) => (
+      <div
+        key={item.id}
+        className="cursor-pointer p-4 transition hover:bg-white/5"
+      >
+        <p className="font-semibold text-white">
+          {item.title}
+        </p>
+
+        <p className="mt-1 text-sm text-gray-400">
+          {item.message}
+        </p>
+      </div>
+    ))
+  )}
+
+</div>
+
+     <div className="flex border-t border-white/10">
+
+  <button
+    onClick={() => setShowNotifications(false)}
+    className="flex-1 p-3 text-sm text-gray-300 hover:bg-white/5"
+  >
+    Close
+  </button>
+
+  <button
+    onClick={() => {
+      setShowNotifications(false);
+      router.push("/notifications");
+    }}
+    className="flex-1 border-l border-white/10 p-3 text-sm text-cyan-400 hover:bg-white/5"
+  >
+    View All
+  </button>
+
+</div>
+
+    </div>
+  )}
+
+</div>
+
       <Link href="/profile">
         Profile
       </Link>
@@ -213,7 +300,27 @@ useEffect(() => {
 </a>
 
     {user ? (
+      
       <>
+      
+      <button
+  className="flex items-center justify-between rounded-xl px-3 py-2 hover:bg-blue-500/10"
+  onClick={() => {
+    setMenuOpen(false);
+    router.push("/notifications");
+  }}
+>
+  <span>
+    🔔 Notifications
+    </span>
+
+  {unreadCount > 0 && (
+    <span className="rounded-full bg-red-500 px-2 py-1 text-xs">
+      {unreadCount}
+    </span>
+  )}
+</button>
+
         <button
           className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
           onClick={() => {

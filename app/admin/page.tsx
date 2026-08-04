@@ -209,6 +209,16 @@ return (
         >
           📦 Listings
         </button>
+
+<button
+  onClick={() =>
+    router.push("/admin/notifications")
+  }
+  className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+>
+  🔔 Notifications
+</button>
+
         <button
   onClick={() =>
     router.push(
@@ -298,6 +308,15 @@ return (
         >
           📦 Manage Listings
         </button>
+        
+        <button
+  onClick={() =>
+    router.push("/admin/notifications")
+  }
+  className="bg-purple-600 hover:bg-purple-700 rounded-3xl p-6 text-2xl font-bold"
+>
+  🔔 Send Notifications
+</button>
 
       </div>
 

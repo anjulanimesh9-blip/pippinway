@@ -260,55 +260,46 @@ if (
 
   return;
 }
-  await addDoc(
-    collection(
-      db,
-      "listings"
-    ),
-    {
-      title,
-      price,
-      country,
-      location,
-      category,
-      phone,
-      description,
-      imageUrls,
-      imageUrl:
-        imageUrls[0],
-      ownerEmail:
-        auth
-          .currentUser
-          ?.email,
-      createdAt:
-        new Date(),
-featured:
-  adType ===
-  "featured",
-
-approved: false,
-
-adType,
-
-expiryDate:
-  adType === "free"
-    ? new Date(
-        Date.now() +
-        30 * 24 * 60 * 60 * 1000
-      )
-    : null,
-
-expired: false,
-
-    }
-  );
-  await updateDoc(
-  userRef,
+await addDoc(
+  collection(db, "listings"),
   {
-    adsPostedThisMonth:
-      increment(1),
+    title,
+    price,
+    country,
+    location,
+    category,
+    phone,
+    description,
+    imageUrls,
+    imageUrl: imageUrls[0],
+
+    ownerId: user.uid,
+    ownerEmail: user.email,
+    ownerName:
+      userData?.displayName ||
+      user.displayName ||
+      "Private Seller",
+
+    createdAt: new Date(),
+
+    featured: adType === "featured",
+    approved: false,
+    adType,
+
+    expiryDate:
+      adType === "free"
+        ? new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          )
+        : null,
+
+    expired: false,
   }
-);
+);  
+await updateDoc(userRef, {
+  adsPostedThisMonth: increment(1),
+});
+
   router.push(
     "/profile"
   );

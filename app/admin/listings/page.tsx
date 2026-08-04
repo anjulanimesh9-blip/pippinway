@@ -7,9 +7,14 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
+
+
 import { db } from "../../firebase";
 import { useRouter } from "next/navigation";
+
 import {
   onAuthStateChanged,
 } from "firebase/auth";
@@ -193,36 +198,48 @@ useEffect(() => {
       }
     };
 
-  const approveAd =
-    async (
-      id: string
-    ) => {
-      try {
-        await updateDoc(
-          doc(
-            db,
-            "listings",
-            id
-          ),
-          {
-            approved:
-              true,
-          }
-        );
+  const approveAd = async (id: string) => {
+  try {
+    // Find the listing
+    const listing = listings.find(
+      (item) => item.id === id
+    );
 
-        alert(
-          "Ad Approved!"
-        );
+    if (!listing) {
+      alert("Listing not found");
+      return;
+    }
 
-        fetchListings();
-      } catch (
-        error
-      ) {
-        console.log(
-          error
-        );
+    // Approve ad
+    await updateDoc(
+      doc(db, "listings", id),
+      {
+        approved: true,
       }
-    };
+    );
+
+    // Create notification
+    await addDoc(
+      collection(db, "notifications"),
+      {
+        userEmail: listing.ownerEmail,
+        title: "🎉 Ad Approved",
+        message: `Your listing "${listing.title}" has been approved and is now live on Pippinway.`,
+        type: "approval",
+        isRead: false,
+        listingId: listing.id,
+        createdAt: serverTimestamp(),
+      }
+    );
+
+    alert("Ad Approved!");
+
+    fetchListings();
+  } catch (error) {
+    console.log(error);
+  }
+};
+    
     const approveAllAds =
   async () => {
     const ok = confirm(

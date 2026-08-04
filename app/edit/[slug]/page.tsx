@@ -180,20 +180,28 @@ export default function EditListing() {
 
         {/* Current Photos */}
         <div className="grid grid-cols-2 gap-3 mb-5">
-          {imageUrls.map(
-            (
-              image,
-              index
-            ) => (
-              <img
-                key={index}
-                src={image}
-                alt="Listing"
-                className="w-full h-40 object-cover rounded-2xl border border-gray-700"
-              />
-            )
-          )}
-        </div>
+  {imageUrls.map((image, index) => (
+    <div key={index} className="relative">
+      <img
+        src={image}
+        alt="Listing"
+        className="w-full h-40 object-cover rounded-2xl border border-gray-700"
+      />
+
+      <button
+        type="button"
+        onClick={() =>
+          setImageUrls(
+            imageUrls.filter((_, i) => i !== index)
+          )
+        }
+        className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full"
+      >
+        ✕
+      </button>
+    </div>
+  ))}
+</div>
 
         <input
           type="text"

@@ -1,37 +1,769 @@
 @import "tailwindcss";
 
-body {
-  background: #000;
-  color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+/* =========================================================
+   PIPPINWAY GLOBAL CSS
+========================================================= */
+
+:root{
+
+  --background:#020817;
+  --foreground:#ffffff;
+
+  --primary:#3b82f6;
+  --primary-dark:#2563eb;
+
+  --secondary:#8b5cf6;
+  --secondary-dark:#7c3aed;
+
+  --success:#34d399;
+  --danger:#ef4444;
+
+  --card:#0f172a;
+  --card-hover:#131d35;
+
+  --border:rgba(255,255,255,.08);
+  --border-strong:rgba(255,255,255,.18);
+
+  --gold:#f2b544;
+
+  --shadow-premium:
+    0 14px 35px rgba(0,0,0,.40);
+
+  --shadow-blue:
+    0 0 28px rgba(59,130,246,.30),
+    0 14px 36px rgba(0,0,0,.40);
+
+  --shadow-purple:
+    0 0 24px rgba(139,92,246,.28),
+    0 14px 36px rgba(0,0,0,.40);
+
 }
 
+/* ========================================================= */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+*,
+*::before,
+*::after{
+  box-sizing:border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html{
+
+  scroll-behavior:smooth;
+
+}
+
+html,
+body{
+
+  width:100%;
+  min-height:100%;
+
+  margin:0;
+  padding:0;
+
+  overflow-x:hidden;
+
+}
+
+body{
+
+  background:var(--background);
+
+  color:var(--foreground);
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  -webkit-font-smoothing:antialiased;
+
+}
+
+a{
+
+  color:inherit;
+
+  text-decoration:none;
+
+}
+
+img{
+
+  max-width:100%;
+
+  height:auto;
+
+  user-select:none;
+
+  -webkit-user-drag:none;
+
+}
+
+button{
+
+  font:inherit;
+
+  cursor:pointer;
+
+}
+
+::selection{
+
+  background:var(--primary);
+
+  color:white;
+
+}
+/* =========================================================
+   FEATURED CARD
+========================================================= */
+
+.featured-card{
+
+  position:relative;
+
+  overflow:hidden;
+
+  border-radius:24px;
+
+  background:var(--card);
+
+  border:1px solid var(--border);
+
+  transition:
+    transform .45s ease,
+    border-color .35s ease,
+    box-shadow .45s ease;
+
+}
+
+.featured-card:hover{
+
+  transform:translateY(-6px);
+
+  border-color:rgba(59,130,246,.45);
+
+  box-shadow:var(--shadow-blue);
+
+}
+
+.featured-card::before{
+
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  border-radius:inherit;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.08),
+      transparent 45%
+    );
+
+  opacity:0;
+
+  transition:.35s;
+
+}
+
+.featured-card:hover::before{
+
+  opacity:1;
+
+}
+
+.featured-card img{
+
+  transition:
+    transform .65s ease;
+
+}
+
+.featured-card:hover img{
+
+  transform:scale(1.08);
+
+}
+
+/* =========================================================
+   EMBLA
+========================================================= */
+
+.embla{
+
+  position:relative;
+
+  width:100%;
+
+  overflow:hidden;
+
+}
+
+.embla__viewport{
+
+  overflow:hidden;
+
+  width:100%;
+
+}
+
+.embla__container{
+
+  display:flex;
+
+  align-items:center;
+
+  padding:30px 0 60px;
+
+}
+
+.embla__slide{
+
+  position:relative;
+
+  flex:0 0 auto;
+
+  display:flex;
+
+  justify-content:center;
+
+  padding:0 10px;
+
+}
+
+/* =========================================================
+   PROGRESS DOTS
+========================================================= */
+
+.embla__progress{
+
+  display:flex;
+
+  justify-content:center;
+
+  gap:10px;
+
+  margin-top:18px;
+
+}
+
+.embla__dot{
+
+  width:10px;
+
+  height:10px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.25);
+
+  transition:.35s;
+
+}
+
+.embla__dot[data-selected="true"]{
+
+  width:34px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--primary),
+      var(--secondary)
+    );
+
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn-icon{
+
+  width:46px;
+
+  height:46px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  border-radius:999px;
+
+  background:rgba(0,0,0,.55);
+
+  color:white;
+
+  border:1px solid rgba(255,255,255,.08);
+
+  backdrop-filter:blur(8px);
+
+  transition:.3s;
+
+}
+
+.btn-icon:hover{
+
+  background:rgba(59,130,246,.35);
+
+  border-color:rgba(59,130,246,.5);
+
+}
+/* =========================================================
+   MOBILE FEATURED SWIPER
+========================================================= */
+
+.featured-swiper .swiper{
+
+  width:100%;
+
+  overflow:visible !important;
+
+  position:relative;
+
+  padding:20px 0 70px;
+
+}
+
+.featured-swiper .swiper-wrapper{
+
+  display:flex;
+
+  align-items:center;
+
+}
+
+.featured-swiper .swiper-slide{
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  overflow:visible !important;
+
+  transition:
+    transform .55s ease,
+    opacity .55s ease,
+    filter .55s ease;
+
+  backface-visibility:hidden;
+
+}
+
+/* Center */
+
+.featured-swiper .swiper-slide-active{
+
+  opacity:1;
+
+  z-index:30;
+
+}
+
+/* Side */
+
+.featured-swiper .swiper-slide-prev,
+.featured-swiper .swiper-slide-next{
+
+  opacity:.68;
+
+}
+
+/* Hide Shadows */
+
+.featured-swiper .swiper-slide-shadow-left,
+.featured-swiper .swiper-slide-shadow-right{
+
+  display:none !important;
+
+}
+
+/* Purple Glow */
+
+.featured-swiper .swiper::after{
+
+  content:"";
+
+  position:absolute;
+
+  left:50%;
+
+  bottom:20px;
+
+  transform:translateX(-50%);
+
+  width:220px;
+
+  height:18px;
+
+  border-radius:999px;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(139,92,246,.45),
+      rgba(139,92,246,.15),
+      transparent
+    );
+
+  filter:blur(12px);
+
+  z-index:-1;
+
+}
+
+/* =========================================================
+   DESKTOP FEATURED
+========================================================= */
+
+.featured-carousel{
+
+  overflow:hidden;
+
+  width:100%;
+
+  position:relative;
+
+  padding:20px 0;
+
+}
+
+.featured-track{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:20px;
+
+}
+
+.featured-item{
+
+  transition:
+    transform .45s ease,
+    opacity .45s ease;
+
+}
+
+.featured-item:hover{
+
+  transform:scale(1.04);
+
+}
+
+/* Active Glow */
+
+.featured-active{
+
+  box-shadow:
+
+    var(--shadow-purple),
+
+    var(--shadow-premium);
+
+}
+
+/* =========================================================
+   GPU
+========================================================= */
+
+.swiper *,
+.embla *,
+.featured-card{
+
+  backface-visibility:hidden;
+
+  transform-style:preserve-3d;
+
+}
+/* =========================================================
+   PIPPIN WALKER
+========================================================= */
+
+.pippin-walker{
+
+  position:absolute;
+
+  left:-160px;
+
+  bottom:8px;
+
+  z-index:50;
+
+  pointer-events:none;
+
+  animation:pippinWalk 28s linear infinite;
+
+}
+
+.pippin-wave{
+
+  width:120px;
+
+  display:block;
+
+  filter:drop-shadow(0 10px 15px rgba(0,0,0,.35));
+
+  animation:
+
+    pippinBounce .7s ease-in-out infinite,
+
+    pippinRotate 1.3s ease-in-out infinite;
+
+}
+
+@keyframes pippinWalk{
+
+  from{
+
+    left:-160px;
+
   }
+
+  to{
+
+    left:calc(100% + 160px);
+
+  }
+
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-/* Hide scrollbar */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+@keyframes pippinBounce{
+
+  0%{
+
+    transform:translateY(0);
+
+  }
+
+  50%{
+
+    transform:translateY(-8px);
+
+  }
+
+  100%{
+
+    transform:translateY(0);
+
+  }
+
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+@keyframes pippinRotate{
+
+  0%{
+
+    transform:rotate(0deg);
+
+  }
+
+  25%{
+
+    transform:rotate(4deg);
+
+  }
+
+  50%{
+
+    transform:rotate(0deg);
+
+  }
+
+  75%{
+
+    transform:rotate(-4deg);
+
+  }
+
+  100%{
+
+    transform:rotate(0deg);
+
+  }
+
 }
+
+/* =========================================================
+   HI BUBBLE
+========================================================= */
+
+.pippin-hi{
+
+  position:absolute;
+
+  top:-28px;
+
+  left:50%;
+
+  transform:translateX(-50%);
+
+  background:#7c3aed;
+
+  color:#fff;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:13px;
+
+  font-weight:700;
+
+  white-space:nowrap;
+
+  box-shadow:
+
+    0 8px 20px rgba(124,58,237,.4);
+
+  animation:bubblePulse 1.5s infinite;
+
+}
+
+@keyframes bubblePulse{
+
+  0%{
+
+    transform:translateX(-50%) scale(1);
+
+  }
+
+  50%{
+
+    transform:translateX(-50%) scale(1.08);
+
+  }
+
+  100%{
+
+    transform:translateX(-50%) scale(1);
+
+  }
+
+}
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+.scrollbar-hide{
+
+  -ms-overflow-style:none;
+
+  scrollbar-width:none;
+
+}
+
+.scrollbar-hide::-webkit-scrollbar{
+
+  display:none;
+
+}
+
+.line-clamp-1{
+
+  display:-webkit-box;
+
+  -webkit-box-orient:vertical;
+
+  box-orient:vertical;
+
+  -webkit-line-clamp:1;
+
+  line-clamp:1;
+
+  overflow:hidden;
+
+}
+
+.line-clamp-2{
+
+  display:-webkit-box;
+
+  -webkit-box-orient:vertical;
+
+  box-orient:vertical;
+
+  -webkit-line-clamp:2;
+
+  line-clamp:2;
+
+  overflow:hidden;
+
+}
+
+.line-clamp-6{
+
+  display:-webkit-box;
+
+  -webkit-box-orient:vertical;
+
+  box-orient:vertical;
+
+  -webkit-line-clamp:6;
+
+  line-clamp:6;
+
+  overflow:hidden;
+
+}
+
+.description-expand{
+
+  transition:all .3s ease;
+
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width:1024px){
+
+  .pippin-walker{
+
+    display:none;
+
+  }
+
+}
+
+@media (max-width:768px){
+
+  .featured-card{
+
+    border-radius:20px;
+
+  }
+
+}
+
+@media (prefers-reduced-motion:reduce){
+
+  *{
+
+    animation:none !important;
+
+    transition:none !important;
+
+    scroll-behavior:auto !important;
+
+  }
+
+}
+
+/* =========================================================
+   DESKTOP STICKY SIDEBARS
+========================================================= */
+
