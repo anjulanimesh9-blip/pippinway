@@ -92,11 +92,11 @@ export default function RootLayout({
         {children}
 
         <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5400699100789727"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+  async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5400699100789727"
+  crossOrigin="anonymous"
+  strategy="beforeInteractive"
+/>
       </body>
     </html>
   );
