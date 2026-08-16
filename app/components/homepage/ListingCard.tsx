@@ -1,150 +1,101 @@
 "use client";
 
 import Link from "next/link";
+import { Clock, Heart, MapPin } from "lucide-react";
+import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
+import type { ListingRecord } from "@/lib/types/featured";
 
 type ListingCardProps = {
-  item: any;
+  item: ListingRecord;
   favorites: string[];
-  toggleFavorite: (e: any, listingId: string) => void;
-  currencyMap: any;
+  toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
+  grid?: boolean;
 };
 
 export default function ListingCard({
   item,
   favorites,
   toggleFavorite,
-  currencyMap,
+  grid = true,
 }: ListingCardProps) {
-  const currency =
-    currencyMap[item.country?.trim()?.toLowerCase()] || "Rs.";
+  const image = item.imageUrls?.[0] || item.imageUrl || "/placeholder.png";
+  const slug = item.slug || item.id;
+  const relativeTime = getRelativeTime(item.createdAt);
 
-  const image =
-    item.imageUrls?.[0] ||
-    item.imageUrl ||
-    "/placeholder.png";
-
-  return (
-    <>
-      {/* ---------------- Mobile ---------------- */}
+  if (!grid) {
+    return (
       <Link
-        href={`/listings/${item.id}`}
-        className="lg:hidden block overflow-hidden rounded-2xl bg-[#111827] border border-white/10 shadow hover:shadow-xl transition"
+        href={`/listings/${slug}`}
+        className="group relative flex flex-row overflow-hidden rounded-2xl border border-white/10 bg-[#1e293b] p-4 gap-4 hover:border-white/20 transition-all"
       >
-        <div className="relative">
-          <img
-            src={image}
-            alt={item.title}
-            className="w-full aspect-square object-cover"
-          />
-
-          {item.featured && (
-            <span className="absolute top-2 left-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 rounded-lg">
-              👑 FEATURED
-            </span>
-          )}
-
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleFavorite(e, item.id);
-            }}
-            className="absolute top-2 right-2 w-9 h-9 rounded-full bg-black/60 flex items-center justify-center"
-          >
-            {favorites.includes(item.id) ? "❤️" : "🤍"}
-          </button>
+        <div className="relative w-[200px] h-[140px] shrink-0 overflow-hidden rounded-xl">
+          <img src={image} alt={item.title ?? "Listing"} className="w-full h-full object-cover" />
         </div>
-
-        <div className="p-3">
-          <h2 className="font-semibold text-white text-sm line-clamp-2 min-h-[40px]">
-            {item.title}
-          </h2>
-
-          <p className="mt-2 text-green-400 font-bold text-lg">
-            {currency} {Number(item.price || 0).toLocaleString()}
-          </p>
-
-          <p className="text-gray-400 text-xs mt-1 truncate">
-            📍 {item.location}
-          </p>
-
-          <p className="text-blue-400 text-xs mt-1 truncate">
-            {item.category}
-          </p>
+        <div className="flex flex-col flex-1 min-w-0">
+          <p className="text-violet-400 font-bold text-lg">{formatPrice(Number(item.price ?? 0), item.country)}</p>
+          <h2 className="font-semibold text-white truncate">{item.title}</h2>
+          <p className="text-gray-400 text-sm mt-1">{item.location}, {item.country}</p>
         </div>
       </Link>
+    );
+  }
 
-      {/* ---------------- Desktop ---------------- */}
-      <Link
-        href={`/listings/${item.id}`}
-        className={`hidden lg:flex group relative overflow-hidden rounded-2xl p-4 gap-4 items-start transition-all hover:shadow-xl
-        ${
-          item.featured
-            ? "bg-yellow-500/5 border border-yellow-500"
-            : "bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10"
-        }`}
-      >
-        {item.featured && (
-          <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">
-            👑 FEATURED
-          </div>
+  return (
+    <Link
+      href={`/listings/${slug}`}
+      className="group block overflow-hidden rounded-2xl bg-[#1e293b] shadow-md hover:shadow-lg transition-shadow"
+    >
+      <div className="relative aspect-square bg-[#0f172a]">
+        <img
+          src={image}
+          alt={item.title ?? "Listing"}
+          className="w-full h-full object-cover"
+        />
+
+        {item.featured === true && (
+          <span className="absolute top-2 left-2 rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-bold text-white">
+            Featured
+          </span>
         )}
 
         <button
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleFavorite(e, item.id);
           }}
-          className="absolute top-2 right-2 z-20 bg-black/60 hover:bg-black/80 rounded-full w-12 h-12 flex items-center justify-center"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow"
         >
-          {favorites.includes(item.id) ? (
-            <span className="text-red-500 text-xl">❤️</span>
-          ) : (
-            <span className="text-white text-xl">🤍</span>
-          )}
-        </button>
-
-        <div className="relative w-[180px] h-[130px] flex-shrink-0 overflow-hidden rounded-xl">
-          <img
-            src={image}
-            alt={item.title}
-            className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+          <Heart
+            size={16}
+            className={
+              favorites.includes(item.id)
+                ? "fill-red-500 text-red-500"
+                : "text-gray-600"
+            }
           />
-        </div>
+        </button>
+      </div>
 
-        <div className="flex flex-col flex-1 min-w-0">
-          <h2 className="font-bold text-white text-xl line-clamp-1 pr-10">
-            {item.title}
-          </h2>
-
-          <p className="text-blue-400 mt-1">
-            {item.category}
+      <div className="p-3">
+        <p className="text-violet-400 font-bold text-base leading-tight truncate">
+          {formatPrice(Number(item.price ?? 0), item.country)}
+        </p>
+        <h2 className="text-white font-semibold text-sm mt-0.5 truncate">
+          {item.title}
+        </h2>
+        <p className="text-gray-400 text-xs mt-1 flex items-center gap-1 truncate">
+          <MapPin size={12} className="shrink-0" />
+          {item.location}, {item.country}
+        </p>
+        {relativeTime && (
+          <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+            <Clock size={11} className="shrink-0" />
+            {relativeTime}
           </p>
-
-          <p className="text-gray-400 mt-1">
-            {item.location}
-          </p>
-
-          <p className="text-gray-500 text-sm mt-1">
-            🕒{" "}
-            {item.createdAt
-              ? new Date(
-                  item.createdAt.seconds * 1000
-                ).toLocaleDateString("en-GB")
-              : "Recently"}
-          </p>
-
-          <p className="mt-3">
-            <span className="text-green-400 text-lg font-semibold">
-              {currency}
-            </span>{" "}
-            <span className="text-green-400 text-3xl font-bold">
-              {Number(item.price || 0).toLocaleString()}
-            </span>
-          </p>
-        </div>
-      </Link>
-    </>
+        )}
+      </div>
+    </Link>
   );
 }

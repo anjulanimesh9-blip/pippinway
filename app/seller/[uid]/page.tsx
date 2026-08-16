@@ -1,6 +1,6 @@
 "use client";
 
-import LoadingScreen from "../../settings/components/LoadingScreen";
+import LoadingScreen from "../../profile/settings/components/LoadingScreen";
 
 import { useSeller } from "./hooks/useSeller";
 

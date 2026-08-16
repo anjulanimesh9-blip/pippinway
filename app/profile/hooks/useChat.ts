@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth, db } from "../../firebase";
+import { subscribeUserChats } from "@/lib/subscribeUserChats";
 import {
   collection,
   query,
@@ -14,7 +16,9 @@ import {
 } from "firebase/firestore";
 
 export default function useChat() {
-  const user = auth.currentUser;
+  const [user, setUser] = useState<User | null>(auth.currentUser);
+
+  useEffect(() => onAuthStateChanged(auth, setUser), []);
 
   const [chatRooms, setChatRooms] = useState<any[]>([]);
   const [selectedChat, setSelectedChat] = useState<any>(null);
@@ -39,59 +43,34 @@ export default function useChat() {
   // ===========================
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setChatRooms([]);
+      return;
+    }
 
-    const q = query(
-      collection(db, "chats"),
-      orderBy("updatedAt", "desc")
-    );
+    const unsub = subscribeUserChats(user.email, (chats) => {
+      setChatRooms(chats);
 
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const chats = snapshot.docs
-          .map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }))
-          .filter(
-            (chat: any) =>
-              chat.sellerEmail === user.email ||
-              chat.buyerEmail === user.email
-          );
+      const latestUnread = chats.find(
+        (chat) =>
+          chat.lastSender !== user.email &&
+          !(user.uid && chat.readBy?.[user.uid])
+      );
 
-        console.log("Chat Rooms:", chats);
-
-        setChatRooms(chats);
-
-        const latestUnread = chats.find(
-          (chat: any) =>
-            chat.lastSender !== user.email &&
-            !(user.uid && chat.readBy?.[user.uid])
-        );
-
-        if (
-          latestUnread &&
-          latestUnread.lastMessage &&
-          latestUnread.lastMessage !== lastMessageId
-        ) {
-          setPopupChat(latestUnread);
-          setLastMessageId(latestUnread.lastMessage);
-
-          setShowPopup(true);
-
-          setTimeout(() => {
-            setShowPopup(false);
-          }, 5000);
-        }
-      },
-      (error) => {
-        console.error("Chat Room Error:", error);
+      if (
+        latestUnread &&
+        latestUnread.lastMessage &&
+        latestUnread.lastMessage !== lastMessageId
+      ) {
+        setPopupChat(latestUnread);
+        setLastMessageId(latestUnread.lastMessage);
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 5000);
       }
-    );
+    });
 
     return unsub;
-  }, [user?.uid, lastMessageId]);
+  }, [user?.email, user?.uid, lastMessageId]);
 
   // ===========================
   // Mark Read

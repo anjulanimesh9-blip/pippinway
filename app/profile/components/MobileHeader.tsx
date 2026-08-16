@@ -28,6 +28,8 @@ export default function MobileHeader({
           alt="logo"
           width={120}
           height={40}
+          className="h-10 w-auto object-contain"
+          priority
         />
 
         <button

@@ -1,80 +1,156 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { LayoutGrid, List } from "lucide-react";
+import ProfileListingCard from "./ProfileListingCard";
+import { getListingStatus, type ListingStatus } from "../utils";
+
+type FilterKey = "all" | ListingStatus;
+
 type MyListingsProps = {
   myAds: any[];
-  userCurrency: string;
+  favoriteIds: string[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
 };
+
+const FILTERS: Array<{ key: FilterKey; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "pending", label: "Pending" },
+  { key: "sold", label: "Sold" },
+  { key: "draft", label: "Draft" },
+];
 
 export default function MyListings({
   myAds,
-  userCurrency,
+  favoriteIds,
   onEdit,
   onDelete,
+  onToggleFavorite,
 }: MyListingsProps) {
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [view, setView] = useState<"grid" | "list">("grid");
+
+  const listings = useMemo(() => {
+    const next = myAds.filter((ad) =>
+      filter === "all" ? true : getListingStatus(ad) === filter
+    );
+
+    next.sort((a, b) => {
+      const priceA = Number(a.price ?? 0);
+      const priceB = Number(b.price ?? 0);
+      const timeA = toTime(a.createdAt);
+      const timeB = toTime(b.createdAt);
+
+      if (sortBy === "low-price") return priceA - priceB;
+      if (sortBy === "high-price") return priceB - priceA;
+      if (sortBy === "oldest") return timeA - timeB;
+      return timeB - timeA;
+    });
+
+    return next;
+  }, [myAds, filter, sortBy]);
+
   return (
-    <div
-      id="my-listings"
-      className="bg-[#0f172a] border border-gray-800 rounded-[28px] p-5 shadow-xl"
-    >
-      <h2 className="text-2xl font-bold mb-5 border-b border-gray-800 pb-3">
-        My Ads
-      </h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-
-        {myAds.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500 py-10">
-            No ads yet.
-          </div>
-        ) : (
-          myAds.map((ad) => (
-            <div
-              key={ad.id}
-              className="bg-[#111827] border border-gray-800 rounded-[22px] overflow-hidden"
+    <div id="my-listings">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setFilter(item.key)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                filter === item.key
+                  ? "bg-[#2563eb] text-white"
+                  : "bg-[#151A22] text-gray-400 hover:text-white"
+              }`}
             >
-              <img
-                src={ad.imageUrl}
-                alt={ad.title}
-                className="w-full h-32 object-cover"
-              />
+              {item.label}
+            </button>
+          ))}
+        </div>
 
-              <div className="p-3">
-                <h3 className="text-sm md:text-lg font-bold line-clamp-2">
-                  {ad.title}
-                </h3>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-xl border border-white/10 bg-[#151A22] px-3 py-2 text-xs text-gray-300 outline-none"
+          >
+            <option value="newest">Sort by: Newest</option>
+            <option value="oldest">Sort by: Oldest</option>
+            <option value="high-price">Sort by: Price High</option>
+            <option value="low-price">Sort by: Price Low</option>
+          </select>
 
-                <p className="text-gray-400 mt-1">
-                  {ad.location}
-                </p>
-
-                <p className="text-green-400 text-lg font-bold mt-2">
-                  {userCurrency}{" "}
-                  {Number(ad.price).toLocaleString()}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-2 mt-4">
-
-                  <button
-                    onClick={() => onEdit(ad.id)}
-                    className="bg-blue-600 hover:bg-blue-700 py-2 rounded-xl w-full"
-                  >
-                    ✏️ Edit
-                  </button>
-
-                  <button
-                    onClick={() => onDelete(ad.id)}
-                    className="bg-red-600 hover:bg-red-700 py-2 rounded-xl w-full"
-                  >
-                    🗑 Delete
-                  </button>
-
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-
+          <div className="flex overflow-hidden rounded-xl border border-white/10 bg-[#151A22]">
+            <button
+              type="button"
+              onClick={() => setView("grid")}
+              className={`p-2 ${view === "grid" ? "bg-white/10 text-white" : "text-gray-500"}`}
+              aria-label="Grid view"
+            >
+              <LayoutGrid size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("list")}
+              className={`p-2 ${view === "list" ? "bg-white/10 text-white" : "text-gray-500"}`}
+              aria-label="List view"
+            >
+              <List size={15} />
+            </button>
+          </div>
+        </div>
       </div>
+
+      {listings.length === 0 ? (
+        <div className="rounded-2xl border border-white/8 bg-[#151A22] py-16 text-center text-gray-500">
+          No ads in this filter yet.
+        </div>
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {listings.map((ad) => (
+            <ProfileListingCard
+              key={ad.id}
+              ad={ad}
+              isFavorite={favoriteIds.includes(ad.id)}
+              onToggleFavorite={onToggleFavorite}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {listings.map((ad) => (
+            <ProfileListingCard
+              key={ad.id}
+              ad={ad}
+              view="list"
+              isFavorite={favoriteIds.includes(ad.id)}
+              onToggleFavorite={onToggleFavorite}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+function toTime(value: unknown): number {
+  if (!value) return 0;
+  if (typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (typeof (value as { seconds?: number }).seconds === "number") {
+    return (value as { seconds: number }).seconds * 1000;
+  }
+  const date = value instanceof Date ? value : new Date(value as string | number);
+  return isNaN(date.getTime()) ? 0 : date.getTime();
 }

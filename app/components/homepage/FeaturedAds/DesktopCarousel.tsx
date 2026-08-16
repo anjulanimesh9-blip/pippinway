@@ -1,15 +1,18 @@
 "use client";
 
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import EmblaAutoplay from "embla-carousel-autoplay";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import FeaturedCard from "./FeaturedCard";
+import type { ListingRecord } from "@/lib/types/featured";
 
 type Props = {
-  items: any[];
+  items: ListingRecord[];
   favorites: string[];
-  toggleFavorite: (e: any, listingId: string) => void;
+  toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
   currencyMap: Record<string, string>;
 };
 
@@ -22,7 +25,7 @@ export default function DesktopCarousel({
   const autoplay = useMemo(
     () =>
       EmblaAutoplay({
-        delay: 3000,
+        delay: 5000,
         stopOnInteraction: false,
         stopOnMouseEnter: true,
       }),
@@ -30,84 +33,61 @@ export default function DesktopCarousel({
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    {
-      loop: true,
-      align: "center",
-      containScroll: false,
-    },
-    [autoplay]
+    { loop: items.length > 1, align: "start", containScroll: "trimSnaps" },
+    items.length > 1 ? [autoplay] : []
   );
 
   const [selected, setSelected] = useState(0);
 
   useEffect(() => {
     if (!emblaApi) return;
-
-    const onSelect = () => {
-      setSelected(emblaApi.selectedScrollSnap());
-    };
-
+    const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
     onSelect();
     emblaApi.on("select", onSelect);
-
     return () => {
       emblaApi.off("select", onSelect);
     };
   }, [emblaApi]);
 
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
   return (
-    <div className="hidden lg:block w-full">
-      <div ref={emblaRef} className="overflow-hidden py-8">
-        <div className="flex items-center">
+    <div className="hidden lg:block relative w-full">
+      {items.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={scrollPrev}
+            aria-label="Previous featured ads"
+            className="absolute left-0 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/10 bg-black/60 p-2 text-white hover:bg-black/80"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={scrollNext}
+            aria-label="Next featured ads"
+            className="absolute right-0 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/10 bg-black/60 p-2 text-white hover:bg-black/80"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </>
+      )}
 
-{items.map((item, index) => {
-  const total = items.length;
-
-  let distance = Math.abs(index - selected);
-
-  if (distance > total / 2) {
-    distance = total - distance;
-  }
-
-  let scale = "scale-75 opacity-40";
-  let z = "z-0";
-
-  if (distance === 0) {
-    scale = "scale-110 opacity-100";
-    z = "z-30";
-  } else if (distance === 1) {
-    scale = "scale-95 opacity-80";
-    z = "z-20";
-  } else if (distance === 2) {
-    scale = "scale-90 opacity-60";
-    z = "z-10";
-  }
-
-return (
-  <div
-    key={`${item.id}-${index}`}
-    className={`
-      flex-[0_0_18%]
-      px-4
-      flex
-      justify-center
-      transition-all
-      duration-500
-      ${scale}
-      ${z}
-    `}
-  >
-    <FeaturedCard
-      item={item}
-      favorites={favorites}
-      toggleFavorite={toggleFavorite}
-      currencyMap={currencyMap}
-      active={distance === 0}
-    />
-  </div>
-);
-})}
-
+      <div ref={emblaRef} className="overflow-hidden px-10 py-4">
+        <div className="flex gap-4">
+          {items.map((item, index) => (
+            <div key={item.id} className="min-w-0 flex-[0_0_32%]">
+              <FeaturedCard
+                item={item}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
+                currencyMap={currencyMap}
+                active={index === selected}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>

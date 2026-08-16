@@ -34,9 +34,9 @@ export default function CategoryFilter({
             <button
               key={category.name}
               onClick={() => setSelectedCategory(category.name)}
-              className={`flex flex-col items-center justify-center min-w-[82px] h-[82px] rounded-2xl transition-all border ${
+              className={`flex flex-col items-center justify-center min-w-[72px] h-[72px] rounded-2xl transition-all border ${
                 active
-                  ? "bg-blue-600 border-blue-500 text-white shadow-lg"
+                  ? "bg-yellow-400 border-yellow-400 text-black shadow-lg"
                   : "bg-[#111827] border-white/10 text-gray-300 hover:bg-[#1f2937]"
               }`}
             >

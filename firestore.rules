@@ -1,0 +1,244 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminEmail() {
+      return isSignedIn() &&
+        request.auth.token.email == 'anjulanimesh9@gmail.com';
+    }
+
+    function isRoleAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isAdmin() {
+      return isAdminEmail() || isRoleAdmin();
+    }
+
+    function userCreditBalance() {
+      return resource.data.featuredCredits == null
+        ? 0
+        : resource.data.featuredCredits;
+    }
+
+    function isFeaturedCreditSpend() {
+      return request.resource.data.featuredCredits == userCreditBalance() - 1 &&
+        request.resource.data.featuredCredits >= 0 &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['featuredCredits', 'featuredCreditLots']);
+    }
+
+    function isListingOwner() {
+      return request.auth.uid == resource.data.ownerId ||
+        request.auth.token.email == resource.data.ownerEmail;
+    }
+
+    function listingApprovalFields() {
+      return [
+        'approved',
+        'rejected',
+        'rejectionReason',
+        'approvedAt',
+        'approvedBy',
+        'rejectedAt',
+        'rejectedBy'
+      ];
+    }
+
+    function listingFeaturedFields() {
+      return [
+        'featured',
+        'adType',
+        'featuredStartDate',
+        'featuredExpiryDate',
+        'featuredExpiresAt',
+        'featuredPackageId',
+        'featuredPurchaseId',
+        'featuredBy'
+      ];
+    }
+
+    function listingProtectedFields() {
+      return [
+        'ownerId',
+        'ownerEmail',
+        'ownerName',
+        'price',
+        'title',
+        'description',
+        'imageUrl',
+        'imageUrls',
+        'category',
+        'location',
+        'country',
+        'phone',
+        'createdAt',
+        'expired'
+      ];
+    }
+
+    function isSellerFeaturedActivation() {
+      return request.resource.data.featured == true &&
+        request.resource.data.adType == 'featured' &&
+        request.resource.data.featuredBy == request.auth.uid;
+    }
+
+    function isSellerCreditFeatureUpdate() {
+      return isSellerFeaturedActivation() &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(listingProtectedFields()) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(listingApprovalFields());
+    }
+
+    function isChatParticipantData(data) {
+      return isSignedIn() && (
+        request.auth.token.email == data.buyerEmail ||
+        request.auth.token.email == data.sellerEmail
+      );
+    }
+
+    function isChatParticipant(chatId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/chats/$(chatId)) &&
+        isChatParticipantData(get(/databases/$(database)/documents/chats/$(chatId)).data);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+
+      allow create: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) &&
+          (
+            isFeaturedCreditSpend() ||
+            !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['featuredCredits', 'featuredCreditLots', 'featuredCreditDurationDays'])
+          )
+        )
+      );
+
+      allow delete: if isAdmin();
+
+      match /favorites/{listingId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          isListingOwner() &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(listingApprovalFields()) &&
+          (
+            !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(listingFeaturedFields()) ||
+            isSellerCreditFeatureUpdate()
+          )
+        )
+      );
+      allow delete: if isSignedIn() && (
+        isAdmin() ||
+        request.auth.uid == resource.data.ownerId ||
+        request.auth.token.email == resource.data.ownerEmail
+      );
+    }
+
+    match /featured_packages/{packageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /payment_settings/{country} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /featured_package_purchases/{purchaseId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    match /featured_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['views', 'clicks'])
+      );
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() &&
+        resource.data.userEmail == request.auth.token.email;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() &&
+        resource.data.userEmail == request.auth.token.email;
+      allow delete: if isAdmin();
+    }
+
+    match /chats/{chatId} {
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        isChatParticipantData(resource.data)
+      );
+
+      allow create: if isSignedIn() &&
+        isChatParticipantData(request.resource.data);
+
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          isChatParticipantData(resource.data) &&
+          request.resource.data.buyerEmail == resource.data.buyerEmail &&
+          request.resource.data.sellerEmail == resource.data.sellerEmail &&
+          request.resource.data.listingId == resource.data.listingId
+        )
+      );
+
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isChatParticipant(chatId) || isAdmin();
+
+        allow create: if isChatParticipant(chatId) &&
+          request.resource.data.sender == request.auth.token.email;
+
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}

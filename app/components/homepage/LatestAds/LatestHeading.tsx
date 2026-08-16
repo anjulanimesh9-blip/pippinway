@@ -1,12 +1,16 @@
-export default function LatestHeading() {
+type Props = {
+  count?: number;
+};
+
+export default function LatestHeading({ count = 0 }: Props) {
   return (
-    <div className="mb-6">
-      <h1
-        id="latest-listings"
-        className="text-3xl md:text-4xl font-bold text-white"
-      >
-        Latest Listings
-      </h1>
+    <div className="mb-3 mt-2">
+      <h2 id="latest-listings" className="text-lg font-bold text-white">
+        Latest Ads
+      </h2>
+      {count > 0 && (
+        <p className="text-xs text-gray-500 mt-0.5">{count} ads</p>
+      )}
     </div>
   );
 }

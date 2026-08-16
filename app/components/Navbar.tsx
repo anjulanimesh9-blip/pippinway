@@ -121,7 +121,8 @@ useEffect(() => {
     alt="Pippinway Logo"
     width={90}
     height={90}
-    className="object-contain shrink-0"
+    className="h-[90px] w-auto object-contain shrink-0"
+    priority
   />
 
  <div className="flex flex-col leading-tight min-w-0">

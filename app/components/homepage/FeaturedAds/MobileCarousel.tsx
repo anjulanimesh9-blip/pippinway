@@ -1,17 +1,18 @@
 "use client";
 
 import { Swiper, SwiperSlide } from "swiper/react";
-import { EffectCoverflow, Autoplay } from "swiper/modules";
+import { Autoplay, Navigation } from "swiper/modules";
 
 import "swiper/css";
-import "swiper/css/effect-coverflow";
+import "swiper/css/navigation";
 
 import FeaturedCard from "./FeaturedCard";
+import type { ListingRecord } from "@/lib/types/featured";
 
 type Props = {
-  items: any[];
+  items: ListingRecord[];
   favorites: string[];
-  toggleFavorite: (e: any, listingId: string) => void;
+  toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
   currencyMap: Record<string, string>;
 };
 
@@ -22,49 +23,34 @@ export default function MobileCarousel({
   currencyMap,
 }: Props) {
   return (
-    <div className="featured-swiper lg:hidden relative pb-12">
-
+    <div className="featured-swiper lg:hidden relative pb-4">
       <Swiper
-        effect="coverflow"
+        modules={[Autoplay, Navigation]}
+        slidesPerView={1.15}
+        spaceBetween={16}
         centeredSlides
-        loop={items.length > 4}
+        loop={items.length >= 4}
         grabCursor
-
-        slidesPerView={1.25}
-        spaceBetween={-80}
-
-        autoplay={{
-          delay: 2800,
-          disableOnInteraction: false,
-        }}
-
-        coverflowEffect={{
-          rotate: 0,
-          stretch: -20,
-          depth: 420,
-          modifier: 2.8,
-          scale: 0.75,
-          slideShadows: false,
-        }}
-
-        modules={[EffectCoverflow, Autoplay]}
+        navigation
+        autoplay={
+          items.length > 1
+            ? { delay: 5000, disableOnInteraction: false }
+            : false
+        }
       >
         {items.map((item) => (
           <SwiperSlide key={item.id}>
-            <div className="flex justify-center">
-
             <FeaturedCard
-  item={item}
-  favorites={favorites}
-  toggleFavorite={toggleFavorite}
-  currencyMap={currencyMap}
-/>
-
-            </div>
+              item={item}
+              favorites={favorites}
+              toggleFavorite={toggleFavorite}
+              currencyMap={currencyMap}
+              mobile
+              active
+            />
           </SwiperSlide>
         ))}
       </Swiper>
-
     </div>
   );
 }

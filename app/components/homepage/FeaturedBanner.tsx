@@ -29,17 +29,17 @@ export default function FeaturedBanner() {
 
           <div className="mt-5 flex gap-3">
             <Link
-              href="/featured"
+              href="/featured-ads"
               className="rounded-xl bg-white px-5 py-3 font-semibold text-blue-700 transition hover:bg-gray-100"
             >
-              🚀 Boost Now
+              Manage Featured Ads
             </Link>
 
             <Link
-              href="/pricing"
+              href="/featured-packages"
               className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white transition hover:bg-white/10"
             >
-              View Plans
+              Buy Package
             </Link>
           </div>
 

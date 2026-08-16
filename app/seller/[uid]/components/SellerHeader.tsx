@@ -24,16 +24,19 @@ export default function SellerHeader({
   seller,
   totalListings,
 }: SellerHeaderProps) {
-  const memberSince =
-    seller.membershipSince?.toDate
-      ? seller.membershipSince
-          .toDate()
-          .toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-      : "N/A";
+  const memberSince = (() => {
+    const raw = seller.membershipSince;
+    if (raw && typeof (raw as { toDate?: () => Date }).toDate === "function") {
+      return (raw as { toDate: () => Date })
+        .toDate()
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+    }
+    return "N/A";
+  })();
 
   return (
     <div className="overflow-hidden rounded-[34px] border border-white/10 bg-[#0F172A] shadow-2xl">

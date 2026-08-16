@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
@@ -111,6 +112,18 @@ export default function useProfile() {
     );
   };
 
+  const addFavorite = async (ad: any) => {
+    if (!user || !ad?.id) return;
+
+    await setDoc(doc(db, "users", user.uid, "favorites", ad.id), {
+      createdAt: new Date(),
+    });
+
+    setFavoriteAds((prev) =>
+      prev.some((item: any) => item.id === ad.id) ? prev : [...prev, ad]
+    );
+  };
+
   const deleteListing = async (listingId: string) => {
     await deleteDoc(doc(db, "listings", listingId));
 
@@ -146,6 +159,7 @@ export default function useProfile() {
     fetchFavorites,
 
     removeFavorite,
+    addFavorite,
     deleteListing,
     requestProSeller,
 

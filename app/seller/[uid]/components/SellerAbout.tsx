@@ -11,16 +11,23 @@ export default function SellerAbout({
   seller,
   listings,
 }: Props) {
-  const memberSince =
-    seller.createdAt?.seconds
-      ? new Date(
-          seller.createdAt.seconds * 1000
-        ).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      : "-";
+  const memberSince = (() => {
+    const raw = seller.createdAt;
+    if (raw && typeof (raw as { seconds?: number }).seconds === "number") {
+      return new Date((raw as { seconds: number }).seconds * 1000).toLocaleDateString(
+        "en-GB",
+        { day: "2-digit", month: "short", year: "numeric" }
+      );
+    }
+    if (raw && typeof (raw as { toDate?: () => Date }).toDate === "function") {
+      return (raw as { toDate: () => Date }).toDate().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    }
+    return "-";
+  })();
 
   return (
     <div className="bg-[#0F172A] rounded-3xl border border-slate-800 p-6">

@@ -4,9 +4,10 @@ import { useEffect, useRef } from "react";
 
 interface Message {
   id: string;
-  text: string;
+  text?: string;
+  message?: string;
   sender: string;
-  createdAt?: any;
+  createdAt?: unknown;
 }
 
 interface ChatWindowProps {
@@ -58,11 +59,12 @@ export default function ChatWindow({
                   : "bg-slate-700 text-white"
               }`}
             >
-              <p>{msg.text}</p>
+              <p>{msg.text ?? msg.message ?? ""}</p>
 
-              {msg.createdAt?.toDate && (
+              {typeof (msg.createdAt as { toDate?: () => Date } | undefined)?.toDate ===
+                "function" && (
                 <p className="text-[11px] opacity-70 mt-2">
-                  {msg.createdAt
+                  {(msg.createdAt as { toDate: () => Date })
                     .toDate()
                     .toLocaleTimeString([], {
                       hour: "2-digit",

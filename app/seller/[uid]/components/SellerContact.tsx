@@ -49,7 +49,7 @@ export default function SellerContact({
           <button
             onClick={() =>
               window.open(
-                `https://wa.me/${seller.whatsapp.replace(/\D/g, "")}`,
+                `https://wa.me/${seller.whatsapp?.replace(/\D/g, "")}`,
                 "_blank"
               )
             }

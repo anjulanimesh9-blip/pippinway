@@ -210,6 +210,34 @@ return (
           📦 Listings
         </button>
 
+        <button
+          onClick={() => router.push("/admin/ad-approvals")}
+          className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+        >
+          ✅ Ad Approvals
+        </button>
+
+        <button
+          onClick={() => router.push("/admin/featured-payments")}
+          className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+        >
+          💳 Featured Payments
+        </button>
+
+        <button
+          onClick={() => router.push("/admin/featured-packages")}
+          className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+        >
+          ⭐ Featured Packages
+        </button>
+
+        <button
+          onClick={() => router.push("/admin/banners")}
+          className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+        >
+          🖼️ Banner Ads
+        </button>
+
 <button
   onClick={() =>
     router.push("/admin/notifications")

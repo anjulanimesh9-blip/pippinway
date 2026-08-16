@@ -19,8 +19,10 @@ export interface Seller {
   phone?: string;
   whatsapp?: string;
   membership?: string;
+  membershipSince?: { toDate?: () => Date } | Date | string;
+  verifiedSeller?: boolean;
   email?: string;
-  createdAt?: any;
+  createdAt?: { seconds?: number; toDate?: () => Date } | Date | string;
 }
 
 export interface Listing {

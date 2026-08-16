@@ -12,6 +12,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/app/firebase";
+import { subscribeUserChats } from "@/lib/subscribeUserChats";
 
 export interface Conversation {
   id: string;
@@ -19,25 +20,23 @@ export interface Conversation {
   sellerEmail: string;
   listingId: string;
   lastMessage: string;
-  updatedAt?: any;
+  updatedAt?: unknown;
 }
 
 export interface Message {
   id: string;
-  text: string;
+  text?: string;
+  message?: string;
   sender: string;
-  createdAt?: any;
+  createdAt?: unknown;
 }
 
 export function useChat() {
   const [loading, setLoading] = useState(true);
-
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedChat, setSelectedChat] = useState("");
-
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // Load conversations
   useEffect(() => {
     const currentUser = auth.currentUser;
 
@@ -46,36 +45,24 @@ export function useChat() {
       return;
     }
 
-    const q = query(
-      collection(db, "chats"),
-      orderBy("updatedAt", "desc")
+    const unsubscribe = subscribeUserChats(
+      currentUser.email,
+      (chats) => {
+        setConversations(chats as Conversation[]);
+        if (!selectedChat && chats.length > 0) {
+          setSelectedChat(chats[0].id);
+        }
+        setLoading(false);
+      },
+      () => {
+        setConversations([]);
+        setLoading(false);
+      }
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const chats = snapshot.docs
-        .map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Conversation, "id">),
-        }))
-        .filter(
-          (chat) =>
-            chat.buyerEmail === currentUser.email ||
-            chat.sellerEmail === currentUser.email
-        );
-
-      setConversations(chats);
-
-      if (!selectedChat && chats.length > 0) {
-        setSelectedChat(chats[0].id);
-      }
-
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    return unsubscribe;
   }, [selectedChat]);
 
-  // Load messages of selected conversation
   useEffect(() => {
     if (!selectedChat) {
       setMessages([]);
@@ -87,43 +74,45 @@ export function useChat() {
       orderBy("createdAt", "asc")
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Message, "id">),
-      }));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setMessages(
+          snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            ...(docSnap.data() as Omit<Message, "id">),
+          }))
+        );
+      },
+      (err) => {
+        console.error("Messages Error:", err);
+      }
+    );
 
-      setMessages(data);
-    });
-
-    return () => unsubscribe();
+    return unsubscribe;
   }, [selectedChat]);
 
-  // Send message
   const sendMessage = async (text: string) => {
     if (!selectedChat) return;
 
     const currentUser = auth.currentUser;
-
     if (!currentUser?.email) return;
 
     await setDoc(
       doc(db, "chats", selectedChat),
       {
         lastMessage: text,
+        lastSender: currentUser.email,
         updatedAt: serverTimestamp(),
       },
       { merge: true }
     );
 
-    await addDoc(
-      collection(db, "chats", selectedChat, "messages"),
-      {
-        text,
-        sender: currentUser.email,
-        createdAt: serverTimestamp(),
-      }
-    );
+    await addDoc(collection(db, "chats", selectedChat, "messages"), {
+      text,
+      sender: currentUser.email,
+      createdAt: serverTimestamp(),
+    });
   };
 
   return {
@@ -131,7 +120,6 @@ export function useChat() {
     conversations,
     selectedChat,
     setSelectedChat,
-
     messages,
     sendMessage,
   };

@@ -95,6 +95,7 @@ await setDoc(
     monthlyAdLimit: 10,
     adsPostedThisMonth: 0,
     featuredCredits: 0,
+    featuredCreditLots: [],
 
     // Seller
     verifiedSeller: false,
