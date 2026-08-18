@@ -17,13 +17,23 @@ function getCreatedAtMs(listing: ListingRecord): number {
   return 0;
 }
 
+function isApproved(listing: ListingRecord): boolean {
+  const value = listing.approved as unknown;
+  return value === true || value === "true" || value === 1;
+}
+
+function isExpired(listing: ListingRecord): boolean {
+  const value = listing.expired as unknown;
+  return value === true || value === "true" || value === 1;
+}
+
 /** Same filter + sort as mobile app useListings.ts */
 function mapListings(
   docs: Array<{ id: string; data: () => Record<string, unknown> }>
 ): ListingRecord[] {
   return docs
     .map((d) => ({ id: d.id, ...d.data() } as ListingRecord))
-    .filter((listing) => listing.approved === true && listing.expired !== true)
+    .filter((listing) => isApproved(listing) && !isExpired(listing))
     .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
 }
 

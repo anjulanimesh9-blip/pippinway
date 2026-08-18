@@ -1,91 +1,63 @@
 "use client";
 
 import Link from "next/link";
-import { FaMapMarkerAlt, FaArrowRight } from "react-icons/fa";
+import { MapPin } from "lucide-react";
 
 type RelatedAdsProps = {
   relatedAds: any[];
   currencyMap: Record<string, string>;
+  sellerName?: string;
 };
 
 export default function RelatedAds({
   relatedAds,
   currencyMap,
+  sellerName,
 }: RelatedAdsProps) {
   if (!relatedAds.length) return null;
 
+  const heading = sellerName
+    ? `More ads from ${sellerName}`
+    : "Similar ads";
+
   return (
-    <section className="mt-14">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-white">
-            Similar Ads
-          </h2>
+    <section className="mt-10 border-t border-white/10 pt-8">
+      <h2 className="mb-4 text-lg font-bold text-white">{heading}</h2>
 
-          <p className="mt-1 text-sm text-gray-400">
-            You may also like these listings
-          </p>
-        </div>
-
-        <span className="hidden md:flex items-center gap-2 text-blue-400 font-medium">
-          Browse More
-          <FaArrowRight />
-        </span>
-      </div>
-
-      {/* Cards */}
-      <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-
-        {relatedAds.map((ad) => {
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        {relatedAds.slice(0, 8).map((ad) => {
           const currency =
-            currencyMap[
-              ad.country?.trim()?.toLowerCase()
-            ] || "Rs.";
+            currencyMap[ad.country?.trim()?.toLowerCase()] || "Rs.";
 
           return (
             <Link
               key={ad.id}
               href={`/listings/${ad.id}`}
-              className="group min-w-[250px] md:min-w-[290px] rounded-3xl overflow-hidden border border-white/10 bg-[#111827] shadow-xl transition duration-300 hover:-translate-y-1 hover:border-blue-500 snap-start"
+              className="overflow-hidden rounded-lg border border-white/10 bg-[#111827] transition hover:border-white/20"
             >
-              {/* Image */}
-              <div className="relative overflow-hidden">
+              <div className="relative aspect-[4/3] bg-[#0B0E14]">
                 <img
                   src={ad.imageUrls?.[0] || ad.imageUrl}
                   alt={ad.title}
-                  className="h-[180px] w-full object-cover transition duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover"
                 />
-
                 {ad.featured && (
-                  <div className="absolute top-3 left-3 rounded-full bg-yellow-500 px-3 py-1 text-xs font-bold text-black shadow-lg">
-                    👑 FEATURED
-                  </div>
+                  <span className="absolute left-2 top-2 rounded bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black">
+                    Featured
+                  </span>
                 )}
               </div>
-
-              {/* Content */}
-              <div className="p-4">
-
-                <h3 className="line-clamp-2 text-lg font-bold text-white">
-                  {ad.title}
-                </h3>
-
-                <p className="mt-3 text-2xl font-bold text-green-400">
+              <div className="p-3">
+                <p className="text-sm font-bold text-emerald-400">
                   {currency} {Number(ad.price).toLocaleString()}
                 </p>
-
-                <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
-                  <FaMapMarkerAlt className="text-red-500" />
-                  <span className="truncate">
-                    {ad.location || "Unknown"}
-                  </span>
-                </div>
-
-                <button className="mt-5 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 py-3 font-semibold text-white transition duration-300 group-hover:from-cyan-500 group-hover:to-blue-600">
-                  View Details
-                </button>
-
+                <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white">
+                  {ad.title}
+                </h3>
+                <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                  <MapPin size={11} />
+                  <span className="truncate">{ad.location || "Unknown"}</span>
+                </p>
               </div>
             </Link>
           );

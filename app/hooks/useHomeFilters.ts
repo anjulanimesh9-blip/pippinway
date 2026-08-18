@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { canonicalCountry, isAllFilterValue } from "@/lib/filterListings";
 
 const STORAGE_KEY = "pippinway.selectedCountry";
 
@@ -14,30 +15,35 @@ export default function useHomeFilters() {
   const [location, setLocation] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  useEffect(() => {
-    // Same storage key as mobile CountryFilterContext
-    const stored =
-      localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("country");
-    if (stored && stored !== "All" && stored !== "All Countries") {
-      setSelectedCountryState(stored);
-    }
-  }, []);
-
   const setSelectedCountry = (value: string) => {
-    setSelectedCountryState(value);
-    if (value === "All") {
+    const next = canonicalCountry(value) ?? "All";
+    setSelectedCountryState(next);
+    if (next === "All") {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem("country");
     } else {
-      localStorage.setItem(STORAGE_KEY, value);
+      localStorage.setItem(STORAGE_KEY, next);
     }
   };
 
   useEffect(() => {
-    setSelectedCategory(searchParams.get("category") || "All");
+    const stored =
+      localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("country");
+    const next = canonicalCountry(stored);
+    if (next) setSelectedCountryState(next);
+  }, []);
+
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    setSelectedCategory(
+      isAllFilterValue(categoryParam) ? "All" : categoryParam || "All"
+    );
     setSearch(searchParams.get("search") || "");
-    const country = searchParams.get("country");
-    if (country) setSelectedCountry(country);
+
+    const countryParam = searchParams.get("country");
+    if (countryParam) {
+      setSelectedCountry(countryParam);
+    }
   }, [searchParams]);
 
   return {
@@ -52,4 +58,4 @@ export default function useHomeFilters() {
     sortBy,
     setSortBy,
   };
-};
+}

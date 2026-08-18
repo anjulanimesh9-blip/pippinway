@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Heart, Share2 } from "lucide-react";
 import ImageGallery from "@/app/components/listing/ImageGallery";
 import ListingInfo from "@/app/components/listing/ListingInfo";
 import ActionButtons from "@/app/components/listing/ActionButtons";
@@ -8,6 +10,8 @@ import SellerCard from "@/app/components/listing/SellerCard";
 import RelatedAds from "@/app/components/listing/RelatedAds";
 import DeleteModal from "@/app/components/listing/DeleteModal";
 import MobileBottomNav from "../../components/MobileBottomNav";
+import Navbar from "../../components/Navbar";
+import { getRelativeTime } from "@/lib/formatPrice";
 import {
   doc,
   getDoc,
@@ -26,7 +30,8 @@ import {
 export default function ListingDetails() {
   const [item, setItem] =
     useState<any>(null);
-
+  const [saved, setSaved] = useState(false);
+  const [sellerAds, setSellerAds] = useState<any[]>([]);
   const [relatedAds, setRelatedAds] =
     useState<any[]>([]);
   
@@ -164,25 +169,31 @@ console.log("Owner:", item?.ownerEmail);
                 )
               );
 
-            const filteredAds =
-              querySnapshot.docs
-                .map((doc) => ({
-                  id: doc.id,
-                  ...doc.data(),
-                }))
-                .filter(
-  (ad: any) =>
-    ad.category ===
-      listingData.category &&
-    ad.id !== slug &&
-    ad.approved === true &&
-    ad.expired !== true
-);
-                
+            const allAds = querySnapshot.docs.map((docSnap) => ({
+              id: docSnap.id,
+              ...docSnap.data(),
+            }));
 
-            setRelatedAds(
-              filteredAds
+            const liveAds = allAds.filter(
+              (ad: any) =>
+                ad.id !== slug &&
+                ad.approved === true &&
+                ad.expired !== true
             );
+
+            const fromSeller = liveAds.filter(
+              (ad: any) =>
+                (listingData.ownerId && ad.ownerId === listingData.ownerId) ||
+                (listingData.ownerEmail &&
+                  ad.ownerEmail === listingData.ownerEmail)
+            );
+
+            const similar = liveAds.filter(
+              (ad: any) => ad.category === listingData.category
+            );
+
+            setSellerAds(fromSeller);
+            setRelatedAds(similar);
           }
         } catch (error) {
           console.error(error);
@@ -211,86 +222,163 @@ const whatsappLink =
         ?.toLowerCase()
     ] || "Rs.";
 
- return (
-  <main className="min-h-screen bg-black text-white pb-20 lg:pb-0">
+  const place = [item.location, item.country].filter(Boolean).join(", ");
+  const posted = getRelativeTime(item.createdAt) || "Recently";
+  const isOwner = currentUser?.email === item.ownerEmail;
+  const moreFromSeller = sellerAds.length > 0 ? sellerAds : relatedAds;
 
-    <div className="p-5">
-      <div className="max-w-5xl mx-auto bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10 rounded-[40px] shadow-[0_0_50px_rgba(59,130,246,0.08)] p-6 md:p-8">
+  const share = () => {
+    if (navigator.share) {
+      navigator.share({ title: item.title, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied!");
+    }
+  };
 
-        <button
-          onClick={() => router.push("/")}
-          className="mb-6 bg-[#111] border border-gray-700 text-white px-4 py-2 rounded-2xl text-sm"
-        >
-          ← Back to Home
-        </button>
+  return (
+    <main className="min-h-screen bg-[#020817] pb-20 text-white lg:pb-8">
+      <Navbar />
 
-        <div className="space-y-4">
-          <ImageGallery
-            imageUrls={item.imageUrls}
-            imageUrl={item.imageUrl}
-            title={item.title}
-          />
-        </div>
+      <div className="mx-auto max-w-6xl px-4 py-4">
+        <nav className="mb-3 flex flex-wrap items-center gap-1 text-xs text-gray-500">
+          <Link href="/" className="hover:text-sky-400">
+            Home
+          </Link>
+          <span>›</span>
+          <Link href="/" className="hover:text-sky-400">
+            All ads
+          </Link>
+          {item.category && (
+            <>
+              <span>›</span>
+              <span className="text-gray-400">{item.category}</span>
+            </>
+          )}
+          <span>›</span>
+          <span className="max-w-[200px] truncate text-gray-300 sm:max-w-none">
+            {item.title}
+          </span>
+        </nav>
 
-        <ListingInfo
-          title={item.title}
-          price={item.price}
-          currency={currency}
-          category={item.category}
-          location={item.location}
-          createdAt={item.createdAt}
-          description={item.description}
-        />
-
-        <ActionButtons
-          whatsappLink={whatsappLink}
-          phone={item.phone}
-          onChat={startChat}
-        />
-
-        <SellerCard
-          uid={item.ownerId}
-          name={item.ownerName}
-          phone={item.phone}
-          location={item.location}
-        />
-
-        {currentUser?.email === item.ownerEmail && (
-          <div className="grid grid-cols-2 gap-3 mt-5">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-white sm:text-2xl">
+              {item.title}
+            </h1>
+            <p className="mt-1 text-sm text-gray-400">
+              Posted {posted}
+              {place ? ` in ${place}` : ""}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             <button
-              onClick={() => setShowDeleteModal(true)}
-              className="bg-gradient-to-r from-red-600 to-red-500 text-white py-4 rounded-[22px] font-semibold shadow-lg hover:scale-[1.02] transition"
+              type="button"
+              onClick={share}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white"
             >
-              Delete
+              <Share2 size={16} />
+              <span className="hidden sm:inline">Share</span>
             </button>
-
             <button
-              onClick={() => router.push(`/edit/${slug}`)}
-              className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black py-4 rounded-[22px] font-semibold shadow-lg hover:scale-[1.02] transition"
+              type="button"
+              onClick={() => setSaved((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white"
             >
-              Edit
+              <Heart
+                size={16}
+                className={saved ? "fill-red-500 text-red-500" : ""}
+              />
+              <span className="hidden sm:inline">Save ad</span>
             </button>
           </div>
-        )}
+        </div>
 
-        <DeleteModal
-          open={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onDelete={handleDelete}
-        />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div>
+            <ImageGallery
+              imageUrls={item.imageUrls}
+              imageUrl={item.imageUrl}
+              title={item.title}
+            />
+
+            <ListingInfo
+              price={item.price}
+              currency={currency}
+              category={item.category}
+              location={item.location}
+              country={item.country}
+              description={item.description}
+              featured={item.featured === true}
+              showBoost={isOwner}
+            />
+          </div>
+
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <SellerCard
+              uid={item.ownerId}
+              name={item.ownerName}
+              location={item.location}
+            />
+
+            <ActionButtons
+              whatsappLink={whatsappLink}
+              phone={item.phone}
+              onChat={startChat}
+            />
+
+            <div className="rounded-lg border border-sky-500/25 bg-sky-500/5 p-4">
+              <h3 className="mb-2 text-sm font-semibold text-sky-300">
+                Stay Alert: Avoid Online Scams
+              </h3>
+              <ul className="space-y-1.5 text-xs leading-5 text-gray-400">
+                <li>Never send money before inspecting the item.</li>
+                <li>Meet in a public place for exchanges.</li>
+                <li>Do not share OTPs or banking details.</li>
+                <li>Report suspicious listings to Pippinway.</li>
+              </ul>
+            </div>
+
+            {isOwner && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push(`/edit/${slug}`)}
+                  className="rounded-lg bg-[#FBB03B] py-3 text-sm font-bold text-black"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="rounded-lg border border-red-500/40 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
 
         <RelatedAds
-          relatedAds={relatedAds}
+          relatedAds={moreFromSeller}
           currencyMap={currencyMap}
+          sellerName={
+            sellerAds.length > 0
+              ? item.ownerName || "this seller"
+              : undefined
+          }
         />
-
       </div>
-    </div>
 
-    {/* Mobile Bottom Navigation */}
-    <MobileBottomNav />
+      <DeleteModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDelete}
+      />
 
-  </main>
-);
+      <MobileBottomNav />
+    </main>
+  );
 }
 

@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type ListingInfoProps = {
-  title: string;
+  title?: string;
   price: number;
   currency: string;
   category: string;
   location: string;
-  createdAt: any;
+  createdAt?: any;
   description: string;
+  featured?: boolean;
+  country?: string;
+  showBoost?: boolean;
 };
 
 export default function ListingInfo({
@@ -18,101 +22,72 @@ export default function ListingInfo({
   currency,
   category,
   location,
-  createdAt,
   description,
+  featured = false,
+  country,
+  showBoost = false,
 }: ListingInfoProps) {
   const [expanded, setExpanded] = useState(false);
+  const longText = (description || "").length > 280;
 
-  const formattedDate = createdAt?.seconds
-    ? new Date(createdAt.seconds * 1000).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "Recently";
+  const specs = [
+    ["Category", category],
+    ["Location", location],
+    ["Country", country],
+    ["Type", featured ? "Featured listing" : "Standard listing"],
+  ].filter(([, value]) => Boolean(value));
 
   return (
-    <div className="mt-8 space-y-6">
-      {/* Featured Badge */}
-      <div className="flex items-center gap-3">
-        <span className="bg-yellow-500 text-black px-4 py-1 rounded-full text-sm font-bold shadow">
-          👑 FEATURED
-        </span>
+    <div>
+      {title && (
+        <h1 className="mb-3 text-xl font-bold text-white sm:text-2xl">{title}</h1>
+      )}
+      <p className="mt-4 text-2xl font-bold text-emerald-400 sm:text-[28px]">
+        {currency} {Number(price).toLocaleString()}
+      </p>
 
-        <span className="text-xs text-gray-400">
-          Premium Listing
-        </span>
+      <div className="mt-6 border-t border-white/10 pt-4">
+        <dl className="grid grid-cols-1 sm:grid-cols-2">
+          {specs.map(([label, value]) => (
+            <div
+              key={label}
+              className="flex gap-3 border-b border-white/5 py-2.5 text-sm"
+            >
+              <dt className="w-28 shrink-0 text-gray-500">{label}:</dt>
+              <dd className="font-medium text-white">{value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
-      {/* Title */}
-      <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
-        {title}
-      </h1>
-
-      {/* Price */}
-      <div className="rounded-3xl bg-gradient-to-r from-green-600 to-emerald-500 p-6 shadow-xl">
-        <p className="text-white/80 text-sm uppercase tracking-wider">
-          Price
+      <div className="mt-6 border-t border-white/10 pt-4">
+        <h2 className="mb-3 text-base font-semibold text-white">Description</h2>
+        <p
+          className={`whitespace-pre-line text-sm leading-7 text-gray-300 ${
+            expanded || !longText ? "" : "line-clamp-5"
+          }`}
+        >
+          {description || "No description provided."}
         </p>
-
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white mt-1">
-          {currency} {Number(price).toLocaleString()}
-        </h2>
-      </div>
-
-      {/* Details */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-gray-400 mb-1">Category</p>
-          <p className="text-white font-semibold">
-            📂 {category}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-gray-400 mb-1">Location</p>
-          <p className="text-white font-semibold">
-            📍 {location}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <p className="text-xs text-gray-400 mb-1">Posted</p>
-          <p className="text-white font-semibold">
-            🕒 {formattedDate}
-          </p>
-        </div>
-      </div>
-
-      {/* Description */}
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg">
-        <h2 className="text-2xl font-bold text-white mb-5">
-          Description
-        </h2>
-
-        <div className="relative">
-          <p
-            className={`text-gray-300 whitespace-pre-line leading-8 transition-all duration-300 ${
-              expanded ? "" : "line-clamp-6"
-            }`}
-          >
-            {description}
-          </p>
-
-          {!expanded && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#111827] to-transparent pointer-events-none rounded-b-3xl" />
-          )}
-        </div>
-
-        <div className="mt-6 flex justify-center">
+        {longText && (
           <button
-            onClick={() => setExpanded(!expanded)}
-            className="rounded-full bg-blue-600 hover:bg-blue-500 px-6 py-3 text-white font-semibold transition"
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-2 text-sm font-semibold text-sky-400 hover:underline"
           >
-            {expanded ? "▲ Read Less" : "▼ Read More"}
+            {expanded ? "Show less" : "Show more"}
           </button>
-        </div>
+        )}
       </div>
+
+      {showBoost && !featured && (
+        <Link
+          href="/featured-packages"
+          className="mt-6 flex w-full items-center justify-center rounded-md bg-[#FBB03B] py-3 text-sm font-bold text-black hover:bg-[#ffc14d]"
+        >
+          Boost this ad
+        </Link>
+      )}
     </div>
   );
 }
