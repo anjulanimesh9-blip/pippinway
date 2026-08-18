@@ -16,6 +16,8 @@ import RightSidebar from "./RightSidebar";
 
 import TrustBadges from "./TrustBadges";
 
+import BannerRotator from "./Banner/BannerRotator";
+
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
 
@@ -36,9 +38,7 @@ type Props = {
 
   currencyMap: Record<string, string>;
 
-  currentBanner: Banner | null;
-
-  pickBanner: (slotIndex: number) => Banner | null;
+  banners: Banner[];
 
   loading?: boolean;
 
@@ -64,9 +64,7 @@ export default function HomeContent({
 
   currencyMap,
 
-  currentBanner,
-
-  pickBanner,
+  banners,
 
   loading = false,
 
@@ -128,6 +126,10 @@ export default function HomeContent({
 
           />
 
+          <div className="mb-4 lg:hidden">
+            <BannerRotator banners={banners} />
+          </div>
+
 
 
           <LatestHeading count={latestListings.length} />
@@ -142,7 +144,7 @@ export default function HomeContent({
 
             toggleFavorite={toggleFavorite}
 
-            pickBanner={pickBanner}
+            banners={banners}
 
             loading={loading}
 
@@ -158,7 +160,7 @@ export default function HomeContent({
 
           <div className="sticky top-24">
 
-            <RightSidebar currentBanner={currentBanner} />
+            <RightSidebar banners={banners} />
 
           </div>
 

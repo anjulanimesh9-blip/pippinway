@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ListingCard from "../ListingCard";
-import FirestoreBanner from "../Banner/FirestoreBanner";
+import BannerRotator from "../Banner/BannerRotator";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
@@ -11,7 +11,7 @@ type LatestListingsProps = {
   latestListings: ListingRecord[];
   favorites: string[];
   toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
-  pickBanner: (slotIndex: number) => Banner | null;
+  banners: Banner[];
   loading?: boolean;
   totalLive?: number;
 };
@@ -19,7 +19,7 @@ type LatestListingsProps = {
 type FeedItem =
   | { type: "listing"; listing: ListingRecord }
   | { type: "featured"; listing: ListingRecord; slot: number }
-  | { type: "banner"; banner: Banner };
+  | { type: "banner"; slot: number };
 
 const FEATURED_GAPS = [1, 3, 2];
 const ROTATE_MS = 4500;
@@ -44,8 +44,7 @@ function GridSkeleton() {
 function buildMixedFeed(
   regularAds: ListingRecord[],
   featuredAds: ListingRecord[],
-  rotateIndex: number,
-  pickBanner: (slotIndex: number) => Banner | null
+  rotateIndex: number
 ): FeedItem[] {
   const items: FeedItem[] = [];
   let featuredSlot = 0;
@@ -65,8 +64,7 @@ function buildMixedFeed(
 
     const position = index + 1;
     if (position % 10 === 0) {
-      const banner = pickBanner(position / 10 - 1);
-      if (banner) items.push({ type: "banner", banner });
+      items.push({ type: "banner", slot: position / 10 - 1 });
     }
 
     if (featuredAds.length === 0) return;
@@ -91,7 +89,7 @@ export default function LatestListings({
   latestListings,
   favorites,
   toggleFavorite,
-  pickBanner,
+  banners,
   loading = false,
   totalLive = 0,
 }: LatestListingsProps) {
@@ -116,8 +114,8 @@ export default function LatestListings({
   }, [featuredAds.length, paused]);
 
   const items = useMemo(
-    () => buildMixedFeed(regularAds, featuredAds, rotateIndex, pickBanner),
-    [regularAds, featuredAds, rotateIndex, pickBanner]
+    () => buildMixedFeed(regularAds, featuredAds, rotateIndex),
+    [regularAds, featuredAds, rotateIndex]
   );
 
   if (loading) {
@@ -149,11 +147,11 @@ export default function LatestListings({
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {items.map((entry, idx) => {
+      {items.map((entry) => {
         if (entry.type === "banner") {
           return (
-            <div key={`banner-slot-${idx}-${entry.banner.id}`} className="border-b border-white/8 p-3">
-              <FirestoreBanner banner={entry.banner} />
+            <div key={`banner-slot-${entry.slot}`} className="border-b border-white/8 p-3">
+              <BannerRotator banners={banners} startOffset={entry.slot} />
             </div>
           );
         }

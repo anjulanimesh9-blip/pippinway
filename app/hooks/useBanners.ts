@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import type { Banner } from "@/lib/types/featured";
@@ -23,7 +23,6 @@ function toMillis(value: unknown): number {
 export default function useBanners(selectedCountry: string | null) {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rotationIndex, setRotationIndex] = useState(0);
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
@@ -70,29 +69,5 @@ export default function useBanners(selectedCountry: string | null) {
       .sort((a, b) => Number(b.priority ?? 0) - Number(a.priority ?? 0));
   }, [banners, selectedCountry, nowTick]);
 
-  const eligibleIds = useMemo(() => eligible.map((b) => b.id).join(","), [eligible]);
-
-  useEffect(() => {
-    setRotationIndex(0);
-  }, [eligibleIds]);
-
-  useEffect(() => {
-    if (eligible.length < 2) return;
-    const timer = setInterval(() => {
-      setRotationIndex((current) => (current + 1) % eligible.length);
-    }, BANNER_ROTATION_MS);
-    return () => clearInterval(timer);
-  }, [eligible.length]);
-
-  const currentBanner = eligible.length > 0 ? eligible[rotationIndex % eligible.length] : null;
-
-  const pickBanner = useCallback(
-    (slotIndex: number) => {
-      if (eligible.length === 0) return null;
-      return eligible[(slotIndex + rotationIndex) % eligible.length];
-    },
-    [eligible, rotationIndex]
-  );
-
-  return { banners: eligible, currentBanner, pickBanner, rotationIndex, loading };
+  return { banners: eligible, loading };
 }

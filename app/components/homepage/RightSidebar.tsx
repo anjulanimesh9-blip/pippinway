@@ -1,46 +1,35 @@
-"use client";
-
-import Link from "next/link";
-import FirestoreBanner from "./Banner/FirestoreBanner";
-import type { Banner } from "@/lib/types/featured";
-
-type Props = {
-  currentBanner: Banner | null;
-};
-
-export default function RightSidebar({ currentBanner }: Props) {
-  return (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)]">
-        {currentBanner ? (
-          <FirestoreBanner banner={currentBanner} />
-        ) : (
-          <img
-            src="/images/banner-ad-1.jpg"
-            alt="Pippinway advertisement"
-            className="w-full h-auto object-cover"
-          />
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-[#1a1f2e] to-[#111827] p-5 text-white">
-        <p className="text-xs font-bold tracking-wider text-yellow-400 uppercase">
-          Your Trusted Marketplace
-        </p>
-        <h3 className="text-lg font-bold mt-2 leading-snug">
-          List Locally, Sell Globally
-        </h3>
-        <p className="text-sm text-gray-400 mt-2">
-          Join thousands of buyers &amp; sellers on Pippinway today.
-        </p>
-        <Link
-          href="/featured-packages"
-          className="mt-4 inline-block w-full rounded-xl border border-yellow-400/60 py-2.5 text-center text-sm font-bold text-yellow-300 hover:bg-yellow-400/10 transition"
-        >
-          Post Your Ad Now
-        </Link>
-      </div>
-    </div>
-  );
-}
-
+"use client";
+
+import Link from "next/link";
+import BannerRotator from "./Banner/BannerRotator";
+import type { Banner } from "@/lib/types/featured";
+
+type Props = {
+  banners: Banner[];
+};
+
+export default function RightSidebar({ banners }: Props) {
+  return (
+    <div className="space-y-4">
+      <BannerRotator banners={banners} />
+
+      <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-[#1a1f2e] to-[#111827] p-5 text-white">
+        <p className="text-xs font-bold tracking-wider text-yellow-400 uppercase">
+          Your Trusted Marketplace
+        </p>
+        <h3 className="text-lg font-bold mt-2 leading-snug">
+          List Locally, Sell Globally
+        </h3>
+        <p className="text-sm text-gray-400 mt-2">
+          Join thousands of buyers &amp; sellers on Pippinway today.
+        </p>
+        <Link
+          href="/featured-packages"
+          className="mt-4 inline-block w-full rounded-xl border border-yellow-400/60 py-2.5 text-center text-sm font-bold text-yellow-300 hover:bg-yellow-400/10 transition"
+        >
+          Post Your Ad Now
+        </Link>
+      </div>
+    </div>
+  );
+}

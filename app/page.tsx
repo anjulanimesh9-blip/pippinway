@@ -101,7 +101,7 @@ function HomePage() {
   );
 
 
-  const { currentBanner, pickBanner } = useBanners(selectedCountry);
+  const { banners } = useBanners(selectedCountry);
 
 
 
@@ -193,9 +193,7 @@ function HomePage() {
 
           currencyMap={currencyMap}
 
-          currentBanner={currentBanner}
-
-          pickBanner={pickBanner}
+          banners={banners}
 
           loading={loading}
 

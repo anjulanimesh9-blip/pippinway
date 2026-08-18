@@ -2,27 +2,23 @@
 
 import Link from "next/link";
 import useBanners from "@/app/hooks/useBanners";
-import FirestoreBanner from "@/app/components/homepage/Banner/FirestoreBanner";
+import BannerRotator from "@/app/components/homepage/Banner/BannerRotator";
 
 type Props = {
   country?: string | null;
 };
 
 export default function ProfileHeroBanner({ country }: Props) {
-  const { currentBanner, loading } = useBanners(country ?? null);
+  const { banners, loading } = useBanners(country ?? null);
 
-  if (loading && !currentBanner) {
+  if (loading && banners.length === 0) {
     return (
       <section className="h-40 animate-pulse rounded-2xl border border-white/8 bg-[#101826] md:h-44" />
     );
   }
 
-  if (currentBanner) {
-    return (
-      <section className="overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)]">
-        <FirestoreBanner banner={currentBanner} />
-      </section>
-    );
+  if (banners.length > 0) {
+    return <BannerRotator banners={banners} />;
   }
 
   return (

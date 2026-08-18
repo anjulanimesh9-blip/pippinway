@@ -5,13 +5,20 @@ import type { Banner } from "@/lib/types/featured";
 
 type Props = {
   banner: Banner | null;
+  framed?: boolean;
 };
 
-export default function FirestoreBanner({ banner }: Props) {
+export default function FirestoreBanner({ banner, framed = true }: Props) {
   if (!banner?.imageUrl) return null;
 
   const content = (
-    <div className="overflow-hidden rounded-2xl border border-yellow-500/30 shadow-[0_0_24px_rgba(250,204,21,0.12)]">
+    <div
+      className={
+        framed
+          ? "overflow-hidden rounded-2xl border border-yellow-500/30 shadow-[0_0_24px_rgba(250,204,21,0.12)]"
+          : undefined
+      }
+    >
       <img
         src={banner.imageUrl}
         alt="Advertisement"
