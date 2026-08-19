@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import useBanners from "@/app/hooks/useBanners";
-import BannerRotator from "@/app/components/homepage/Banner/BannerRotator";
+import useBanners, { bannersForPlacement } from "@/app/hooks/useBanners";
+import BannerRotator, {
+  PROFILE_BANNER_CLASS,
+} from "@/app/components/homepage/Banner/BannerRotator";
 
 type Props = {
   country?: string | null;
@@ -13,16 +15,23 @@ export default function ProfileHeroBanner({ country }: Props) {
 
   if (loading && banners.length === 0) {
     return (
-      <section className="h-40 animate-pulse rounded-2xl border border-white/8 bg-[#101826] md:h-44" />
+      <section
+        className={`animate-pulse rounded-2xl border border-white/8 bg-[#101826] ${PROFILE_BANNER_CLASS}`}
+      />
     );
   }
 
-  if (banners.length > 0) {
-    return <BannerRotator banners={banners} />;
+  const profileBanners = bannersForPlacement(banners, "profile");
+  if (profileBanners.length > 0) {
+    return (
+      <BannerRotator banners={profileBanners} className={PROFILE_BANNER_CLASS} />
+    );
   }
 
   return (
-    <section className="relative h-40 overflow-hidden rounded-2xl border border-white/8 bg-[#101826] md:h-44">
+    <section
+      className={`relative overflow-hidden rounded-2xl border border-white/8 bg-[#101826] ${PROFILE_BANNER_CLASS}`}
+    >
       <img
         src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1400&q=80"
         alt=""
@@ -33,16 +42,16 @@ export default function ProfileHeroBanner({ country }: Props) {
         20% OFF
       </div>
 
-      <div className="relative z-10 flex h-full flex-col justify-center px-5 md:px-8">
-        <p className="text-xs font-bold tracking-[0.22em] text-[#FBB03B]">
+      <div className="relative z-10 flex h-full flex-col justify-center px-4 sm:px-5 md:px-8">
+        <p className="text-[10px] font-bold tracking-[0.22em] text-[#FBB03B] sm:text-xs">
           NEED A CAR?
         </p>
-        <h2 className="mt-1 max-w-md text-2xl font-extrabold leading-tight text-white md:text-3xl">
+        <h2 className="mt-0.5 max-w-md text-lg font-extrabold leading-tight text-white sm:mt-1 sm:text-2xl md:text-3xl">
           FIND THE PERFECT RIDE
         </h2>
         <Link
           href="/?category=Cars"
-          className="mt-4 inline-flex w-fit items-center rounded-lg bg-[#FBB03B] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#ffc14d]"
+          className="mt-2 inline-flex w-fit items-center rounded-lg bg-[#FBB03B] px-3 py-1.5 text-xs font-bold text-black transition hover:bg-[#ffc14d] sm:mt-4 sm:px-4 sm:py-2 sm:text-sm"
         >
           Browse Cars
         </Link>

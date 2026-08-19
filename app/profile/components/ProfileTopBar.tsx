@@ -62,14 +62,14 @@ export default function ProfileTopBar({
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/8 bg-[#0B0E14]/95 backdrop-blur-xl">
-      <div className="flex items-center gap-3 px-4 py-3 lg:px-6">
+      <div className="flex items-center gap-1.5 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3 lg:px-6">
         <button
           type="button"
           onClick={onMenu}
-          className="rounded-xl p-2 text-gray-300 hover:bg-white/5 lg:hidden"
+          className="shrink-0 rounded-xl p-1.5 text-gray-300 hover:bg-white/5 sm:p-2 lg:hidden"
           aria-label="Open menu"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
 
         <form
@@ -79,13 +79,14 @@ export default function ProfileTopBar({
           <div className="relative min-w-0 flex-1">
             <Search
               size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 sm:left-3"
             />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search anything..."
-              className="w-full bg-transparent py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-gray-500"
+              placeholder="Search..."
+              className="w-full min-w-0 bg-transparent py-2 pl-8 pr-2 text-sm text-white outline-none placeholder:text-gray-500 sm:py-2.5 sm:pl-10 sm:pr-3"
+              aria-label="Search anything"
             />
           </div>
 
@@ -120,21 +121,21 @@ export default function ProfileTopBar({
 
         <Link
           href="/add-listing"
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#FBB03B] px-3 py-2.5 text-sm font-bold text-black transition hover:bg-[#ffc14d] sm:px-4"
+          className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-[#FBB03B] px-2 py-2 text-xs font-bold text-black transition hover:bg-[#ffc14d] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
         >
-          <Plus size={16} strokeWidth={2.5} />
+          <Plus size={15} strokeWidth={2.5} />
           <span className="hidden sm:inline">Post New Ad</span>
           <span className="sm:hidden">Post</span>
         </Link>
 
-        <div className="relative" ref={notifyRef}>
+        <div className="relative shrink-0" ref={notifyRef}>
           <button
             type="button"
             onClick={() => setShowNotifications((v) => !v)}
-            className="relative rounded-xl p-2 text-gray-300 hover:bg-white/5"
+            className="relative rounded-xl p-1.5 text-gray-300 hover:bg-white/5 sm:p-2"
             aria-label="Notifications"
           >
-            <Bell size={20} />
+            <Bell size={18} />
             {unreadCount > 0 && (
               <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#0B0E14]" />
             )}
@@ -178,10 +179,10 @@ export default function ProfileTopBar({
             <img
               src={profileImage}
               alt={userName}
-              className="h-9 w-9 rounded-full object-cover ring-2 ring-white/10"
+              className="h-8 w-8 rounded-full object-cover ring-2 ring-white/10 sm:h-9 sm:w-9"
             />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-600 text-sm font-bold ring-2 ring-white/10">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-600 text-xs font-bold ring-2 ring-white/10 sm:h-9 sm:w-9 sm:text-sm">
               {userName.charAt(0).toUpperCase()}
             </div>
           )}

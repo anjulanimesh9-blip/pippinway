@@ -46,6 +46,8 @@ export interface FeaturedPackagePurchase {
   rejectedBy?: string;
 }
 
+export type BannerPlacement = "infeed" | "sidebar" | "profile";
+
 export interface Banner {
   id: string;
   active?: boolean;
@@ -57,6 +59,8 @@ export interface Banner {
   linkType?: "none" | "listing" | "category" | "external";
   listingId?: string;
   externalUrl?: string;
+  /** Missing on older banners; treat as in-feed (never profile). */
+  placement?: BannerPlacement;
 }
 
 export interface ListingRecord {

@@ -3,10 +3,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/firebase";
-import type { Banner } from "@/lib/types/featured";
+import { isPermissionDenied } from "@/lib/firestoreErrors";
+import type { Banner, BannerPlacement } from "@/lib/types/featured";
 
 const ELIGIBILITY_RECHECK_MS = 30000;
 export const BANNER_ROTATION_MS = 5000;
+
+export function getBannerPlacement(banner: Banner): BannerPlacement {
+  if (banner.placement === "sidebar" || banner.placement === "profile") {
+    return banner.placement;
+  }
+  return "infeed";
+}
+
+/**
+ * In-feed: infeed or missing placement (excludes sidebar + profile).
+ * Profile: only explicit profile banners (no fallback to other types).
+ * Sidebar: sidebar-marked first; else untagged banners (excludes profile + infeed).
+ */
+export function bannersForPlacement(
+  banners: Banner[],
+  placement: BannerPlacement
+): Banner[] {
+  if (placement === "profile") {
+    return banners.filter((b) => b.placement === "profile");
+  }
+  if (placement === "infeed") {
+    return banners.filter((b) => getBannerPlacement(b) === "infeed");
+  }
+  const sidebar = banners.filter((b) => b.placement === "sidebar");
+  if (sidebar.length > 0) return sidebar;
+  return banners.filter((b) => !b.placement);
+}
 
 function toMillis(value: unknown): number {
   if (!value) return 0;
@@ -33,6 +61,11 @@ export default function useBanners(selectedCountry: string | null) {
         setLoading(false);
       },
       (err) => {
+        if (isPermissionDenied(err)) {
+          setBanners([]);
+          setLoading(false);
+          return;
+        }
         console.error("useBanners error:", err);
         setLoading(false);
       }

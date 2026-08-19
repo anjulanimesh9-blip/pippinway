@@ -16,7 +16,9 @@ import RightSidebar from "./RightSidebar";
 
 import TrustBadges from "./TrustBadges";
 
-import BannerRotator from "./Banner/BannerRotator";
+import BannerRotator, { MOBILE_SIDEBAR_BANNER_CLASS } from "./Banner/BannerRotator";
+
+import { bannersForPlacement } from "@/app/hooks/useBanners";
 
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
@@ -71,6 +73,9 @@ export default function HomeContent({
   totalCount = 0,
 
 }: Props) {
+
+  const infeedBanners = bannersForPlacement(banners, "infeed");
+  const sidebarBanners = bannersForPlacement(banners, "sidebar");
 
   return (
 
@@ -127,7 +132,10 @@ export default function HomeContent({
           />
 
           <div className="mb-4 lg:hidden">
-            <BannerRotator banners={banners} />
+            <BannerRotator
+              banners={sidebarBanners}
+              className={MOBILE_SIDEBAR_BANNER_CLASS}
+            />
           </div>
 
 
@@ -144,7 +152,7 @@ export default function HomeContent({
 
             toggleFavorite={toggleFavorite}
 
-            banners={banners}
+            banners={infeedBanners}
 
             loading={loading}
 
@@ -160,7 +168,7 @@ export default function HomeContent({
 
           <div className="sticky top-24">
 
-            <RightSidebar banners={banners} />
+            <RightSidebar banners={sidebarBanners} />
 
           </div>
 

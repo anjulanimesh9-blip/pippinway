@@ -9,6 +9,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import { isPermissionDenied } from "@/lib/firestoreErrors";
 
 export default function useFavorites(user: any) {
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -17,11 +18,18 @@ export default function useFavorites(user: any) {
     if (!user) return;
 
     const loadFavorites = async () => {
-      const snapshot = await getDocs(
-        collection(db, "users", user.uid, "favorites")
-      );
-
-      setFavorites(snapshot.docs.map((doc) => doc.id));
+      try {
+        const snapshot = await getDocs(
+          collection(db, "users", user.uid, "favorites")
+        );
+        setFavorites(snapshot.docs.map((doc) => doc.id));
+      } catch (err) {
+        if (isPermissionDenied(err)) {
+          setFavorites([]);
+          return;
+        }
+        console.error("useFavorites error:", err);
+      }
     };
 
     loadFavorites();

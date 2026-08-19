@@ -6,6 +6,19 @@ import bannerImages from "@/lib/bannerImages";
 import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
 
+/** In-feed / list banners: compact 16:5 strip on phones, taller on sm+/lg. Never 9:16. */
+export const INFEED_BANNER_CLASS =
+  "h-[140px] w-full overflow-hidden sm:h-[240px] lg:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+/** Short on phones (~2 compact rows); 240/280 on sm+ so the image fills, no letterbox. */
+export const PROFILE_BANNER_CLASS =
+  "h-[140px] w-full overflow-hidden sm:h-[240px] lg:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+/** Desktop right-column skyscraper only — do not use this frame on small screens. */
+export const SIDEBAR_BANNER_CLASS =
+  "aspect-[9/16] w-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+/** Mobile stand-in for the sidebar: wide ~140px strip (~2 list rows), not 9:16. */
+export const MOBILE_SIDEBAR_BANNER_CLASS =
+  "h-[140px] w-full overflow-hidden [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+
 type Props = {
   banners: Banner[];
   fallbackImages?: string[];
@@ -62,7 +75,7 @@ export default function BannerRotator({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] ${className}`}
+      className={`relative overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] ${className || INFEED_BANNER_CLASS}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -79,7 +92,7 @@ export default function BannerRotator({
           key={slide.id}
           className={
             slideIndex === activeIndex
-              ? "relative z-10 opacity-100 transition-opacity duration-500"
+              ? "absolute inset-0 z-10 opacity-100 transition-opacity duration-500"
               : "pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-500"
           }
           aria-hidden={slideIndex !== activeIndex}
@@ -89,7 +102,7 @@ export default function BannerRotator({
       ))}
 
       {slides.length > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 z-20 flex justify-center gap-1.5">
+        <div className="absolute bottom-2 left-0 right-0 z-20 flex justify-center gap-1.5 sm:bottom-3">
           {slides.map((slide, slideIndex) => (
             <button
               key={slide.id}

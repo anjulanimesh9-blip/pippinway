@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowLeftRight,
   BadgeCheck,
@@ -8,11 +9,13 @@ import {
   CreditCard,
   Heart,
   HelpCircle,
+  Home,
   LayoutDashboard,
   LogOut,
   MessageSquare,
   Package,
   Settings,
+  Shield,
   Star,
   User,
 } from "lucide-react";
@@ -35,12 +38,16 @@ type SidebarProps = {
   unreadCount: number;
   activeItem: ProfileNavKey;
   userMembership?: string;
+  isAdmin?: boolean;
   proRequest?: boolean;
   onNavigate: (key: ProfileNavKey) => void;
   onLogout: () => void;
   onRequestPro: () => void;
   onClose?: () => void;
 };
+
+const SIDE_LINK_CLASS =
+  "relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-gray-400 transition hover:bg-white/5 hover:text-white";
 
 const NAV_ITEMS: Array<{
   key: ProfileNavKey;
@@ -65,6 +72,7 @@ export default function Sidebar({
   unreadCount,
   activeItem,
   userMembership,
+  isAdmin,
   proRequest,
   onNavigate,
   onLogout,
@@ -109,6 +117,22 @@ export default function Sidebar({
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
+          <Link href="/" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
+            <Home size={18} />
+            <span>Home</span>
+          </Link>
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => onClose?.()}
+              className={SIDE_LINK_CLASS}
+            >
+              <Shield size={18} />
+              <span>Admin</span>
+            </Link>
+          )}
+
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = activeItem === item.key;

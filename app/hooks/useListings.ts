@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import { isPermissionDenied } from "@/lib/firestoreErrors";
 import type { ListingRecord } from "@/lib/types/featured";
 
 function getCreatedAtMs(listing: ListingRecord): number {
@@ -51,6 +52,12 @@ export default function useListings() {
         setError(null);
       },
       (err) => {
+        if (isPermissionDenied(err)) {
+          setListings([]);
+          setLoading(false);
+          setError(null);
+          return;
+        }
         console.error("useListings error:", err);
         setLoading(false);
         setError("Could not load listings. Check your connection and refresh.");

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import BannerRotator from "./Banner/BannerRotator";
+import BannerRotator, { SIDEBAR_BANNER_CLASS } from "./Banner/BannerRotator";
 import type { Banner } from "@/lib/types/featured";
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 export default function RightSidebar({ banners }: Props) {
   return (
     <div className="space-y-4">
-      <BannerRotator banners={banners} />
+      <BannerRotator banners={banners} className={SIDEBAR_BANNER_CLASS} />
 
       <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-[#1a1f2e] to-[#111827] p-5 text-white">
         <p className="text-xs font-bold tracking-wider text-yellow-400 uppercase">

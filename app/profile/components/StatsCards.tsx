@@ -68,24 +68,24 @@ export default function StatsCards({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-3 xl:grid-cols-5">
       {CARDS.map((card) => {
         const Icon = card.icon;
         return (
           <div
             key={card.key}
-            className="rounded-2xl border border-white/8 bg-[#151A22] p-4"
+            className="rounded-xl border border-white/8 bg-[#151A22] px-2.5 py-2 sm:px-3 sm:py-2.5"
           >
             <div
-              className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${card.iconWrap}`}
+              className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg sm:mb-2 sm:h-8 sm:w-8 ${card.iconWrap}`}
             >
-              <Icon size={18} />
+              <Icon size={14} />
             </div>
-            <p className="text-xs text-gray-400">{card.label}</p>
-            <p className="mt-1 text-2xl font-extrabold text-white">
+            <p className="text-[11px] text-gray-400">{card.label}</p>
+            <p className="mt-0.5 text-lg font-extrabold leading-tight text-white sm:text-xl">
               {values[card.key]}
             </p>
-            <p className="mt-0.5 text-[11px] text-gray-500">{card.hint}</p>
+            <p className="mt-0.5 text-[10px] text-gray-500">{card.hint}</p>
           </div>
         );
       })}

@@ -179,6 +179,7 @@ export default function ProfilePage() {
           unreadCount={unreadCount}
           activeItem={activeItem}
           userMembership={userData?.membership}
+          isAdmin={userData?.role === "admin"}
           proRequest={userData?.proRequest}
           onNavigate={handleNavigate}
           onLogout={handleLogout}
@@ -192,6 +193,7 @@ export default function ProfilePage() {
           unreadCount={unreadCount}
           activeItem={activeItem}
           userMembership={userData?.membership}
+          isAdmin={userData?.role === "admin"}
           proRequest={userData?.proRequest}
           onNavigate={handleNavigate}
           onLogout={handleLogout}
@@ -208,7 +210,7 @@ export default function ProfilePage() {
         />
 
         <div className="flex-1 overflow-y-auto pb-24 lg:pb-0">
-          <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-5 lg:px-6">
+          <div className="mx-auto w-full max-w-[1600px] space-y-3 px-3 py-3 sm:space-y-4 sm:px-4 sm:py-4 lg:px-6">
             <ProfileHeroBanner country={userData?.country} />
 
             <ProfileHeader

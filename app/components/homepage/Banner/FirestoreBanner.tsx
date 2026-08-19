@@ -15,32 +15,45 @@ export default function FirestoreBanner({ banner, framed = true }: Props) {
     <div
       className={
         framed
-          ? "overflow-hidden rounded-2xl border border-yellow-500/30 shadow-[0_0_24px_rgba(250,204,21,0.12)]"
-          : undefined
+          ? "relative h-full overflow-hidden rounded-2xl border border-yellow-500/30 shadow-[0_0_24px_rgba(250,204,21,0.12)]"
+          : "relative h-full"
       }
     >
       <img
         src={banner.imageUrl}
         alt="Advertisement"
-        className="w-full h-auto object-cover"
+        className="absolute inset-0 h-full w-full object-cover object-center"
       />
     </div>
   );
 
   if (banner.linkType === "external" && banner.externalUrl) {
     return (
-      <a href={banner.externalUrl} target="_blank" rel="noopener noreferrer">
+      <a
+        href={banner.externalUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block h-full w-full"
+      >
         {content}
       </a>
     );
   }
 
   if (banner.linkType === "listing" && banner.listingId) {
-    return <Link href={`/listings/${banner.listingId}`}>{content}</Link>;
+    return (
+      <Link href={`/listings/${banner.listingId}`} className="block h-full w-full">
+        {content}
+      </Link>
+    );
   }
 
   if (banner.linkType === "category") {
-    return <Link href="/listings">{content}</Link>;
+    return (
+      <Link href="/listings" className="block h-full w-full">
+        {content}
+      </Link>
+    );
   }
 
   return content;

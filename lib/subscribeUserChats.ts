@@ -6,6 +6,7 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import { isPermissionDenied } from "@/lib/firestoreErrors";
 
 export type ChatDoc = {
   id: string;
@@ -32,15 +33,6 @@ function getUpdatedAtMs(chat: ChatDoc): number {
     return (raw as { seconds: number }).seconds * 1000;
   }
   return 0;
-}
-
-function isPermissionDenied(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code?: string }).code === "permission-denied"
-  );
 }
 
 /**
