@@ -6,18 +6,18 @@ import bannerImages from "@/lib/bannerImages";
 import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
 
-/** In-feed / list banners: compact 16:5 strip on phones, taller on sm+/lg. Never 9:16. */
+/** In-feed / list banners: compact ~140px strip on phone/Capacitor (max-lg). Taller only on desktop. Never 9:16. */
 export const INFEED_BANNER_CLASS =
-  "h-[140px] w-full overflow-hidden sm:h-[240px] lg:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
-/** Short on phones (~2 compact rows); 240/280 on sm+ so the image fills, no letterbox. */
+  "h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+/** Short on phones (~2 compact rows); taller only at lg+ so the image fills, no letterbox. */
 export const PROFILE_BANNER_CLASS =
-  "h-[140px] w-full overflow-hidden sm:h-[240px] lg:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  "h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
 /** Desktop right-column skyscraper only — do not use this frame on small screens. */
 export const SIDEBAR_BANNER_CLASS =
   "aspect-[9/16] w-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
 /** Mobile stand-in for the sidebar: wide ~140px strip (~2 list rows), not 9:16. */
 export const MOBILE_SIDEBAR_BANNER_CLASS =
-  "h-[140px] w-full overflow-hidden [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  "h-[140px] w-full overflow-hidden max-lg:h-[140px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
 
 type Props = {
   banners: Banner[];

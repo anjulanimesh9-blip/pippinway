@@ -46,7 +46,7 @@ export default function LatestListings({
         ))}
       </div>
 
-      {/* Banner */}
+      {/* Banner — compact ~140px strip, object-cover (no letterbox / portrait stretch) */}
       {bannerImages.length > 0 && (
         <div className="max-w-6xl mx-auto">
           <BannerSlider
