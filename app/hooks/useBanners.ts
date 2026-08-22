@@ -60,7 +60,7 @@ export default function useBanners(selectedCountry: string | null) {
       (snapshot) => {
         setBanners(
           snapshot.docs.map((d) => {
-            const data = d.data() as Banner;
+            const data = d.data() as Omit<Banner, "id">;
             return {
               id: d.id,
               ...data,
