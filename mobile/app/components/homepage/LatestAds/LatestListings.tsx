@@ -31,7 +31,8 @@ function buildMixedFeed(
 ): FeedItem[] {
   const items: FeedItem[] = [];
   let featuredSlot = 0;
-  let gapIndex = rotateIndex % FEATURED_GAPS.length;
+  // Fixed gaps so featured slots stay put; rotateIndex only swaps featured ads.
+  let gapIndex = 0;
   let untilFeatured = FEATURED_GAPS[gapIndex];
 
   if (regularAds.length === 0) {
