@@ -11,6 +11,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import { isLiveListing } from "@/lib/filterListings";
 
 export interface Seller {
   displayName: string;
@@ -72,10 +73,12 @@ export function useSeller() {
 
         const snap = await getDocs(q);
 
-        const data: Listing[] = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Listing, "id">),
-        }));
+        const data: Listing[] = snap.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as Omit<Listing, "id">),
+          }))
+          .filter((listing) => isLiveListing(listing));
 
         setListings(data);
       } catch (error) {

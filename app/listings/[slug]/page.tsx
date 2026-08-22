@@ -12,6 +12,7 @@ import DeleteModal from "@/app/components/listing/DeleteModal";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import Navbar from "../../components/Navbar";
 import { getRelativeTime } from "@/lib/formatPrice";
+import { isLiveListing } from "@/lib/filterListings";
 import {
   doc,
   getDoc,
@@ -152,7 +153,7 @@ console.log("Owner:", item?.ownerEmail);
 
             if (
   listingData.approved !== true ||
-  listingData.expired === true
+  !isLiveListing(listingData)
 ) {
   router.push("/");
   return;
@@ -178,7 +179,7 @@ console.log("Owner:", item?.ownerEmail);
               (ad: any) =>
                 ad.id !== slug &&
                 ad.approved === true &&
-                ad.expired !== true
+                isLiveListing(ad)
             );
 
             const fromSeller = liveAds.filter(

@@ -15,6 +15,7 @@ import useAuth from "@/app/hooks/useAuth";
 import useSellerListings from "@/app/hooks/useSellerListings";
 import { db, storage } from "@/app/firebase";
 import { sendNotification } from "@/lib/sendNotification";
+import { isLiveListing } from "@/lib/filterListings";
 
 function CheckoutContent() {
   const router = useRouter();
@@ -25,7 +26,7 @@ function CheckoutContent() {
   const eligibleAds = useMemo(
     () =>
       listings.filter(
-        (ad) => ad.approved === true && ad.expired !== true && ad.rejected !== true
+        (ad) => ad.approved === true && ad.rejected !== true && isLiveListing(ad)
       ),
     [listings]
   );

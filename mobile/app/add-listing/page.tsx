@@ -294,6 +294,9 @@ await addDoc(
     rewardCounted: false,
     adType,
 
+    expiresAt: new Date(
+      Date.now() + 30 * 24 * 60 * 60 * 1000
+    ),
     expiryDate:
       adType === "free"
         ? new Date(

@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import type { FeaturedCreditLot, ListingRecord } from "@/lib/types/featured";
+import { isLiveListing } from "@/lib/filterListings";
 import { getFeaturedStatus } from "@/lib/listingFeatured";
 
 export const DEFAULT_FEATURED_VALIDITY_DAYS = 7;
@@ -51,7 +52,7 @@ export function resolveActivationDuration(
 export function isEligibleForFeaturedCredit(listing: ListingRecord): boolean {
   if (!listing.ownerId) return false;
   if (listing.approved !== true) return false;
-  if (listing.expired === true) return false;
+  if (!isLiveListing(listing)) return false;
   if (listing.rejected === true) return false;
   const status = getFeaturedStatus(listing);
   return status === "normal" || status === "expired";

@@ -18,6 +18,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase";
+import { isLiveListing } from "@/lib/filterListings";
 import {
   useParams,
   useRouter,
@@ -147,7 +148,7 @@ console.log("Owner:", item?.ownerEmail);
 
             if (
   listingData.approved !== true ||
-  listingData.expired === true
+  !isLiveListing(listingData)
 ) {
   router.push("/");
   return;
@@ -176,7 +177,7 @@ console.log("Owner:", item?.ownerEmail);
       listingData.category &&
     ad.id !== slug &&
     ad.approved === true &&
-    ad.expired !== true
+    isLiveListing(ad)
 );
                 
 

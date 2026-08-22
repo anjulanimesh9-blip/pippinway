@@ -5,9 +5,10 @@ import { db } from "@/app/firebase";
 import {
   collection,
   getDocs,
-  orderBy,
   query,
+  where,
 } from "firebase/firestore";
+import { getCreatedAtMs, isLiveListing } from "@/lib/filterListings";
 
 export default function useListings() {
   const [listings, setListings] = useState<any[]>([]);
@@ -18,7 +19,7 @@ export default function useListings() {
       try {
         const q = query(
           collection(db, "listings"),
-          orderBy("createdAt", "desc")
+          where("expired", "==", false)
         );
 
         const snapshot = await getDocs(q);
@@ -31,8 +32,9 @@ export default function useListings() {
           .filter(
             (listing: any) =>
               listing.approved === true &&
-              listing.expired !== true
-          );
+              isLiveListing(listing)
+          )
+          .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
 
         setListings(data);
       } catch (err) {

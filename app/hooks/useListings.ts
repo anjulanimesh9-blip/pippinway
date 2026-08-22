@@ -1,30 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import { isPermissionDenied } from "@/lib/firestoreErrors";
+import { getCreatedAtMs, isLiveListing } from "@/lib/filterListings";
 import type { ListingRecord } from "@/lib/types/featured";
-
-function getCreatedAtMs(listing: ListingRecord): number {
-  const createdAt = listing.createdAt;
-  if (!createdAt) return 0;
-  if (typeof (createdAt as { toMillis?: () => number }).toMillis === "function") {
-    return (createdAt as { toMillis: () => number }).toMillis();
-  }
-  if (typeof (createdAt as { seconds?: number }).seconds === "number") {
-    return (createdAt as { seconds: number }).seconds * 1000;
-  }
-  return 0;
-}
 
 function isApproved(listing: ListingRecord): boolean {
   const value = listing.approved as unknown;
-  return value === true || value === "true" || value === 1;
-}
-
-function isExpired(listing: ListingRecord): boolean {
-  const value = listing.expired as unknown;
   return value === true || value === "true" || value === 1;
 }
 
@@ -34,7 +18,7 @@ function mapListings(
 ): ListingRecord[] {
   return docs
     .map((d) => ({ id: d.id, ...d.data() } as ListingRecord))
-    .filter((listing) => isApproved(listing) && !isExpired(listing))
+    .filter((listing) => isApproved(listing) && isLiveListing(listing))
     .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
 }
 
@@ -45,7 +29,7 @@ export default function useListings() {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "listings"),
+      query(collection(db, "listings"), where("expired", "==", false)),
       (snapshot) => {
         setListings(mapListings(snapshot.docs));
         setLoading(false);

@@ -91,7 +91,20 @@ service cloud.firestore {
         'country',
         'phone',
         'createdAt',
+        'publishedAt',
+        'expiresAt',
+        'expiryDate',
         'expired'
+      ];
+    }
+
+    function listingExpiryFields() {
+      return [
+        'expiresAt',
+        'expiryDate',
+        'expired',
+        'createdAt',
+        'publishedAt'
       ];
     }
 
@@ -197,6 +210,8 @@ service cloud.firestore {
           isListingOwner() &&
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(listingApprovalFields()) &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(listingExpiryFields()) &&
           (
             !request.resource.data.diff(resource.data).affectedKeys()
               .hasAny(listingFeaturedFields()) ||

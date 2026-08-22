@@ -78,6 +78,8 @@ export interface ListingRecord {
   approved?: boolean;
   rejected?: boolean;
   expired?: boolean;
+  expiresAt?: unknown;
+  publishedAt?: unknown;
   featured?: boolean;
   adType?: string;
   featuredStartDate?: unknown;

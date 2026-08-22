@@ -69,12 +69,57 @@ function matchesLocation(listing: ListingRecord, location?: string) {
   return (listing.location ?? "").toLowerCase().includes(q);
 }
 
+export const LISTING_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function getTimestampMs(value: unknown): number {
+  if (!value) return 0;
+  if (typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (typeof (value as { toDate?: () => Date }).toDate === "function") {
+    return (value as { toDate: () => Date }).toDate().getTime();
+  }
+  if (typeof (value as { seconds?: number }).seconds === "number") {
+    return (value as { seconds: number }).seconds * 1000;
+  }
+  if (value instanceof Date) {
+    const ms = value.getTime();
+    return Number.isFinite(ms) ? ms : 0;
+  }
+  const parsed = new Date(value as string | number).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+type ListingExpiryFields = {
+  expired?: unknown;
+  expiresAt?: unknown;
+  publishedAt?: unknown;
+  createdAt?: unknown;
+};
+
+export function isListingFlaggedExpired(listing: ListingExpiryFields): boolean {
+  const value = listing.expired;
+  return value === true || value === "true" || value === 1;
+}
+
+/** Hide listings that are flagged expired or past createdAt/publishedAt + 30 days. */
+export function isLiveListing(listing: ListingExpiryFields): boolean {
+  if (isListingFlaggedExpired(listing)) return false;
+  const expiresAtMs = getTimestampMs(listing.expiresAt);
+  if (expiresAtMs > 0 && expiresAtMs <= Date.now()) return false;
+  const startMs =
+    getTimestampMs(listing.publishedAt) || getTimestampMs(listing.createdAt);
+  if (startMs > 0 && Date.now() - startMs >= LISTING_TTL_MS) return false;
+  return true;
+}
+
 export function applyHomeFilters(
   listings: ListingRecord[],
   filters: HomeFilters
 ): ListingRecord[] {
   return listings.filter(
     (listing) =>
+      isLiveListing(listing) &&
       matchesCountry(listing, filters.country) &&
       matchesCategory(listing, filters.category) &&
       matchesSearch(listing, filters.search) &&
@@ -93,13 +138,5 @@ export function splitFeaturedAndLatest(
 }
 
 export function getCreatedAtMs(listing: ListingRecord): number {
-  const createdAt = listing.createdAt;
-  if (!createdAt) return 0;
-  if (typeof (createdAt as { toMillis?: () => number }).toMillis === "function") {
-    return (createdAt as { toMillis: () => number }).toMillis();
-  }
-  if (typeof (createdAt as { seconds?: number }).seconds === "number") {
-    return (createdAt as { seconds: number }).seconds * 1000;
-  }
-  return 0;
+  return getTimestampMs(listing.createdAt);
 }

@@ -10,8 +10,13 @@ setGlobalOptions({ region: "us-central1", maxInstances: 20 });
 // Lazy Admin: Firebase CLI requires this file to discover exports and times
 // out after 10s if initializeApp()/credentials I/O run at import time.
 let db;
+let bucket;
 let FieldValue;
 let Timestamp;
+
+const LISTING_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const EXPIRY_GRACE_MS = 60 * 60 * 1000;
+const CLEANUP_BATCH_LIMIT = 200;
 
 function initAdmin() {
   if (db) return db;
@@ -32,6 +37,15 @@ onInit(initAdmin);
 
 function getDb() {
   return db || initAdmin();
+}
+
+function getBucket() {
+  initAdmin();
+  if (!bucket) {
+    const { getStorage } = require("firebase-admin/storage");
+    bucket = getStorage().bucket();
+  }
+  return bucket;
 }
 
 const NORMAL_CYCLE = 3;
@@ -615,3 +629,206 @@ exports.updateCashRewardStatus = onCall(async (request) => {
     paymentStatus: updated.status,
   };
 });
+
+function toValidTimestamp(value) {
+  if (!value) return null;
+  if (typeof value.toMillis === "function") {
+    const ms = value.toMillis();
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return Timestamp.fromMillis(ms);
+  }
+  if (typeof value.seconds === "number" && Number.isFinite(value.seconds)) {
+    const ms = value.seconds * 1000;
+    if (ms <= 0) return null;
+    return new Timestamp(value.seconds, value.nanoseconds || 0);
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime()) && value.getTime() > 0) {
+    return Timestamp.fromDate(value);
+  }
+  return null;
+}
+
+function listingStartTimestamp(data) {
+  return toValidTimestamp(data?.publishedAt) || toValidTimestamp(data?.createdAt);
+}
+
+function computeExpiresAt(startTs) {
+  return Timestamp.fromMillis(startTs.toMillis() + LISTING_TTL_MS);
+}
+
+/**
+ * Server-computed 30-day expiry. Overwrites any client expiresAt hint.
+ * Does not touch reward fields, so onListingWrittenForRewards stays a no-op.
+ */
+async function applyServerListingExpiry(listingRef, data) {
+  initAdmin();
+  const now = Timestamp.now();
+  const start = listingStartTimestamp(data) || now;
+  const updates = {
+    expiresAt: computeExpiresAt(start),
+    expired: false,
+  };
+  if (!toValidTimestamp(data?.createdAt)) {
+    updates.createdAt = now;
+  }
+  await listingRef.update(updates);
+}
+
+/**
+ * 1st-gen onCreate — sets expiresAt from createdAt/publishedAt + 30 days
+ * using Admin/server time. Client expiresAt is only a hint.
+ */
+exports.onListingCreatedSetExpiry = functionsV1
+  .region("us-central1")
+  .firestore.document("listings/{listingId}")
+  .onCreate(async (snap) => {
+    initAdmin();
+    await applyServerListingExpiry(snap.ref, snap.data() || {});
+  });
+
+function collectImageUrls(data) {
+  const urls = [];
+  if (Array.isArray(data?.imageUrls)) {
+    for (const url of data.imageUrls) {
+      if (typeof url === "string" && url) urls.push(url);
+    }
+  }
+  if (typeof data?.imageUrl === "string" && data.imageUrl) {
+    urls.push(data.imageUrl);
+  }
+  return [...new Set(urls)];
+}
+
+function storagePathFromUrl(url) {
+  if (typeof url !== "string" || !url) return null;
+  try {
+    const gs = url.match(/^gs:\/\/[^/]+\/(.+)$/);
+    if (gs) return decodeURIComponent(gs[1]);
+
+    const encoded = url.match(/\/o\/([^?]+)/);
+    if (encoded) return decodeURIComponent(encoded[1]);
+
+    const hosted = url.match(/storage\.googleapis\.com\/(.+)$/);
+    if (hosted) return decodeURIComponent(hosted[1].split("?")[0]);
+  } catch (err) {
+    console.warn("Could not parse storage path", url, err);
+  }
+  return null;
+}
+
+function isListingStoragePath(path) {
+  return typeof path === "string" && path.startsWith("listings/");
+}
+
+async function deleteListingImages(data, listingId) {
+  const paths = [
+    ...new Set(
+      collectImageUrls(data)
+        .map(storagePathFromUrl)
+        .filter(isListingStoragePath)
+    ),
+  ];
+  if (paths.length === 0) return;
+
+  const storageBucket = getBucket();
+  await Promise.all(
+    paths.map(async (path) => {
+      try {
+        await storageBucket.file(path).delete({ ignoreNotFound: true });
+      } catch (err) {
+        console.warn("Storage delete failed", listingId, path, err);
+      }
+    })
+  );
+}
+
+async function deleteListingOnlySubdocs(listingRef) {
+  const collections = await listingRef.listCollections();
+  for (const col of collections) {
+    const docs = await col.listDocuments();
+    await Promise.all(docs.map((docRef) => docRef.delete()));
+  }
+}
+
+function isSafeToPermanentlyDelete(data, nowMs) {
+  const createdAt = toValidTimestamp(data?.createdAt);
+  if (!createdAt) {
+    return { ok: false, reason: "missing_createdAt" };
+  }
+  const publishedAt = toValidTimestamp(data?.publishedAt);
+  const start =
+    publishedAt && publishedAt.toMillis() > createdAt.toMillis()
+      ? publishedAt
+      : createdAt;
+  const ageMs = nowMs - start.toMillis();
+  if (ageMs < LISTING_TTL_MS + EXPIRY_GRACE_MS) {
+    return { ok: false, reason: "within_grace" };
+  }
+  return { ok: true };
+}
+
+async function loadExpiredListingCandidates(now) {
+  const cutoff = Timestamp.fromMillis(now.toMillis() - LISTING_TTL_MS);
+  const listingsRef = getDb().collection("listings");
+  const [byExpiry, byCreated] = await Promise.all([
+    listingsRef.where("expiresAt", "<=", now).limit(CLEANUP_BATCH_LIMIT).get(),
+    listingsRef.where("createdAt", "<=", cutoff).limit(CLEANUP_BATCH_LIMIT).get(),
+  ]);
+
+  const byId = new Map();
+  for (const snap of [...byExpiry.docs, ...byCreated.docs]) {
+    byId.set(snap.id, snap);
+  }
+  return [...byId.values()];
+}
+
+async function permanentlyDeleteListing(snap) {
+  const listingId = snap.id;
+  const data = snap.data() || {};
+  await deleteListingImages(data, listingId);
+  await deleteListingOnlySubdocs(snap.ref);
+  await snap.ref.delete();
+}
+
+/**
+ * Scheduled every 6 hours (UTC). Finds listings past createdAt/publishedAt +
+ * 30 days and permanently deletes the Firestore doc plus listing images.
+ * Never deletes users, profiles, chats, notifications, or reward history.
+ * Safe check: valid createdAt required; age must be >= 30 days + 1 hour grace.
+ */
+exports.cleanupExpiredListings = functionsV1
+  .region("us-central1")
+  .runWith({ timeoutSeconds: 540, memory: "512MB" })
+  .pubsub.schedule("every 6 hours")
+  .timeZone("UTC")
+  .onRun(async () => {
+    initAdmin();
+    const now = Timestamp.now();
+    const nowMs = now.toMillis();
+    const candidates = await loadExpiredListingCandidates(now);
+
+    let deleted = 0;
+    let skipped = 0;
+
+    for (const snap of candidates) {
+      const check = isSafeToPermanentlyDelete(snap.data() || {}, nowMs);
+      if (!check.ok) {
+        skipped += 1;
+        if (check.reason === "missing_createdAt") {
+          console.warn("Expiry cleanup skipped listing with no createdAt", snap.id);
+        }
+        continue;
+      }
+      try {
+        await permanentlyDeleteListing(snap);
+        deleted += 1;
+      } catch (err) {
+        console.error("Expiry cleanup failed for listing", snap.id, err);
+      }
+    }
+
+    console.log(
+      `cleanupExpiredListings: deleted=${deleted} skipped=${skipped} candidates=${candidates.length}`
+    );
+    return { deleted, skipped, candidates: candidates.length };
+  });

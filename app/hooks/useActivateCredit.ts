@@ -18,6 +18,8 @@ import {
   findSpendableLotIndex,
   resolveActivationDuration,
 } from "@/lib/featuredCredits";
+import { isLiveListing } from "@/lib/filterListings";
+import type { ListingRecord } from "@/lib/types/featured";
 
 function isCurrentlyFeatured(listing: Record<string, unknown>): boolean {
   if (listing.featured !== true) return false;
@@ -55,7 +57,7 @@ export default function useActivateCredit(user: User | null) {
 
           if (listing.ownerId !== user.uid) throw new Error("NOT_OWNER");
           if (listing.approved !== true) throw new Error("NOT_APPROVED");
-          if (listing.expired === true) throw new Error("LISTING_EXPIRED");
+          if (!isLiveListing(listing as ListingRecord)) throw new Error("LISTING_EXPIRED");
           if (listing.rejected === true) throw new Error("LISTING_REJECTED");
           if (isCurrentlyFeatured(listing)) throw new Error("ALREADY_FEATURED");
 

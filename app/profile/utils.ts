@@ -1,9 +1,11 @@
+import { isLiveListing } from "@/lib/filterListings";
+
 export type ListingStatus = "active" | "pending" | "sold" | "draft";
 
 export function getListingStatus(ad: any): ListingStatus {
   if (ad?.sold === true || ad?.status === "sold") return "sold";
   if (ad?.draft === true || ad?.status === "draft") return "draft";
-  if (ad?.approved === true && ad?.expired !== true && ad?.rejected !== true) {
+  if (ad?.approved === true && ad?.rejected !== true && isLiveListing(ad)) {
     return "active";
   }
   return "pending";
