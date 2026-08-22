@@ -23,10 +23,9 @@ import MobileBottomNav from "../components/MobileBottomNav";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const user = auth.currentUser;
-
   const {
   loading,
+  user,
   userData,
   myAds,
   favoriteAds,

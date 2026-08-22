@@ -1,5 +1,10 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getApp, getApps, initializeApp } from "firebase/app";
+import {
+  browserLocalPersistence,
+  getAuth,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
@@ -22,12 +27,31 @@ const firebaseConfig = {
 };
 
 const app =
-  initializeApp(
-    firebaseConfig
-  );
+  getApps().length > 0
+    ? getApp()
+    : initializeApp(
+        firebaseConfig
+      );
+
+function createAuth() {
+  if (typeof window === "undefined") {
+    return getAuth(app);
+  }
+
+  try {
+    return initializeAuth(app, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+      ],
+    });
+  } catch {
+    return getAuth(app);
+  }
+}
 
 export const auth =
-  getAuth(app);
+  createAuth();
 
 export const db =
   getFirestore(app);

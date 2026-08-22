@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  signOut,
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { useRouter } from "next/navigation";
@@ -14,6 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] =
   useState(false);
+  const [loginErrorText, setLoginErrorText] =
+  useState("");
   const [resetMessage, setResetMessage] =
   useState("");
   const [verifyMessage, setVerifyMessage] =
@@ -25,6 +28,7 @@ export default function LoginPage() {
 
   setVerifyMessage("");
   setLoginError(false);
+  setLoginErrorText("");
 
   try {
     const userCredential =
@@ -34,6 +38,12 @@ export default function LoginPage() {
     password
   );
 
+    try {
+      await userCredential.user.reload();
+    } catch {
+      // Use the sign-in token if reload is blocked in the WebView.
+    }
+
 if (
   !userCredential.user
     .emailVerified
@@ -41,6 +51,7 @@ if (
   setVerifyMessage(
   "📩 Please verify your email before login. Check your inbox or spam folder."
 );
+  await signOut(auth);
 
 return;
 }
@@ -49,7 +60,14 @@ setLoginError(false);
 
 router.push("/profile"); 
     } catch (error: any) {
+  const code = error?.code ? String(error.code) : "";
+  const message = error?.message ? String(error.message) : "";
   setLoginError(true);
+  setLoginErrorText(
+    code || message
+      ? [code, message].filter(Boolean).join(" — ")
+      : "Invalid email or password"
+  );
 }
   };
 const handleResetPassword =
@@ -142,7 +160,7 @@ const handleResetPassword =
 
                 {loginError && (
   <p className="text-red-500 text-sm">
-    Invalid email or password
+    {loginErrorText || "Invalid email or password"}
   </p>
 )}
 <div className="grid grid-cols-2 gap-3 mt-6">

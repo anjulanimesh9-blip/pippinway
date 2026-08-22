@@ -53,20 +53,10 @@ useEffect(() => {
           return;
         }
 
-        await currentUser.reload();
-
-        if (
-          !currentUser.emailVerified
-        ) {
-          await signOut(
-            auth
-          );
-
-          setUser(
-            null
-          );
-
-          return;
+        try {
+          await currentUser.reload();
+        } catch {
+          // Keep the signed-in session if reload fails in the WebView.
         }
 
         setUser(
