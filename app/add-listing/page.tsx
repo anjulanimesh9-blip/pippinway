@@ -10,8 +10,6 @@ import {
   addDoc,
   collection,
   getDoc,
-  updateDoc,
-  increment,
 } from "firebase/firestore";
 import {
   ref,
@@ -284,10 +282,7 @@ await addDoc(
 
     expired: false,
   }
-);  
-await updateDoc(userRef, {
-  adsPostedThisMonth: increment(1),
-});
+);
 
   router.push(
     "/profile"

@@ -91,9 +91,6 @@ await setDoc(
     proRequest: false,
     proApproved: false,
 
-    // Limits
-    monthlyAdLimit: 10,
-    adsPostedThisMonth: 0,
     featuredCredits: 0,
 
     // Seller
