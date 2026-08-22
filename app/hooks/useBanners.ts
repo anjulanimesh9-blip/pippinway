@@ -62,8 +62,8 @@ export default function useBanners(selectedCountry: string | null) {
           snapshot.docs.map((d) => {
             const data = d.data() as Omit<Banner, "id">;
             return {
-              id: d.id,
               ...data,
+              id: d.id,
               imageUrl: resolveBannerImageUrl(data as unknown as Record<string, unknown>),
             } as Banner;
           })
