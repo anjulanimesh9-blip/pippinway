@@ -66,9 +66,6 @@ const [checkingAuth, setCheckingAuth] =
 
   const [errors, setErrors] =
     useState<any>({});
-    const [adType,
-  setAdType] =
-  useState("free");
   const [previewImage, setPreviewImage] =
   useState<string | null>(null);
   useEffect(() => {
@@ -250,18 +247,10 @@ const userSnap =
 const userData =
   userSnap.data();
 
-if (
-  userData
-    ?.adsPostedThisMonth >=
-  userData
-    ?.monthlyAdLimit
-) {
-  alert(
-    "You've reached your monthly limit.\nUpgrade to Seller Pro ⭐"
-  );
+const expiresAt = new Date(
+  Date.now() + 30 * 24 * 60 * 60 * 1000
+);
 
-  return;
-}
 await addDoc(
   collection(db, "listings"),
   {
@@ -284,21 +273,14 @@ await addDoc(
 
     createdAt: new Date(),
 
-    featured: adType === "featured",
+    featured: false,
     approved: false,
     rejected: false,
     rewardCounted: false,
-    adType,
+    adType: "free",
 
-    expiresAt: new Date(
-      Date.now() + 30 * 24 * 60 * 60 * 1000
-    ),
-    expiryDate:
-      adType === "free"
-        ? new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          )
-        : null,
+    expiresAt,
+    expiryDate: expiresAt,
 
     expired: false,
   }
@@ -593,66 +575,6 @@ onChange={(e) => {
     : "border border-blue-900/30 focus:border-blue-500"
 }`}
           />
-          <div className="mb-5">
-  <label className="block text-lg font-bold mb-3">
-    Select Ad Type
-  </label>
-
-  <div className="grid md:grid-cols-2 gap-4">
-
-    {/* Free Ad */}
-    <div
-      onClick={() =>
-        setAdType(
-          "free"
-        )
-      }
-className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blue-400 hover:bg-blue-500/5 ${
-  adType === "free"
-    ? "border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
-    : "border-gray-700 bg-[#0b1120]"
-}`}
-    >
-      <h3 className="font-bold text-xl">
-        Free Ad
-      </h3>
-
-      <p className="text-gray-400 mt-2">
-        Standard listing
-      </p>
-    </div>
-
-    {/* Featured */}
-    <div
-      onClick={() =>
-        setAdType(
-          "featured"
-        )
-      }
-      className={`cursor-pointer border rounded-[24px] p-5 transition relative overflow-hidden ${
-  adType === "featured"
-    ? "border-yellow-500 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 shadow-[0_0_30px_rgba(234,179,8,0.25)] scale-[1.03]"
-    : "border-gray-700 bg-[#0b1120]"
-}`}
-    >
-  <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-  👑 BEST
-</div>
-      <h3 className="font-bold text-2xl text-yellow-400">
-  ⭐ Featured Ad
-</h3>
-
-      <p className="text-gray-400 mt-2">
-        Show at top of
-        homepage
-      </p>
-
-     <p className="text-green-400 font-bold mt-4 text-lg">
-  $1 / 7 Days
-</p>
-    </div>
-  </div>
-</div>
 <div className="space-y-3 mb-5">
   <p className="text-xs text-gray-400">
     Maximum {MAX_LISTING_IMAGES} photos
