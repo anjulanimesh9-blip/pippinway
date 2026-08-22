@@ -83,6 +83,7 @@ export interface ListingRecord {
   featured?: boolean;
   adType?: string;
   featuredStartDate?: unknown;
+  featuredUntil?: unknown;
   featuredExpiryDate?: unknown;
   featuredExpiresAt?: unknown;
   featuredPackageId?: string | null;

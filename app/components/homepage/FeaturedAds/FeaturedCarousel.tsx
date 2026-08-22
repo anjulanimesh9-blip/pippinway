@@ -5,6 +5,8 @@ import useEmblaCarousel from "embla-carousel-react";
 import EmblaAutoplay from "embla-carousel-autoplay";
 
 import FeaturedCard from "./FeaturedCard";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
+import type { ListingRecord } from "@/lib/types/featured";
 
 type Listing = {
   id: string;
@@ -66,7 +68,7 @@ export default function FeaturedCarousel({
 
   const featured = useMemo(
 
-    () => ads.filter((item) => item.featured),
+    () => ads.filter((item) => isActiveFeaturedListing(item as ListingRecord)),
 
     [ads]
 

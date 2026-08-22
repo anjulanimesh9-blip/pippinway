@@ -7,6 +7,8 @@ import MobileCarousel from "./MobileCarousel";
 
 import { Listing } from "./types";
 import { shuffleArray } from "./utils";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
+import type { ListingRecord } from "@/lib/types/featured";
 
 type Props = {
   listings: Listing[];
@@ -24,7 +26,7 @@ export default function FeaturedAds({
 
   // Featured only
   const featured = useMemo(
-    () => listings.filter((item) => item.featured),
+    () => listings.filter((item) => isActiveFeaturedListing(item as ListingRecord)),
     [listings]
   );
 

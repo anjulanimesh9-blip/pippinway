@@ -14,7 +14,7 @@ type Props = {
   setSelectedCategory: (value: string) => void;
 
   featuredListings: any[];
-  mixedListings: any[];
+  latestListings: any[];
 
   favorites: string[];
   toggleFavorite: (e: any, listingId: string) => void;
@@ -29,7 +29,7 @@ export default function HomeContent({
   selectedCategory,
   setSelectedCategory,
   featuredListings,
-  mixedListings,
+  latestListings,
   favorites,
   toggleFavorite,
   currencyMap,
@@ -97,7 +97,7 @@ export default function HomeContent({
         <LatestHeading />
 
         <LatestListings
-          mixedListings={mixedListings}
+          latestListings={latestListings}
           favorites={favorites}
           toggleFavorite={toggleFavorite}
           currencyMap={currencyMap}

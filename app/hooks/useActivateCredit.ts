@@ -19,18 +19,8 @@ import {
   resolveActivationDuration,
 } from "@/lib/featuredCredits";
 import { isLiveListing } from "@/lib/filterListings";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
-
-function isCurrentlyFeatured(listing: Record<string, unknown>): boolean {
-  if (listing.featured !== true) return false;
-  const raw = listing.featuredExpiryDate ?? listing.featuredExpiresAt;
-  if (!raw) return true;
-  const expiry =
-    typeof (raw as { toDate?: () => Date }).toDate === "function"
-      ? (raw as { toDate: () => Date }).toDate()
-      : new Date(raw as string | number);
-  return !isNaN(expiry.getTime()) && expiry.getTime() > Date.now();
-}
 
 export default function useActivateCredit(user: User | null) {
   const [activatingListingId, setActivatingListingId] = useState<string | null>(
@@ -59,7 +49,9 @@ export default function useActivateCredit(user: User | null) {
           if (listing.approved !== true) throw new Error("NOT_APPROVED");
           if (!isLiveListing(listing as ListingRecord)) throw new Error("LISTING_EXPIRED");
           if (listing.rejected === true) throw new Error("LISTING_REJECTED");
-          if (isCurrentlyFeatured(listing)) throw new Error("ALREADY_FEATURED");
+          if (isActiveFeaturedListing(listing as ListingRecord)) {
+            throw new Error("ALREADY_FEATURED");
+          }
 
           const currentCredits = Number(
             userSnap.exists() ? userSnap.data().featuredCredits ?? 0 : 0

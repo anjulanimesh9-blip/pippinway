@@ -832,3 +832,67 @@ exports.cleanupExpiredListings = functionsV1
     );
     return { deleted, skipped, candidates: candidates.length };
   });
+
+function getFeaturedExpiryMs(data) {
+  const explicit =
+    toValidTimestamp(data?.featuredUntil) ||
+    toValidTimestamp(data?.featuredExpiryDate) ||
+    toValidTimestamp(data?.featuredExpiresAt);
+  if (explicit) return explicit.toMillis();
+
+  const start =
+    toValidTimestamp(data?.featuredStartDate) || listingStartTimestamp(data);
+  if (start) {
+    return start.toMillis() + FEATURED_CREDIT_DAYS * 24 * 60 * 60 * 1000;
+  }
+  return null;
+}
+
+/**
+ * Scheduled every 2 hours (UTC). Clears featured flags after featuredUntil /
+ * featuredExpiryDate / featuredExpiresAt (or start + 7 days) is past server time.
+ * The listing stays live as a normal approved ad. Does not delete listings
+ * and does not touch 30-day listing expiry.
+ */
+exports.cleanupExpiredFeatured = functionsV1
+  .region("us-central1")
+  .runWith({ timeoutSeconds: 540, memory: "256MB" })
+  .pubsub.schedule("every 2 hours")
+  .timeZone("UTC")
+  .onRun(async () => {
+    initAdmin();
+    const nowMs = Timestamp.now().toMillis();
+    const featuredSnap = await getDb()
+      .collection("listings")
+      .where("featured", "==", true)
+      .limit(CLEANUP_BATCH_LIMIT)
+      .get();
+
+    let cleared = 0;
+    let skipped = 0;
+
+    for (const snap of featuredSnap.docs) {
+      const data = snap.data() || {};
+      const expiryMs = getFeaturedExpiryMs(data);
+      if (expiryMs == null || expiryMs > nowMs) {
+        skipped += 1;
+        continue;
+      }
+
+      try {
+        await snap.ref.update({
+          featured: false,
+          adType: "free",
+          featuredClearedAt: FieldValue.serverTimestamp(),
+        });
+        cleared += 1;
+      } catch (err) {
+        console.error("Featured expiry cleanup failed for listing", snap.id, err);
+      }
+    }
+
+    console.log(
+      `cleanupExpiredFeatured: cleared=${cleared} skipped=${skipped} candidates=${featuredSnap.size}`
+    );
+    return { cleared, skipped, candidates: featuredSnap.size };
+  });

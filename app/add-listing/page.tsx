@@ -27,6 +27,10 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
+import {
+  MAX_LISTING_IMAGES,
+  MAX_LISTING_IMAGES_MESSAGE,
+} from "@/lib/listingImages";
 
 export default function AddListing() {
   const router =
@@ -187,7 +191,10 @@ if (checkingAuth) {
       (image): image is File => image instanceof File
     );
 
-    if (listingImages.length !== 4) {
+    if (
+      listingImages.length === 0 ||
+      listingImages.length > MAX_LISTING_IMAGES
+    ) {
   newErrors.image = true;
 }
 
@@ -276,7 +283,7 @@ await addDoc(
     category,
     phone,
     description,
-    imageUrls,
+    imageUrls: imageUrls.slice(0, MAX_LISTING_IMAGES),
     imageUrl: imageUrls[0],
 
     ownerId: user.uid,
@@ -656,7 +663,10 @@ className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blu
   </div>
 </div>
 <div className="space-y-3 mb-5">
-  {[1, 2, 3, 4].map((num, index) => (
+  <p className="text-xs text-gray-400">
+    Maximum {MAX_LISTING_IMAGES} photos
+  </p>
+  {Array.from({ length: MAX_LISTING_IMAGES }, (_, i) => i + 1).map((num, index) => (
     <div
       key={num}
       className={`relative bg-[#0b1120] rounded-[24px] p-5 ${
@@ -673,15 +683,25 @@ className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blu
         type="file"
         accept="image/*"
         onChange={(e) => {
-          if (!e.target.files?.[0]) return;
+          const picked = e.target.files?.[0];
+          if (!picked) return;
+
+          const filled = images.filter(Boolean).length;
+          const replacing = Boolean(images[index]);
+          if (!replacing && filled >= MAX_LISTING_IMAGES) {
+            e.target.value = "";
+            alert(MAX_LISTING_IMAGES_MESSAGE);
+            return;
+          }
 
           const newImages = [...images];
-          newImages[index] = e.target.files[0];
+          newImages[index] = picked;
 
           setImages([...newImages]);
 
           if (
-            newImages.filter(Boolean).length === 4
+            newImages.filter(Boolean).length > 0 &&
+            newImages.filter(Boolean).length <= MAX_LISTING_IMAGES
           ) {
             setErrors((prev: any) => ({
               ...prev,
@@ -737,7 +757,7 @@ className={`cursor-pointer border rounded-[24px] p-5 transition hover:border-blu
 
   {errors.image && (
     <p className="text-red-500 text-sm mt-2 text-center">
-      Please upload exactly 4 photos
+      Please upload up to {MAX_LISTING_IMAGES} photos
     </p>
   )}
 </div>

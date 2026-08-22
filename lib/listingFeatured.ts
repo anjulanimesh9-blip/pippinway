@@ -2,6 +2,8 @@ import type { ListingRecord } from "@/lib/types/featured";
 
 export type FeaturedStatus = "normal" | "featured" | "expired";
 
+export const DEFAULT_FEATURED_VALIDITY_DAYS = 7;
+
 function toDate(value: unknown): Date | null {
   if (!value) return null;
   if (typeof (value as { toDate?: () => Date }).toDate === "function") {
@@ -15,10 +17,30 @@ function toDate(value: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-export function getListingFeaturedExpiry(listing: ListingRecord): Date | null {
+function featuredStartDate(listing: ListingRecord): Date | null {
   return (
-    toDate(listing.featuredExpiryDate) ?? toDate(listing.featuredExpiresAt)
+    toDate(listing.featuredStartDate) ??
+    toDate(listing.publishedAt) ??
+    toDate(listing.createdAt)
   );
+}
+
+export function getListingFeaturedExpiry(listing: ListingRecord): Date | null {
+  const explicit =
+    toDate(listing.featuredUntil) ??
+    toDate(listing.featuredExpiryDate) ??
+    toDate(listing.featuredExpiresAt);
+  if (explicit) return explicit;
+
+  if (listing.featured === true) {
+    const start = featuredStartDate(listing);
+    if (start) {
+      return new Date(
+        start.getTime() + DEFAULT_FEATURED_VALIDITY_DAYS * 24 * 60 * 60 * 1000
+      );
+    }
+  }
+  return null;
 }
 
 /** Same logic as mobile getFeaturedStatus */

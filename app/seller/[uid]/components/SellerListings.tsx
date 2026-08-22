@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { Listing } from "../hooks/useSeller";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
+import type { ListingRecord } from "@/lib/types/featured";
 
 interface SellerListingsProps {
   listings: Listing[];
@@ -60,7 +62,7 @@ export default function SellerListings({
                 className="h-56 w-full object-cover transition duration-500 group-hover:scale-110"
               />
 
-              {listing.featured && (
+              {isActiveFeaturedListing(listing as ListingRecord) && (
                 <span className="absolute left-3 top-3 rounded-full bg-yellow-500 px-3 py-1 text-xs font-bold text-black">
                   ⭐ FEATURED
                 </span>

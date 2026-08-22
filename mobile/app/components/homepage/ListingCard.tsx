@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 
 type ListingCardProps = {
   item: any;
@@ -22,6 +23,7 @@ export default function ListingCard({
     item.imageUrls?.[0] ||
     item.imageUrl ||
     "/placeholder.png";
+  const isFeatured = isActiveFeaturedListing(item);
 
   return (
     <>
@@ -37,7 +39,7 @@ export default function ListingCard({
             className="w-full aspect-square object-cover"
           />
 
-          {item.featured && (
+          {isFeatured && (
             <span className="absolute top-2 left-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 rounded-lg">
               👑 FEATURED
             </span>
@@ -79,12 +81,12 @@ export default function ListingCard({
         href={`/listings/${item.id}`}
         className={`hidden lg:flex group relative overflow-hidden rounded-2xl p-4 gap-4 items-start transition-all hover:shadow-xl
         ${
-          item.featured
+          isFeatured
             ? "bg-yellow-500/5 border border-yellow-500"
             : "bg-gradient-to-b from-[#0f172a] to-[#111827] border border-white/10"
         }`}
       >
-        {item.featured && (
+        {isFeatured && (
           <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">
             👑 FEATURED
           </div>

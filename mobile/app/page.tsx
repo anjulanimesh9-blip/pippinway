@@ -40,13 +40,7 @@ export default function Home() {
     toggleFavorite,
   } = useFavorites(user);
 
-  const {
-    featuredListings,
-    mixedListings,
-  } = useFeaturedListings(
-    listings,
-    selectedCategory
-  );
+  const { featuredListings } = useFeaturedListings(listings);
 
   return (
     <main className="min-h-screen bg-[#020817] pb-20 lg:pb-0">
@@ -73,7 +67,7 @@ export default function Home() {
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           featuredListings={featuredListings}
-          mixedListings={mixedListings}
+          latestListings={listings}
           favorites={favorites}
           toggleFavorite={toggleFavorite}
           currencyMap={currencyMap}

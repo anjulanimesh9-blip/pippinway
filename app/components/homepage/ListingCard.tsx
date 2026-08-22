@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Clock, Heart, MapPin, Star } from "lucide-react";
 import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
 
 type ListingCardProps = {
@@ -20,6 +21,7 @@ export default function ListingCard({
 }: ListingCardProps) {
   const image = item.imageUrls?.[0] || item.imageUrl || "/placeholder.png";
   const slug = item.slug || item.id;
+  const isFeatured = isActiveFeaturedListing(item);
   const relativeTime = getRelativeTime(item.createdAt);
   const locationLabel = [item.location, item.country].filter(Boolean).join(", ");
   const price = formatPrice(Number(item.price ?? 0), item.country);
@@ -37,7 +39,7 @@ export default function ListingCard({
             alt={item.title ?? "Listing"}
             className="h-full w-full object-cover"
           />
-          {item.featured === true && (
+          {isFeatured && (
             <span className="absolute left-1 top-1 rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white sm:left-1.5 sm:top-1.5">
               Featured
             </span>
@@ -70,7 +72,7 @@ export default function ListingCard({
             </button>
           </div>
 
-          {item.featured === true && (
+          {isFeatured && (
             <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded bg-yellow-400/15 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
               <Star size={10} fill="currentColor" />
               FEATURED
@@ -110,7 +112,7 @@ export default function ListingCard({
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
 
-        {item.featured === true && (
+        {isFeatured && (
           <span className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow">
             Featured
           </span>

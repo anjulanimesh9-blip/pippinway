@@ -11,6 +11,10 @@ import {
   useParams,
   useRouter,
 } from "next/navigation";
+import {
+  MAX_LISTING_IMAGES,
+  MAX_LISTING_IMAGES_MESSAGE,
+} from "@/lib/listingImages";
 
 export default function EditListing() {
   const params = useParams();
@@ -63,12 +67,12 @@ export default function EditListing() {
           );
 
           setImageUrls(
-            data.imageUrls ||
+            (data.imageUrls ||
               (data.imageUrl
                 ? [
                     data.imageUrl,
                   ]
-                : [])
+                : [])).slice(0, MAX_LISTING_IMAGES)
           );
         }
       };
@@ -136,7 +140,7 @@ export default function EditListing() {
             description,
             phone,
             imageUrls:
-              updatedImages,
+              updatedImages.slice(0, MAX_LISTING_IMAGES),
             imageUrl:
               updatedImages[0],
           }
@@ -252,7 +256,7 @@ export default function EditListing() {
 
         <div className="mb-5">
           <label className="block mb-2 text-sm text-gray-400">
-            Upload 4 New Photos
+            Upload up to {MAX_LISTING_IMAGES} new photos
           </label>
 
           <input
@@ -260,19 +264,27 @@ export default function EditListing() {
             multiple
             accept="image/*"
             onChange={(e) => {
-              const files =
+              let files =
                 Array.from(
                   e.target
                     .files || []
                 );
 
               if (
-                files.length !==
-                4
+                files.length >
+                MAX_LISTING_IMAGES
               ) {
                 alert(
-                  "Please select exactly 4 photos"
+                  MAX_LISTING_IMAGES_MESSAGE
                 );
+                files = files.slice(
+                  0,
+                  MAX_LISTING_IMAGES
+                );
+                e.target.value = "";
+              }
+
+              if (files.length === 0) {
                 return;
               }
 

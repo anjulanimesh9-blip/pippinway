@@ -1,9 +1,12 @@
 import { Timestamp } from "firebase/firestore";
 import type { FeaturedCreditLot, ListingRecord } from "@/lib/types/featured";
 import { isLiveListing } from "@/lib/filterListings";
-import { getFeaturedStatus } from "@/lib/listingFeatured";
+import {
+  DEFAULT_FEATURED_VALIDITY_DAYS,
+  getFeaturedStatus,
+} from "@/lib/listingFeatured";
 
-export const DEFAULT_FEATURED_VALIDITY_DAYS = 7;
+export { DEFAULT_FEATURED_VALIDITY_DAYS };
 
 export function findSpendableLotIndex(lots: FeaturedCreditLot[]): number {
   return lots.findIndex((lot) => Number(lot.remaining ?? 0) > 0);

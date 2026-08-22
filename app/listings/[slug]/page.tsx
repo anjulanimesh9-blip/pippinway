@@ -13,6 +13,7 @@ import MobileBottomNav from "../../components/MobileBottomNav";
 import Navbar from "../../components/Navbar";
 import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import {
   doc,
   getDoc,
@@ -310,7 +311,7 @@ const whatsappLink =
               location={item.location}
               country={item.country}
               description={item.description}
-              featured={item.featured === true}
+              featured={isActiveFeaturedListing(item)}
               showBoost={isOwner}
             />
           </div>
