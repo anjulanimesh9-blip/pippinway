@@ -101,16 +101,16 @@ img{
 
 }
 
-/* Unlayered so it wins over `img { height: auto }` above Tailwind utilities. */
-.banner-slot-img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  max-width:none;
-  max-height:none;
-  object-fit:cover;
-  object-position:center;
+/* Backup only. Live banners use inline BANNER_SLOT_IMG_STYLE. */
+img.banner-slot-img{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center !important;
 }
 
 button{

@@ -6,21 +6,18 @@ import bannerImages, { isUsableBannerSrc } from "@/lib/bannerImages";
 import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
 
-const SLOT_IMG =
-  "[&_img]:absolute [&_img]:inset-0 [&_img]:h-full [&_img]:w-full [&_img]:max-h-none [&_img]:max-w-none [&_img]:object-cover [&_img]:object-center";
-
 /** In-feed / list banners: compact ~140px strip on phone/Capacitor (max-lg). Taller only on desktop. Never 9:16. */
 export const INFEED_BANNER_CLASS =
-  `relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] ${SLOT_IMG}`;
+  "relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px]";
 /** Short on phones (~2 compact rows); taller only at lg+ so the image fills, no letterbox. */
 export const PROFILE_BANNER_CLASS =
-  `relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] ${SLOT_IMG}`;
+  "relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px]";
 /** Desktop right-column skyscraper only — do not use this frame on small screens. */
 export const SIDEBAR_BANNER_CLASS =
-  `relative aspect-[9/16] w-full overflow-hidden ${SLOT_IMG}`;
+  "relative aspect-[9/16] w-full overflow-hidden";
 /** Mobile stand-in for the sidebar: wide ~140px strip (~2 list rows), not 9:16. */
 export const MOBILE_SIDEBAR_BANNER_CLASS =
-  `relative h-[140px] w-full overflow-hidden max-lg:h-[140px] ${SLOT_IMG}`;
+  "relative h-[140px] w-full overflow-hidden max-lg:h-[140px]";
 
 type Props = {
   banners: Banner[];
@@ -110,9 +107,10 @@ export default function BannerRotator({
           key={slide.id}
           className={
             slideIndex === activeIndex
-              ? "absolute inset-0 z-10 opacity-100 transition-opacity duration-500"
-              : "pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-500"
+              ? "absolute inset-0 z-10 overflow-hidden opacity-100 transition-opacity duration-500"
+              : "pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-0 transition-opacity duration-500"
           }
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
           aria-hidden={slideIndex !== activeIndex}
         >
           <FirestoreBanner

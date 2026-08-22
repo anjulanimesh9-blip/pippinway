@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Banner } from "@/lib/types/featured";
-import { isUsableBannerSrc } from "@/lib/bannerImages";
+import { BANNER_SLOT_IMG_STYLE, isUsableBannerSrc } from "@/lib/bannerImages";
 
 type Props = {
   banner: Banner | null;
@@ -21,14 +21,16 @@ export default function FirestoreBanner({
     <div
       className={
         framed
-          ? "absolute inset-0 overflow-hidden rounded-2xl border border-yellow-500/30 shadow-[0_0_24px_rgba(250,204,21,0.12)]"
-          : "absolute inset-0"
+          ? "relative h-full w-full overflow-hidden rounded-2xl border border-yellow-500/30 shadow-[0_0_24px_rgba(250,204,21,0.12)]"
+          : "relative h-full w-full overflow-hidden"
       }
+      style={{ position: "relative", width: "100%", height: "100%" }}
     >
       <img
         src={banner.imageUrl.trim()}
         alt="Advertisement"
         className="banner-slot-img"
+        style={BANNER_SLOT_IMG_STYLE}
         onError={onImageError}
       />
     </div>
@@ -40,7 +42,8 @@ export default function FirestoreBanner({
         href={banner.externalUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute inset-0 block"
+        className="absolute inset-0 block h-full w-full"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       >
         {content}
       </a>
@@ -49,7 +52,11 @@ export default function FirestoreBanner({
 
   if (banner.linkType === "listing" && banner.listingId) {
     return (
-      <Link href={`/listings/${banner.listingId}`} className="absolute inset-0 block">
+      <Link
+        href={`/listings/${banner.listingId}`}
+        className="absolute inset-0 block h-full w-full"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      >
         {content}
       </Link>
     );
@@ -57,7 +64,11 @@ export default function FirestoreBanner({
 
   if (banner.linkType === "category") {
     return (
-      <Link href="/listings" className="absolute inset-0 block">
+      <Link
+        href="/listings"
+        className="absolute inset-0 block h-full w-full"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      >
         {content}
       </Link>
     );

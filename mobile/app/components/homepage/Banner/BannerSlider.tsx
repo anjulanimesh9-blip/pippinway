@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { BANNER_SLOT_IMG_STYLE } from "@/lib/bannerImages";
 
 type BannerSliderProps = {
   bannerImages: string[];
@@ -48,19 +49,25 @@ export default function BannerSlider({
           }
           aria-hidden={slideIndex !== activeIndex}
         >
-          <img
-            src={slide.src}
-            alt="Advertisement"
-            className="banner-slot-img"
-            onError={() =>
-              setFailed((current) => {
-                if (current.has(slide.key)) return current;
-                const next = new Set(current);
-                next.add(slide.key);
-                return next;
-              })
-            }
-          />
+          <div
+            className="relative h-full w-full overflow-hidden"
+            style={{ position: "relative", width: "100%", height: "100%" }}
+          >
+            <img
+              src={slide.src}
+              alt="Advertisement"
+              className="banner-slot-img"
+              style={BANNER_SLOT_IMG_STYLE}
+              onError={() =>
+                setFailed((current) => {
+                  if (current.has(slide.key)) return current;
+                  const next = new Set(current);
+                  next.add(slide.key);
+                  return next;
+                })
+              }
+            />
+          </div>
         </div>
       ))}
 
