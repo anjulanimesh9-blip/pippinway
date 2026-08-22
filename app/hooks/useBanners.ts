@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import { isPermissionDenied } from "@/lib/firestoreErrors";
+import { resolveBannerImageUrl } from "@/lib/bannerImages";
 import type { Banner, BannerPlacement } from "@/lib/types/featured";
 
 const ELIGIBILITY_RECHECK_MS = 30000;
@@ -57,7 +58,16 @@ export default function useBanners(selectedCountry: string | null) {
     const unsubscribe = onSnapshot(
       collection(db, "banners"),
       (snapshot) => {
-        setBanners(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Banner)));
+        setBanners(
+          snapshot.docs.map((d) => {
+            const data = d.data() as Banner;
+            return {
+              id: d.id,
+              ...data,
+              imageUrl: resolveBannerImageUrl(data as unknown as Record<string, unknown>),
+            } as Banner;
+          })
+        );
         setLoading(false);
       },
       (err) => {

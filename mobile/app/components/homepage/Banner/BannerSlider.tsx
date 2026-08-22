@@ -1,17 +1,36 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 type BannerSliderProps = {
   bannerImages: string[];
   currentBanner: number;
 };
 
+function isUsableSrc(src: unknown): src is string {
+  if (typeof src !== "string") return false;
+  const url = src.trim();
+  if (!url) return false;
+  return /^(https?:\/\/|\/|blob:|data:image\/)/i.test(url);
+}
+
 export default function BannerSlider({
   bannerImages,
   currentBanner,
 }: BannerSliderProps) {
-  if (!bannerImages.length) return null;
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
 
-  const activeIndex = currentBanner % bannerImages.length;
+  const slides = useMemo(
+    () =>
+      bannerImages
+        .map((src, index) => ({ src: src.trim(), key: `${src}-${index}` }))
+        .filter((slide) => isUsableSrc(slide.src) && !failed.has(slide.key)),
+    [bannerImages, failed]
+  );
+
+  if (!slides.length) return null;
+
+  const activeIndex = currentBanner % slides.length;
 
   return (
     <div
@@ -19,9 +38,9 @@ export default function BannerSlider({
       aria-roledescription="carousel"
       aria-label="Advertisement"
     >
-      {bannerImages.map((src, slideIndex) => (
+      {slides.map((slide, slideIndex) => (
         <div
-          key={`${src}-${slideIndex}`}
+          key={slide.key}
           className={
             slideIndex === activeIndex
               ? "absolute inset-0 z-10 opacity-100 transition-opacity duration-500"
@@ -30,18 +49,26 @@ export default function BannerSlider({
           aria-hidden={slideIndex !== activeIndex}
         >
           <img
-            src={src}
+            src={slide.src}
             alt="Advertisement"
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className="banner-slot-img"
+            onError={() =>
+              setFailed((current) => {
+                if (current.has(slide.key)) return current;
+                const next = new Set(current);
+                next.add(slide.key);
+                return next;
+              })
+            }
           />
         </div>
       ))}
 
-      {bannerImages.length > 1 && (
+      {slides.length > 1 && (
         <div className="absolute bottom-2 left-0 right-0 z-20 flex justify-center gap-1.5">
-          {bannerImages.map((src, slideIndex) => (
+          {slides.map((slide, slideIndex) => (
             <span
-              key={`${src}-dot-${slideIndex}`}
+              key={`${slide.key}-dot`}
               className={`h-2 rounded-full transition ${
                 slideIndex === activeIndex
                   ? "w-5 bg-yellow-400"

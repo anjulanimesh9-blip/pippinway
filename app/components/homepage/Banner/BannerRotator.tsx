@@ -2,22 +2,25 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Banner } from "@/lib/types/featured";
-import bannerImages from "@/lib/bannerImages";
+import bannerImages, { isUsableBannerSrc } from "@/lib/bannerImages";
 import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
 
+const SLOT_IMG =
+  "[&_img]:absolute [&_img]:inset-0 [&_img]:h-full [&_img]:w-full [&_img]:max-h-none [&_img]:max-w-none [&_img]:object-cover [&_img]:object-center";
+
 /** In-feed / list banners: compact ~140px strip on phone/Capacitor (max-lg). Taller only on desktop. Never 9:16. */
 export const INFEED_BANNER_CLASS =
-  "h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  `relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] ${SLOT_IMG}`;
 /** Short on phones (~2 compact rows); taller only at lg+ so the image fills, no letterbox. */
 export const PROFILE_BANNER_CLASS =
-  "h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  `relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px] ${SLOT_IMG}`;
 /** Desktop right-column skyscraper only — do not use this frame on small screens. */
 export const SIDEBAR_BANNER_CLASS =
-  "aspect-[9/16] w-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  `relative aspect-[9/16] w-full overflow-hidden ${SLOT_IMG}`;
 /** Mobile stand-in for the sidebar: wide ~140px strip (~2 list rows), not 9:16. */
 export const MOBILE_SIDEBAR_BANNER_CLASS =
-  "h-[140px] w-full overflow-hidden max-lg:h-[140px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  `relative h-[140px] w-full overflow-hidden max-lg:h-[140px] ${SLOT_IMG}`;
 
 type Props = {
   banners: Banner[];
@@ -26,11 +29,17 @@ type Props = {
   className?: string;
 };
 
-function toSlides(banners: Banner[], fallbackImages: string[]): Banner[] {
-  const withImages = banners.filter((banner) => Boolean(banner.imageUrl));
-  if (withImages.length > 0) return withImages;
+function toFirestoreSlides(banners: Banner[]): Banner[] {
+  return banners
+    .map((banner) => ({
+      ...banner,
+      imageUrl: isUsableBannerSrc(banner.imageUrl) ? banner.imageUrl.trim() : "",
+    }))
+    .filter((banner) => Boolean(banner.imageUrl));
+}
 
-  return fallbackImages.map((imageUrl, index) => ({
+function toFallbackSlides(fallbackImages: string[]): Banner[] {
+  return fallbackImages.filter(isUsableBannerSrc).map((imageUrl, index) => ({
     id: `fallback-banner-${index}`,
     imageUrl,
     linkType: "none" as const,
@@ -43,13 +52,22 @@ export default function BannerRotator({
   startOffset = 0,
   className = "",
 }: Props) {
-  const slides = useMemo(
-    () => toSlides(banners, fallbackImages),
-    [banners, fallbackImages]
+  const firestoreSlides = useMemo(() => toFirestoreSlides(banners), [banners]);
+  const fallbackSlides = useMemo(
+    () => toFallbackSlides(fallbackImages),
+    [fallbackImages]
   );
-  const slideKey = slides.map((slide) => slide.id).join(",");
+  const [failedIds, setFailedIds] = useState<Set<string>>(() => new Set());
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  const slides = useMemo(() => {
+    const live = firestoreSlides.filter((slide) => !failedIds.has(slide.id));
+    if (live.length > 0) return live;
+    return fallbackSlides.filter((slide) => !failedIds.has(slide.id));
+  }, [firestoreSlides, fallbackSlides, failedIds]);
+
+  const slideKey = slides.map((slide) => slide.id).join(",");
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -97,7 +115,18 @@ export default function BannerRotator({
           }
           aria-hidden={slideIndex !== activeIndex}
         >
-          <FirestoreBanner banner={slide} framed={false} />
+          <FirestoreBanner
+            banner={slide}
+            framed={false}
+            onImageError={() =>
+              setFailedIds((current) => {
+                if (current.has(slide.id)) return current;
+                const next = new Set(current);
+                next.add(slide.id);
+                return next;
+              })
+            }
+          />
         </div>
       ))}
 
