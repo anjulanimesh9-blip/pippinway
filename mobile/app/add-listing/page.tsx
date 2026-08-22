@@ -31,6 +31,7 @@ import {
   MAX_LISTING_IMAGES,
   MAX_LISTING_IMAGES_MESSAGE,
 } from "@/lib/listingImages";
+import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
 
 export default function AddListing() {
   const router =
@@ -49,18 +50,6 @@ const [checkingAuth, setCheckingAuth] =
     useState("");
   const [phone, setPhone] =
     useState("");
-    const countryCodes: any = {
-  Singapore: "+65",
-  India: "+91",
-  Thailand: "+66",
-  Zimbabwe: "+263",
-  USA: "+1",
-  Maldives: "+960",
-  "Sri Lanka": "+94",
-  "South Africa": "+27",
-  "United Kingdom": "+44",
-  Canada: "+1",
-};
   const [category, setCategory] =
     useState("");
   const [
@@ -419,7 +408,9 @@ onChange={(e) => {
   const selectedCountry = e.target.value;
 
   setCountry(selectedCountry);
-  setPhone(countryCodes[selectedCountry] || "");
+  setPhone((prev) =>
+    applyCountryCallingCode(prev, selectedCountry)
+  );
 
   setErrors((prev: any) => ({
     ...prev,
