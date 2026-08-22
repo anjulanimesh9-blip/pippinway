@@ -12,6 +12,8 @@ import MessagePopup from "./components/MessagePopup";
 import useProfile from "./hooks/useProfile";
 import useChat from "./hooks/useChat";
 import QuickActions from "./components/QuickActions";
+import RewardsCard from "./components/RewardsCard";
+import MobileHeader from "./components/MobileHeader";
 import ChatPanel from "./components/ChatPanel";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -148,15 +150,55 @@ const greeting =
         behavior: "smooth",
       });
     }}
+    onRewards={() => router.push("/rewards")}
     onSettings={() => router.push("/profile/settings")}
     onLogout={handleLogout}
   />
 
 </div>
 
+<div className="lg:hidden">
+  <Sidebar
+    menuOpen={menuOpen}
+    unreadCount={unreadCount}
+    userMembership={userData?.membership}
+    onDashboard={() => router.push("/profile")}
+    onMyListings={() => router.push("/")}
+    onAddListing={() => router.push("/add-listing")}
+    onMessages={() => {
+      if (chatRooms.length > 0) {
+        openChat(chatRooms[0]);
+      } else {
+        setShowMessages(true);
+      }
+    }}
+    onFavorites={() => {
+      favoritesRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }}
+    onRewards={() => router.push("/rewards")}
+    onSettings={() => router.push("/profile/settings")}
+    onLogout={handleLogout}
+    onClose={() => setMenuOpen(false)}
+  />
+</div>
+
 
 {/* Main */}
-<div className="flex-1 w-full overflow-y-auto px-4 py-6 pb-24 md:px-8 lg:pb-8">
+<div className="flex-1 w-full overflow-y-auto pb-24 lg:pb-8">
+<MobileHeader
+  unreadCount={unreadCount}
+  onMenu={() => setMenuOpen(true)}
+  onMessages={() => {
+    if (chatRooms.length > 0) {
+      openChat(chatRooms[0]);
+    } else {
+      setShowMessages(true);
+    }
+  }}
+/>
+<div className="px-4 py-6 md:px-8">
 
 
         <div className="mx-auto w-full max-w-[1700px] space-y-8">
@@ -196,6 +238,8 @@ onOpenChat={openChat}
   favorites={favoriteAds.length}
   unreadMessages={unreadCount}
 />
+
+<RewardsCard userId={user.uid} />
         
 <QuickActions
   onAddListing={() => router.push("/add-listing")}
@@ -245,6 +289,7 @@ onOpenChat={openChat}
 </div>
    
         </div>
+         </div>
          </div>
 
     <ChatPanel

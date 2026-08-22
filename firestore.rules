@@ -47,7 +47,19 @@ service cloud.firestore {
         'approvedAt',
         'approvedBy',
         'rejectedAt',
-        'rejectedBy'
+        'rejectedBy',
+        'rewardCounted',
+        'rewardCountedAt'
+      ];
+    }
+
+    function rewardUserFields() {
+      return [
+        'availableSpins',
+        'availableMegaSpins',
+        'rewardNormalProgress',
+        'rewardMegaProgress',
+        'rewardApprovedAdsCount'
       ];
     }
 
@@ -117,15 +129,21 @@ service cloud.firestore {
       );
 
       allow create: if isSignedIn() && (
-        request.auth.uid == userId ||
-        isAdmin()
+        isAdmin() ||
+        (
+          request.auth.uid == userId &&
+          !request.resource.data.keys().hasAny(rewardUserFields())
+        )
       );
 
       allow update: if isSignedIn() && (
         isAdmin() ||
         (
           request.auth.uid == userId &&
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['role']) &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(rewardUserFields()) &&
           (
             isFeaturedCreditSpend() ||
             !request.resource.data.diff(resource.data).affectedKeys()
@@ -139,11 +157,40 @@ service cloud.firestore {
       match /favorites/{listingId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
+
+      // Reward history (including paymentDetails) is created/updated only by
+      // Cloud Functions. Customers can read their own docs; admins can read all.
+      match /rewardHistory/{spinId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == userId ||
+          isAdmin()
+        );
+        allow write: if false;
+      }
+
+      match /rewardCountedListings/{listingId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == userId ||
+          isAdmin()
+        );
+        allow write: if false;
+      }
+
+      match /rewardSpinRequests/{requestId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == userId ||
+          isAdmin()
+        );
+        allow write: if false;
+      }
     }
 
     match /listings/{listingId} {
       allow read: if true;
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.approved == false &&
+        request.resource.data.get('rejected', false) != true &&
+        request.resource.data.get('rewardCounted', false) != true;
       allow update: if isSignedIn() && (
         isAdmin() ||
         (
@@ -208,6 +255,14 @@ service cloud.firestore {
       allow update: if isSignedIn() &&
         resource.data.userEmail == request.auth.token.email;
       allow delete: if isAdmin();
+    }
+
+    match /{path=**}/rewardHistory/{spinId} {
+      allow read: if isAdmin() || (
+        isSignedIn() &&
+        resource.data.userId == request.auth.uid
+      );
+      allow write: if false;
     }
 
     match /chats/{chatId} {

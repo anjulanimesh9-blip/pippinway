@@ -7,6 +7,7 @@ import {
   BadgeCheck,
   Boxes,
   CreditCard,
+  Gift,
   Heart,
   HelpCircle,
   Home,
@@ -132,6 +133,15 @@ export default function Sidebar({
               <span>Admin</span>
             </Link>
           )}
+
+          <Link
+            href="/rewards"
+            onClick={() => onClose?.()}
+            className={SIDE_LINK_CLASS}
+          >
+            <Gift size={18} />
+            <span>🎡 Rewards</span>
+          </Link>
 
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;

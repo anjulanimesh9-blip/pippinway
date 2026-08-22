@@ -13,6 +13,7 @@ import ProfileTopBar from "./components/ProfileTopBar";
 import ProfileHeroBanner from "./components/ProfileHeroBanner";
 import ProfileHeader from "./components/ProfileHeader";
 import StatsCards from "./components/StatsCards";
+import RewardsCard from "./components/RewardsCard";
 import ProfileTabs, { type ProfileTabKey } from "./components/ProfileTabs";
 import MyListings from "./components/MyListings";
 import Favorites from "./components/Favorites";
@@ -232,6 +233,8 @@ export default function ProfilePage() {
               favorites={favoriteAds.length}
               messages={chatRooms.length}
             />
+
+            <RewardsCard userId={user.uid} />
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
               <div className="space-y-4">

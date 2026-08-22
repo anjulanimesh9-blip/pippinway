@@ -183,7 +183,11 @@ if (checkingAuth) {
         newErrors.description =
           true;
 
-    if (images.length !== 4) {
+    const listingImages = images.filter(
+      (image): image is File => image instanceof File
+    );
+
+    if (listingImages.length !== 4) {
   newErrors.image = true;
 }
 
@@ -198,6 +202,14 @@ if (checkingAuth) {
       ) {
         return;
       }
+
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("Please login first");
+        return;
+      }
+
       setLoading(true);
 
 try {
@@ -205,7 +217,7 @@ try {
     string[] = [];
 
   for (
-    const image of images
+    const image of listingImages
   ) {
     const imageRef =
       ref(
@@ -227,12 +239,6 @@ try {
       downloadURL
     );
   }
-const user = auth.currentUser;
-
-if (!user) {
-  alert("Please login first");
-  return;
-}
 
 const userRef = doc(
   db,
@@ -284,6 +290,8 @@ await addDoc(
 
     featured: adType === "featured",
     approved: false,
+    rejected: false,
+    rewardCounted: false,
     adType,
 
     expiryDate:
@@ -305,17 +313,29 @@ await updateDoc(userRef, {
   );
 
 } catch (error) {
-  console.log(
+  console.error(
     error
   );
 
-  setLoading(
-    false
-  );
+  const firebaseError = error as {
+    code?: string;
+    message?: string;
+  };
+  const detail = [
+    firebaseError?.message,
+    firebaseError?.code
+      ? `(${firebaseError.code})`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
   alert(
-    "Upload failed"
+    detail || "Upload failed"
   );
+} finally {
+  setLoading(false);
 }
     };
 

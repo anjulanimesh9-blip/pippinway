@@ -11,6 +11,7 @@ type SidebarProps = {
   onAddListing: () => void;
   onMessages: () => void;
   onFavorites: () => void;
+  onRewards: () => void;
   onSettings: () => void;
   onLogout: () => void;
   onClose?: () => void;
@@ -25,6 +26,7 @@ export default function Sidebar({
   onAddListing,
   onMessages,
   onFavorites,
+  onRewards,
   onSettings,
   onLogout,
   onClose,
@@ -45,7 +47,7 @@ export default function Sidebar({
     className="fixed inset-0 bg-black/60 z-40 lg:hidden"
     onClick={onClose}
   />
-)}s
+)}
 
       <aside
         className={`
@@ -113,6 +115,13 @@ export default function Sidebar({
             className={itemClass}
           >
             ❤️ Favorites
+          </button>
+
+          <button
+            onClick={() => handleClick(onRewards)}
+            className={itemClass}
+          >
+            🎡 Rewards
           </button>
 
           <button

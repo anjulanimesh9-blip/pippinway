@@ -225,6 +225,13 @@ return (
         </button>
 
         <button
+          onClick={() => router.push("/admin/rewards")}
+          className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
+        >
+          🎁 Rewards
+        </button>
+
+        <button
           onClick={() => router.push("/admin/featured-packages")}
           className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
         >
@@ -345,6 +352,13 @@ return (
 >
   🔔 Send Notifications
 </button>
+
+        <button
+          onClick={() => router.push("/admin/rewards")}
+          className="bg-amber-600 hover:bg-amber-700 rounded-3xl p-6 text-2xl font-bold"
+        >
+          🎁 Rewards
+        </button>
 
       </div>
 
