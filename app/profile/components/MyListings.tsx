@@ -112,7 +112,7 @@ export default function MyListings({
           No ads in this filter yet.
         </div>
       ) : view === "grid" ? (
-        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-2 items-stretch gap-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {listings.map((ad) => (
             <div key={ad.id} className="h-full">
               <ProfileListingCard

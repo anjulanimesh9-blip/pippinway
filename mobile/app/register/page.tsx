@@ -3,10 +3,7 @@
 import React, {
   useState,
 } from "react";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -46,9 +43,7 @@ if (!phone)
 if (!country)
   newErrors.country = true;
 
-if (
-  Object.keys(newErrors).length > 0
-) {
+if (newErrors.email || newErrors.password || newErrors.phone || newErrors.country) {
   setErrors(newErrors);
   return;
 }
@@ -67,9 +62,6 @@ setErrors({
     email,
     password
   );
-await sendEmailVerification(
-  userCredential.user
-);
 await setDoc(
   doc(
     db,
@@ -101,13 +93,7 @@ await setDoc(
   }
 );
 
-  setSuccessMessage(
-  "Your account has been created successfully. Please open your email and click the verification link before login."
-);
-
-setTimeout(() => {
-  router.push("/login");
-}, 2500);
+  router.push("/profile");
     } catch (error: any) {
       setSuccessMessage(
   "❌ something went wrong. please try again."

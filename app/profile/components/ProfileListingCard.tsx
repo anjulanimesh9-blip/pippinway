@@ -73,7 +73,7 @@ export default function ProfileListingCard({
   if (view === "list") {
     return (
       <div className="group relative flex overflow-hidden rounded-2xl border border-white/8 bg-[#111827]">
-        <Link href={`/listings/${slug}`} className="relative h-28 w-36 shrink-0 overflow-hidden bg-[#0B0E14]">
+        <Link href={`/listings/${slug}`} className="relative h-20 w-24 shrink-0 overflow-hidden bg-[#0B0E14]">
           <ListingPhoto
             src={image}
             alt={title}
@@ -86,14 +86,14 @@ export default function ProfileListingCard({
             </span>
           )}
         </Link>
-        <div className="flex min-w-0 flex-1 flex-col justify-between p-3">
+        <div className="flex min-w-0 flex-1 flex-col justify-between p-2">
           <div>
-            <Link href={`/listings/${slug}`} className="line-clamp-1 font-semibold text-white">
+            <Link href={`/listings/${slug}`} className="line-clamp-1 text-sm font-semibold text-white">
               {title}
             </Link>
-            <p className="mt-1 text-lg font-bold text-emerald-400">{price}</p>
+            <p className="mt-0.5 text-sm font-bold text-emerald-400">{price}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
             <span className="inline-flex items-center gap-1">
               <MapPin size={11} />
               {location}
@@ -131,8 +131,8 @@ export default function ProfileListingCard({
   }
 
   return (
-    <div className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#111827]">
-      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[#0B0E14]">
+    <div className="group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-white/8 bg-[#111827]">
+      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#0B0E14]">
         <Link href={`/listings/${slug}`} className="absolute inset-0 block">
           <ListingPhoto
             src={image}
@@ -188,24 +188,24 @@ export default function ProfileListingCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-3">
+      <div className="flex flex-1 flex-col p-2">
         <Link
           href={`/listings/${slug}`}
-          className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-white hover:text-sky-300"
+          className="line-clamp-1 text-xs font-semibold leading-4 text-white hover:text-sky-300"
         >
           {title}
         </Link>
-        <p className="mt-1 min-h-6 text-base font-bold leading-6 text-emerald-400">{price}</p>
+        <p className="mt-0.5 text-sm font-bold leading-5 text-emerald-400">{price}</p>
 
-        <div className="mt-2 flex h-4 items-center justify-between gap-2 text-[11px] text-gray-400">
+        <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-gray-400">
           <span className="inline-flex min-w-0 items-center gap-1 truncate">
-            <MapPin size={11} className="shrink-0" />
+            <MapPin size={10} className="shrink-0" />
             {location}
           </span>
           <span className="shrink-0">{relativeTime}</span>
         </div>
 
-        <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2 text-[11px] text-gray-500">
+        <div className="mt-auto flex items-center justify-between pt-1 text-[10px] text-gray-500">
           <div className="flex items-center gap-2.5">
             <span className="inline-flex items-center gap-1">
               <Eye size={11} />

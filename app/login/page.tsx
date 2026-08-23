@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  signOut,
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { useRouter } from "next/navigation";
@@ -19,42 +18,20 @@ export default function LoginPage() {
   useState("");
   const [resetMessage, setResetMessage] =
   useState("");
-  const [verifyMessage, setVerifyMessage] =
-  useState("");
   const router = useRouter();
 
   const handleLogin = async (e: any) => {
   e.preventDefault();
 
-  setVerifyMessage("");
   setLoginError(false);
   setLoginErrorText("");
 
   try {
-    const userCredential =
   await signInWithEmailAndPassword(
     auth,
     email,
     password
   );
-
-    try {
-      await userCredential.user.reload();
-    } catch {
-      // Use the sign-in token if reload is blocked in the WebView.
-    }
-
-if (
-  !userCredential.user
-    .emailVerified
-) {
-  setVerifyMessage(
-  "📩 Please verify your email before login. Check your inbox or spam folder."
-);
-  await signOut(auth);
-
-return;
-}
 
 setLoginError(false);
 
@@ -100,12 +77,6 @@ const handleResetPassword =
         <h1 className="text-3xl font-bold mb-6 text-center text-white">
           Login
         </h1>
-        {verifyMessage && (
-  <div className="mb-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300 text-sm text-center">
-    {verifyMessage}
-  </div>
-)}
-
         <form
           onSubmit={handleLogin}
           className="space-y-4"

@@ -50,7 +50,7 @@ export default function useNotifications() {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       stopSnapshot();
 
-      if (!user?.email || !user.emailVerified) {
+      if (!user?.email) {
         setNotifications([]);
         setLoading(false);
         return;
