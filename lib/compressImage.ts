@@ -1,5 +1,5 @@
 export const LISTING_IMAGE_MAX_EDGE_PX = 1600;
-export const LISTING_IMAGE_JPEG_QUALITY = 0.7;
+export const LISTING_IMAGE_JPEG_QUALITY = 0.85;
 export const LISTING_IMAGE_SKIP_UNDER_BYTES = 200 * 1024;
 
 function loadImageElement(src: string): Promise<HTMLImageElement> {

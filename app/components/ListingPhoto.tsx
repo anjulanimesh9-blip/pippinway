@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 
-export const LISTING_PHOTO_QUALITY = 70;
+export const LISTING_PHOTO_QUALITY = 80;
 
 export const LISTING_THUMB_SIZES = "(min-width: 640px) 120px, 88px";
 export const LISTING_GRID_SIZES =
