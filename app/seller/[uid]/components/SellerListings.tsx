@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ListingPhoto, { LISTING_GRID_SIZES } from "@/app/components/ListingPhoto";
 import { Listing } from "../hooks/useSeller";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
@@ -50,16 +51,13 @@ export default function SellerListings({
             className="group overflow-hidden rounded-3xl border border-slate-800 bg-[#0F172A] transition-all duration-300 hover:-translate-y-2 hover:border-blue-500 hover:shadow-2xl"
           >
             {/* Image */}
-            <div className="relative overflow-hidden">
+            <div className="relative h-56 overflow-hidden">
 
-              <img
-                src={
-                  listing.imageUrls?.[0] ||
-                  listing.imageUrl ||
-                  "https://placehold.co/600x400?text=No+Image"
-                }
+              <ListingPhoto
+                src={listing.imageUrls?.[0] || listing.imageUrl}
                 alt={listing.title}
-                className="h-56 w-full object-cover transition duration-500 group-hover:scale-110"
+                sizes={LISTING_GRID_SIZES}
+                className="object-cover transition duration-500 group-hover:scale-110"
               />
 
               {isActiveFeaturedListing(listing as ListingRecord) && (

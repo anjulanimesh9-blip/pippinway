@@ -77,7 +77,14 @@ export default function DesktopCarousel({
 
       <div ref={emblaRef} className="overflow-hidden px-10 py-4">
         <div className="flex gap-4">
-          {items.map((item, index) => (
+          {items.map((item, index) => {
+            const len = items.length;
+            const distance = Math.min(
+              Math.abs(index - selected),
+              len - Math.abs(index - selected)
+            );
+            const loadImage = len <= 4 || distance <= 2;
+            return (
             <div key={item.id} className="min-w-0 flex-[0_0_32%]">
               <FeaturedCard
                 item={item}
@@ -85,9 +92,11 @@ export default function DesktopCarousel({
                 toggleFavorite={toggleFavorite}
                 currencyMap={currencyMap}
                 active={index === selected}
+                loadImage={loadImage}
               />
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

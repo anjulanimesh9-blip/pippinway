@@ -6,7 +6,12 @@ import {
   getDoc,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db, storage } from "../../firebase";
+import {
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 import {
   useParams,
   useRouter,
@@ -15,6 +20,7 @@ import {
   MAX_LISTING_IMAGES,
   MAX_LISTING_IMAGES_MESSAGE,
 } from "@/lib/listingImages";
+import { compressListingImage } from "@/lib/compressImage";
 
 export default function EditListing() {
   const params = useParams();
@@ -98,30 +104,25 @@ export default function EditListing() {
           for (
             const image of imageFiles
           ) {
-            const formData =
-              new FormData();
-
-            formData.append(
-              "file",
-              image
-            );
-
-            const uploadRes =
-              await fetch(
-                "/api/upload",
-                {
-                  method:
-                    "POST",
-                  body:
-                    formData,
-                }
+            const compressed =
+              await compressListingImage(
+                image
+              );
+            const imageRef =
+              ref(
+                storage,
+                `listings/${Date.now()}-${compressed.name}`
               );
 
-            const uploadData =
-              await uploadRes.json();
+            await uploadBytes(
+              imageRef,
+              compressed
+            );
 
             updatedImages.push(
-              uploadData.filePath
+              await getDownloadURL(
+                imageRef
+              )
             );
           }
         }

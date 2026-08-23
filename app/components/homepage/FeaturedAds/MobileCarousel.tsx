@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 
@@ -22,6 +23,8 @@ export default function MobileCarousel({
   toggleFavorite,
   currencyMap,
 }: Props) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   return (
     <div className="featured-swiper lg:hidden relative pb-4">
       <Swiper
@@ -32,13 +35,21 @@ export default function MobileCarousel({
         loop={items.length >= 4}
         grabCursor
         navigation
+        onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
         autoplay={
           items.length > 1
             ? { delay: 5000, disableOnInteraction: false }
             : false
         }
       >
-        {items.map((item) => (
+        {items.map((item, index) => {
+          const len = items.length;
+          const distance = Math.min(
+            Math.abs(index - activeIndex),
+            len - Math.abs(index - activeIndex)
+          );
+          const loadImage = len <= 3 || distance <= 1;
+          return (
           <SwiperSlide key={item.id}>
             <FeaturedCard
               item={item}
@@ -46,10 +57,12 @@ export default function MobileCarousel({
               toggleFavorite={toggleFavorite}
               currencyMap={currencyMap}
               mobile
-              active
+              active={index === activeIndex}
+              loadImage={loadImage}
             />
           </SwiperSlide>
-        ))}
+          );
+        })}
       </Swiper>
     </div>
   );

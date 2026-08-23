@@ -29,6 +29,7 @@ import {
   MAX_LISTING_IMAGES,
   MAX_LISTING_IMAGES_MESSAGE,
 } from "@/lib/listingImages";
+import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
 
 export default function AddListing() {
@@ -210,15 +211,16 @@ try {
   for (
     const image of listingImages
   ) {
+    const compressed = await compressListingImage(image);
     const imageRef =
       ref(
         storage,
-        `listings/${Date.now()}-${image.name}`
+        `listings/${Date.now()}-${compressed.name}`
       );
 
     await uploadBytes(
       imageRef,
-      image
+      compressed
     );
 
     const downloadURL =

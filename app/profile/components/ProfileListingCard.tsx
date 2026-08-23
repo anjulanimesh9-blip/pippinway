@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { Eye, Heart, MapPin, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import ListingPhoto, {
+  LISTING_GRID_SIZES,
+  LISTING_THUMB_SIZES,
+} from "@/app/components/ListingPhoto";
 import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import { getListingStatus } from "../utils";
@@ -70,10 +74,11 @@ export default function ProfileListingCard({
     return (
       <div className="group relative flex overflow-hidden rounded-2xl border border-white/8 bg-[#111827]">
         <Link href={`/listings/${slug}`} className="relative h-28 w-36 shrink-0 overflow-hidden bg-[#0B0E14]">
-          <img
+          <ListingPhoto
             src={image}
             alt={title}
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            sizes={LISTING_THUMB_SIZES}
+            className="object-cover object-center"
           />
           {isFeatured && (
             <span className="absolute left-2 top-2 rounded bg-[#FBB03B] px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-black">
@@ -129,10 +134,11 @@ export default function ProfileListingCard({
     <div className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#111827]">
       <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[#0B0E14]">
         <Link href={`/listings/${slug}`} className="absolute inset-0 block">
-          <img
+          <ListingPhoto
             src={image}
             alt={title}
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            sizes={LISTING_GRID_SIZES}
+            className="object-cover object-center"
           />
         </Link>
 

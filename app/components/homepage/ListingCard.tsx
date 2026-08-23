@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { Clock, Heart, MapPin, Star } from "lucide-react";
+import ListingPhoto, {
+  LISTING_GRID_SIZES,
+  LISTING_THUMB_SIZES,
+} from "@/app/components/ListingPhoto";
 import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
@@ -34,10 +38,11 @@ export default function ListingCard({
         className="group flex gap-3 border-b border-white/8 bg-[#111827] px-3 py-3 transition-colors hover:bg-[#1a2333] sm:gap-4 sm:px-4 sm:py-4"
       >
         <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-lg bg-[#0f172a] sm:h-[120px] sm:w-[120px]">
-          <img
+          <ListingPhoto
             src={image}
             alt={item.title ?? "Listing"}
-            className="h-full w-full object-cover"
+            sizes={LISTING_THUMB_SIZES}
+            className="object-cover"
           />
           {isFeatured && (
             <span className="absolute left-1 top-1 rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white sm:left-1.5 sm:top-1.5">
@@ -106,10 +111,11 @@ export default function ListingCard({
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#1e293b] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/35 hover:shadow-[0_16px_40px_rgba(37,99,235,0.18)]"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0f172a]">
-        <img
+        <ListingPhoto
           src={image}
           alt={item.title ?? "Listing"}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          sizes={LISTING_GRID_SIZES}
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
 
         {isFeatured && (

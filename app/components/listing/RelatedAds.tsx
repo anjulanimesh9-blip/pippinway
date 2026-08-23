@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MapPin } from "lucide-react";
+import ListingPhoto, { RELATED_AD_SIZES } from "@/app/components/ListingPhoto";
 
 type RelatedAdsProps = {
   relatedAds: any[];
@@ -36,10 +37,11 @@ export default function RelatedAds({
               className="overflow-hidden rounded-lg border border-white/10 bg-[#111827] transition hover:border-white/20"
             >
               <div className="relative aspect-[4/3] bg-[#0B0E14]">
-                <img
+                <ListingPhoto
                   src={ad.imageUrls?.[0] || ad.imageUrl}
                   alt={ad.title}
-                  className="h-full w-full object-cover"
+                  sizes={RELATED_AD_SIZES}
+                  className="object-cover"
                 />
                 {ad.featured && (
                   <span className="absolute left-2 top-2 rounded bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black">

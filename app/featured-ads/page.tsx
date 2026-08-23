@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
+import ListingPhoto, { LISTING_THUMB_SIZES } from "@/app/components/ListingPhoto";
 import Navbar from "@/app/components/Navbar";
 import useAuth from "@/app/hooks/useAuth";
 import useFeaturedCredits from "@/app/hooks/useFeaturedCredits";
@@ -34,7 +35,14 @@ function ListingRow({
 
   return (
     <div className="flex gap-4 rounded-2xl border border-white/10 bg-[#111827] p-4">
-      <img src={image} alt={listing.title} className="h-24 w-24 rounded-xl object-cover" />
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl">
+        <ListingPhoto
+          src={image}
+          alt={listing.title || "Listing"}
+          sizes={LISTING_THUMB_SIZES}
+          className="object-cover"
+        />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>

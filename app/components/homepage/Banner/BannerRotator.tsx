@@ -102,16 +102,29 @@ export default function BannerRotator({
       aria-roledescription="carousel"
       aria-label="Advertisement"
     >
-      {slides.map((slide, slideIndex) => (
+      {slides.map((slide, slideIndex) => {
+        const isActive = slideIndex === activeIndex;
+        const isNext = slideIndex === (activeIndex + 1) % slides.length;
+        if (!isActive && !isNext) {
+          return (
+            <div
+              key={slide.id}
+              className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-0"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+              aria-hidden
+            />
+          );
+        }
+        return (
         <div
           key={slide.id}
           className={
-            slideIndex === activeIndex
+            isActive
               ? "absolute inset-0 z-10 overflow-hidden opacity-100 transition-opacity duration-500"
               : "pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-0 transition-opacity duration-500"
           }
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-          aria-hidden={slideIndex !== activeIndex}
+          aria-hidden={!isActive}
         >
           <FirestoreBanner
             banner={slide}
@@ -126,7 +139,8 @@ export default function BannerRotator({
             }
           />
         </div>
-      ))}
+        );
+      })}
 
       {slides.length > 1 && (
         <div className="absolute bottom-2 left-0 right-0 z-20 flex justify-center gap-1.5 sm:bottom-3">

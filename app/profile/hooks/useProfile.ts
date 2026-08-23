@@ -9,8 +9,10 @@ import {
   getCountFromServer,
   getDoc,
   getDocs,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 
@@ -98,16 +100,23 @@ export default function useProfile() {
   };
 
   const fetchMyAds = async (currentUser: User) => {
-    const snapshot = await getDocs(collection(db, "listings"));
+    const listingsRef = collection(db, "listings");
+    const [byOwnerId, byEmail] = await Promise.all([
+      getDocs(query(listingsRef, where("ownerId", "==", currentUser.uid))),
+      currentUser.email
+        ? getDocs(query(listingsRef, where("ownerEmail", "==", currentUser.email)))
+        : Promise.resolve(null),
+    ]);
 
-    const ads = snapshot.docs
-      .map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }))
-      .filter((ad: any) => ad.ownerEmail === currentUser.email);
+    const byId = new Map<string, any>();
+    for (const snap of [byOwnerId, byEmail]) {
+      if (!snap) continue;
+      for (const d of snap.docs) {
+        byId.set(d.id, { id: d.id, ...d.data() });
+      }
+    }
 
-    setMyAds(ads);
+    setMyAds([...byId.values()]);
   };
 
   const fetchFavorites = async (currentUser: User) => {

@@ -20,6 +20,9 @@ import {
   deleteDoc,
   getDocs,
   collection,
+  limit,
+  query,
+  where,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
@@ -163,39 +166,50 @@ console.log("Owner:", item?.ownerEmail);
               listingData
             );
 
-            const querySnapshot =
-              await getDocs(
-                collection(
-                  db,
-                  "listings"
+            const listingsRef = collection(db, "listings");
+            const relatedQuery = listingData.category
+              ? query(
+                  listingsRef,
+                  where("category", "==", listingData.category),
+                  limit(16)
                 )
-              );
+              : query(listingsRef, limit(16));
+            const sellerQuery = listingData.ownerId
+              ? query(
+                  listingsRef,
+                  where("ownerId", "==", listingData.ownerId),
+                  limit(12)
+                )
+              : listingData.ownerEmail
+                ? query(
+                    listingsRef,
+                    where("ownerEmail", "==", listingData.ownerEmail),
+                    limit(12)
+                  )
+                : null;
 
-            const allAds = querySnapshot.docs.map((docSnap) => ({
-              id: docSnap.id,
-              ...docSnap.data(),
-            }));
+            const [relatedSnap, sellerSnap] = await Promise.all([
+              getDocs(relatedQuery),
+              sellerQuery ? getDocs(sellerQuery) : Promise.resolve(null),
+            ]);
 
-            const liveAds = allAds.filter(
-              (ad: any) =>
-                ad.id !== slug &&
-                ad.approved === true &&
-                isLiveListing(ad)
-            );
+            const toLiveAds = (
+              docs: Array<{ id: string; data: () => Record<string, unknown> }>
+            ) =>
+              docs
+                .map((docSnap) => ({
+                  id: docSnap.id,
+                  ...docSnap.data(),
+                }))
+                .filter(
+                  (ad: any) =>
+                    ad.id !== slug &&
+                    ad.approved === true &&
+                    isLiveListing(ad)
+                );
 
-            const fromSeller = liveAds.filter(
-              (ad: any) =>
-                (listingData.ownerId && ad.ownerId === listingData.ownerId) ||
-                (listingData.ownerEmail &&
-                  ad.ownerEmail === listingData.ownerEmail)
-            );
-
-            const similar = liveAds.filter(
-              (ad: any) => ad.category === listingData.category
-            );
-
-            setSellerAds(fromSeller);
-            setRelatedAds(similar);
+            setSellerAds(sellerSnap ? toLiveAds(sellerSnap.docs) : []);
+            setRelatedAds(toLiveAds(relatedSnap.docs));
           }
         } catch (error) {
           console.error(error);

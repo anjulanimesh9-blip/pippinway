@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import ListingPhoto, {
+  GALLERY_MAIN_SIZES,
+  GALLERY_THUMB_SIZES,
+} from "@/app/components/ListingPhoto";
 
 type ImageGalleryProps = {
   imageUrls?: string[];
@@ -44,19 +48,26 @@ export default function ImageGallery({
   return (
     <>
       <div className="overflow-hidden rounded-lg border border-white/10 bg-[#0B0E14]">
-        <div className="relative">
-          <img
+        <div className="relative h-[280px] sm:h-[380px] lg:h-[420px]">
+          <ListingPhoto
             src={images[selectedImage]}
             alt={title}
+            sizes={GALLERY_MAIN_SIZES}
+            eager
+            className="cursor-zoom-in object-contain bg-[#0B0E14] select-none"
+          />
+          <button
+            type="button"
             onClick={() => setIsFullscreen(true)}
-            className="h-[280px] w-full cursor-zoom-in object-contain bg-[#0B0E14] select-none sm:h-[380px] lg:h-[420px]"
+            className="absolute inset-0 z-10 cursor-zoom-in"
+            aria-label="Open image fullscreen"
           />
           {images.length > 1 && (
             <>
               <button
                 type="button"
                 onClick={previousImage}
-                className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/75"
+                className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/75"
                 aria-label="Previous image"
               >
                 <ChevronLeft size={20} />
@@ -64,14 +75,14 @@ export default function ImageGallery({
               <button
                 type="button"
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/75"
+                className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white hover:bg-black/75"
                 aria-label="Next image"
               >
                 <ChevronRight size={20} />
               </button>
             </>
           )}
-          <span className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 text-[11px] text-white">
+          <span className="absolute bottom-2 right-2 z-20 rounded bg-black/60 px-2 py-0.5 text-[11px] text-white">
             {selectedImage + 1} / {images.length}
           </span>
         </div>
@@ -84,16 +95,17 @@ export default function ImageGallery({
               key={index}
               type="button"
               onClick={() => setSelectedImage(index)}
-              className={`h-16 w-[76px] shrink-0 overflow-hidden rounded border ${
+              className={`relative h-16 w-[76px] shrink-0 overflow-hidden rounded border ${
                 selectedImage === index
                   ? "border-emerald-400"
                   : "border-white/10 opacity-70 hover:opacity-100"
               }`}
             >
-              <img
+              <ListingPhoto
                 src={image}
                 alt={`${title} ${index + 1}`}
-                className="h-full w-full object-cover"
+                sizes={GALLERY_THUMB_SIZES}
+                className="object-cover"
               />
             </button>
           ))}
@@ -129,12 +141,18 @@ export default function ImageGallery({
               <ChevronLeft size={36} />
             </button>
           )}
-          <img
-            src={images[selectedImage]}
-            alt={title}
+          <div
+            className="relative h-[90vh] w-[95vw]"
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] max-w-[95vw] object-contain"
-          />
+          >
+            <ListingPhoto
+              src={images[selectedImage]}
+              alt={title}
+              sizes="95vw"
+              eager
+              className="object-contain"
+            />
+          </div>
           {images.length > 1 && (
             <button
               type="button"
