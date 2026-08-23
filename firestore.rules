@@ -201,9 +201,11 @@ service cloud.firestore {
     match /listings/{listingId} {
       allow read: if true;
       allow create: if isSignedIn() &&
-        request.resource.data.approved is bool &&
+        request.resource.data.approved == true &&
         request.resource.data.get('rejected', false) != true &&
         request.resource.data.get('expired', false) != true &&
+        request.resource.data.get('sold', false) != true &&
+        request.resource.data.get('draft', false) != true &&
         request.resource.data.get('rewardCounted', false) != true;
       allow update: if isSignedIn() && (
         isAdmin() ||

@@ -59,7 +59,7 @@ export default function useListings() {
         )
       : query(
           collection(db, "listings"),
-          where("expired", "==", false),
+          orderBy("createdAt", "desc"),
           limit(HOME_FALLBACK_LIMIT)
         );
 

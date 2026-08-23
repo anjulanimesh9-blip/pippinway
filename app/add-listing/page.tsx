@@ -248,8 +248,9 @@ const userSnap =
 const userData =
   userSnap.data();
 
+const postedAt = new Date();
 const expiresAt = new Date(
-  Date.now() + 30 * 24 * 60 * 60 * 1000
+  postedAt.getTime() + 30 * 24 * 60 * 60 * 1000
 );
 
 await addDoc(
@@ -272,7 +273,8 @@ await addDoc(
       user.displayName ||
       "Private Seller",
 
-    createdAt: new Date(),
+    createdAt: postedAt,
+    publishedAt: postedAt,
 
     featured: false,
     approved: true,
@@ -291,6 +293,7 @@ await addDoc(
   }
 );
 
+  alert("Your ad is now live on Pippinway.");
   router.push(
     "/profile"
   );

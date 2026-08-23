@@ -195,23 +195,28 @@ function sanitizePaymentDetails(input) {
   };
 }
 
+function isEligiblePublishedListing(data) {
+  if (!data) return false;
+  if (data.approved !== true) return false;
+  if (data.rejected === true) return false;
+  if (data.draft === true) return false;
+  if (data.expired === true) return false;
+  const status = typeof data.status === "string" ? data.status.toLowerCase() : "";
+  if (status === "draft" || status === "rejected" || status === "expired") return false;
+  return true;
+}
+
 /**
- * Count an approved listing toward normal (3) and mega (10) spin cycles.
- * Same listing ID is never counted twice. Shared so the trigger wrapper
- * (1st-gen onWrite) does not change prize/progress behavior.
+ * Count a published listing toward normal (3) and mega (10) spin cycles.
+ * First publish: create with approved:true, or admin flip false→true.
+ * Same listing ID is never counted twice (rewardCounted + per-user ledger).
+ * If a prior attempt never stamped rewardCounted, a later eligible write retries.
  */
 async function countListingTowardRewards(beforeSnap, afterSnap, listingId) {
   if (!afterSnap?.exists) return;
 
-  const before = beforeSnap?.exists ? beforeSnap.data() : null;
   const after = afterSnap.data();
-
-  const becameApproved =
-    after.approved === true &&
-    after.rejected !== true &&
-    (!beforeSnap?.exists || before?.approved !== true);
-
-  if (!becameApproved) return;
+  if (!isEligiblePublishedListing(after)) return;
   if (after.rewardCounted === true) return;
 
   const ownerId = typeof after.ownerId === "string" ? after.ownerId : "";
@@ -233,8 +238,7 @@ async function countListingTowardRewards(beforeSnap, afterSnap, listingId) {
 
     if (!listingFresh.exists) return;
     const listing = listingFresh.data();
-    if (listing.approved !== true) return;
-    if (listing.rejected === true) return;
+    if (!isEligiblePublishedListing(listing)) return;
     if (listing.rewardCounted === true) return;
     if (countedSnap.exists) {
       transaction.update(listingRef, {
@@ -286,7 +290,7 @@ async function countListingTowardRewards(beforeSnap, afterSnap, listingId) {
 
 /**
  * 1st-gen Firestore onWrite (not Eventarc / 2nd-gen onDocumentWritten).
- * Count the first time a listing is approved (create with approved:true, or admin flip).
+ * Count once when a listing is first published (create approved:true, or admin flip).
  */
 exports.onListingWrittenForRewards = functionsV1
   .region("us-central1")

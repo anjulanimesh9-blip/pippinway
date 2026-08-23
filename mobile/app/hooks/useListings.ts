@@ -5,8 +5,8 @@ import { db } from "@/app/firebase";
 import {
   collection,
   getDocs,
+  orderBy,
   query,
-  where,
 } from "firebase/firestore";
 import { getCreatedAtMs, isLiveListing } from "@/lib/filterListings";
 import type { ListingRecord } from "@/lib/types/featured";
@@ -35,7 +35,7 @@ export default function useListings() {
       try {
         const q = query(
           collection(db, "listings"),
-          where("expired", "==", false)
+          orderBy("createdAt", "desc")
         );
 
         const snapshot = await getDocs(q);

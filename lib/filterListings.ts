@@ -105,11 +105,16 @@ export function isListingFlaggedExpired(listing: ListingExpiryFields): boolean {
 /** Hide listings that are flagged expired or past createdAt/publishedAt + 30 days. */
 export function isLiveListing(listing: ListingExpiryFields): boolean {
   if (isListingFlaggedExpired(listing)) return false;
-  const expiresAtMs = getTimestampMs(listing.expiresAt);
-  if (expiresAtMs > 0 && expiresAtMs <= Date.now()) return false;
   const startMs =
     getTimestampMs(listing.publishedAt) || getTimestampMs(listing.createdAt);
-  if (startMs > 0 && Date.now() - startMs >= LISTING_TTL_MS) return false;
+  const ageMs = startMs > 0 ? Date.now() - startMs : 0;
+  // Brand-new ads stay visible even if expiresAt was written incorrectly.
+  if (startMs <= 0 || ageMs < 24 * 60 * 60 * 1000) {
+    return true;
+  }
+  const expiresAtMs = getTimestampMs(listing.expiresAt);
+  if (expiresAtMs > 0 && expiresAtMs <= Date.now()) return false;
+  if (ageMs >= LISTING_TTL_MS) return false;
   return true;
 }
 
