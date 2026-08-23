@@ -2,7 +2,6 @@
 
 import CategoryFilter from "./CategoryFilter";
 import FeaturedBanner from "./FeaturedBanner";
-import FeaturedAds from "./FeaturedAds/FeaturedAds";
 import LatestListings from "./LatestAds/LatestListings";
 import LatestHeading from "./LatestAds/LatestHeading";
 import CategorySidebar from "./CategorySidebar";
@@ -13,7 +12,6 @@ type Props = {
   selectedCategory: string;
   setSelectedCategory: (value: string) => void;
 
-  featuredListings: any[];
   latestListings: any[];
 
   favorites: string[];
@@ -28,7 +26,6 @@ type Props = {
 export default function HomeContent({
   selectedCategory,
   setSelectedCategory,
-  featuredListings,
   latestListings,
   favorites,
   toggleFavorite,
@@ -63,26 +60,6 @@ export default function HomeContent({
         {/* Featured Banner */}
         <div className="mt-6">
           <FeaturedBanner />
-        </div>
-
-        {/* Desktop Featured Ads */}
-        <div className="hidden lg:block mt-10 mb-12">
-          <FeaturedAds
-            listings={featuredListings}
-            favorites={favorites}
-            toggleFavorite={toggleFavorite}
-            currencyMap={currencyMap}
-          />
-        </div>
-
-        {/* Mobile Featured Ads */}
-        <div className="lg:hidden mb-8 mt-6">
-          <FeaturedAds
-            listings={featuredListings}
-            favorites={favorites}
-            toggleFavorite={toggleFavorite}
-            currencyMap={currencyMap}
-          />
         </div>
 
         {bannerImages.length > 0 && (

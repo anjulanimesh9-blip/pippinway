@@ -2,7 +2,7 @@
 
 
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo } from "react";
 
 
 
@@ -27,10 +27,6 @@ import useFeaturedListings from "./hooks/useFeaturedListings";
 import useHomeFilters from "./hooks/useHomeFilters";
 
 import useBanners from "./hooks/useBanners";
-
-
-
-import currencyMap from "../lib/currencyMap";
 
 
 
@@ -92,7 +88,7 @@ function HomePage() {
 
 
 
-  const { featuredListings, latestListings } = useFeaturedListings(
+  const { latestListings } = useFeaturedListings(
 
     listings,
 
@@ -183,15 +179,11 @@ function HomePage() {
 
           setSelectedCategory={setSelectedCategory}
 
-          featuredListings={featuredListings}
-
           latestListings={sortedLatest}
 
           favorites={favorites}
 
           toggleFavorite={toggleFavorite}
-
-          currencyMap={currencyMap}
 
           banners={banners}
 

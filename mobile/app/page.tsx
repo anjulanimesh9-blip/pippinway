@@ -49,7 +49,7 @@ export default function Home() {
     [selectedCountry, selectedCategory, search]
   );
 
-  const { featuredListings, latestListings } = useFeaturedListings(
+  const { latestListings } = useFeaturedListings(
     listings,
     filters
   );
@@ -92,7 +92,6 @@ export default function Home() {
         <HomeContent
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
-          featuredListings={featuredListings}
           latestListings={sortedLatest}
           favorites={favorites}
           toggleFavorite={toggleFavorite}

@@ -2,16 +2,16 @@
 
 import { useMemo } from "react";
 import type { ListingRecord } from "@/lib/types/featured";
-import { splitFeaturedAndLatest, type HomeFilters } from "@/lib/filterListings";
+import { applyHomeFilters, type HomeFilters } from "@/lib/filterListings";
 
 export default function useFeaturedListings(
   listings: ListingRecord[],
   filters: HomeFilters
 ) {
-  const { featuredListings, latestListings } = useMemo(
-    () => splitFeaturedAndLatest(listings, filters),
+  const latestListings = useMemo(
+    () => applyHomeFilters(listings, filters),
     [listings, filters]
   );
 
-  return { featuredListings, latestListings };
+  return { latestListings };
 }
