@@ -42,8 +42,7 @@ function listingTitle(ad: any): string {
 }
 
 function listingPrice(ad: any): string {
-  const raw = Number(ad.price ?? 0);
-  return formatPrice(Number.isFinite(raw) ? raw : 0, ad.country);
+  return formatPrice(ad.price, ad.country);
 }
 
 // Keep this file on production deploys; card layout lives here.

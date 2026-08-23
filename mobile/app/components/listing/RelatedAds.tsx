@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FaMapMarkerAlt, FaArrowRight } from "react-icons/fa";
+import { formatPrice } from "@/lib/formatPrice";
 
 type RelatedAdsProps = {
   relatedAds: any[];
@@ -38,11 +39,6 @@ export default function RelatedAds({
       <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
 
         {relatedAds.map((ad) => {
-          const currency =
-            currencyMap[
-              ad.country?.trim()?.toLowerCase()
-            ] || "Rs.";
-
           return (
             <Link
               key={ad.id}
@@ -72,7 +68,7 @@ export default function RelatedAds({
                 </h3>
 
                 <p className="mt-3 text-2xl font-bold text-green-400">
-                  {currency} {Number(ad.price).toLocaleString()}
+                  {formatPrice(ad.price, ad.country)}
                 </p>
 
                 <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">

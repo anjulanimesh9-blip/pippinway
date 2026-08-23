@@ -28,7 +28,7 @@ export default function ListingCard({
   const isFeatured = isActiveFeaturedListing(item);
   const relativeTime = getRelativeTime(item.createdAt);
   const locationLabel = [item.location, item.country].filter(Boolean).join(", ");
-  const price = formatPrice(Number(item.price ?? 0), item.country);
+  const price = formatPrice(item.price, item.country);
   const meta = [locationLabel, item.category].filter(Boolean).join(", ");
 
   if (!grid) {

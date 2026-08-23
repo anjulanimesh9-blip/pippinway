@@ -5,6 +5,7 @@ import ListingPhoto, { LISTING_GRID_SIZES } from "@/app/components/ListingPhoto"
 import { Listing } from "../hooks/useSeller";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
+import { formatPrice } from "@/lib/formatPrice";
 
 interface SellerListingsProps {
   listings: Listing[];
@@ -95,7 +96,7 @@ export default function SellerListings({
               )}
 
               <p className="mt-4 text-3xl font-bold text-green-400">
-                ${Number(listing.price || 0).toLocaleString()}
+                {formatPrice(listing.price, listing.country)}
               </p>
 
               <div className="mt-5 flex items-center justify-between">

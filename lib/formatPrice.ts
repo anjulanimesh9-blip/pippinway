@@ -23,10 +23,32 @@ const CURRENCY_DISPLAY: Record<string, (amount: string) => string> = {
   MVR: (n) => `MVR ${n}`,
 };
 
-export function formatPrice(price: number | string, country?: string): string {
-  if (typeof price !== "number") return String(price ?? "");
-  const formattedNumber = price.toLocaleString("en-US");
-  const currencyCode = country ? countryCurrencies[country] : undefined;
+function currencyCodeForCountry(country?: string): string | undefined {
+  if (!country) return undefined;
+  if (countryCurrencies[country]) return countryCurrencies[country];
+  const lower = country.trim().toLowerCase();
+  const match = Object.keys(countryCurrencies).find(
+    (key) => key.toLowerCase() === lower
+  );
+  return match ? countryCurrencies[match] : undefined;
+}
+
+export function parseListingPrice(
+  price: number | string | null | undefined
+): number {
+  if (typeof price === "number") {
+    return Number.isFinite(price) ? price : 0;
+  }
+  const parsed = Number(String(price ?? "").replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function formatPrice(
+  price: number | string | null | undefined,
+  country?: string
+): string {
+  const formattedNumber = parseListingPrice(price).toLocaleString("en-US");
+  const currencyCode = currencyCodeForCountry(country);
   const display = currencyCode ? CURRENCY_DISPLAY[currencyCode] : undefined;
   return display ? display(formattedNumber) : `$${formattedNumber}`;
 }

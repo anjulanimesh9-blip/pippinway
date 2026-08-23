@@ -237,6 +237,7 @@ const whatsappLink =
           title={item.title}
           price={item.price}
           currency={currency}
+          country={item.country}
           category={item.category}
           location={item.location}
           createdAt={item.createdAt}

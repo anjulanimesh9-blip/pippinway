@@ -30,6 +30,7 @@ import {
   MAX_LISTING_IMAGES_MESSAGE,
 } from "@/lib/listingImages";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
+import { parseListingPrice } from "@/lib/formatPrice";
 
 export default function AddListing() {
   const router =
@@ -253,7 +254,7 @@ await addDoc(
   collection(db, "listings"),
   {
     title,
-    price,
+    price: parseListingPrice(price),
     country,
     location,
     category,

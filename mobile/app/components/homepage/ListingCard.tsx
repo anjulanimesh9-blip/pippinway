@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatPrice } from "@/lib/formatPrice";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 
 type ListingCardProps = {
@@ -16,8 +17,7 @@ export default function ListingCard({
   toggleFavorite,
   currencyMap,
 }: ListingCardProps) {
-  const currency =
-    currencyMap[item.country?.trim()?.toLowerCase()] || "Rs.";
+  const price = formatPrice(item.price, item.country);
 
   const image =
     item.imageUrls?.[0] ||
@@ -63,7 +63,7 @@ export default function ListingCard({
           </h2>
 
           <p className="mt-2 text-green-400 font-bold text-lg">
-            {currency} {Number(item.price || 0).toLocaleString()}
+            {price}
           </p>
 
           <p className="text-gray-400 text-xs mt-1 truncate">
@@ -137,13 +137,8 @@ export default function ListingCard({
               : "Recently"}
           </p>
 
-          <p className="mt-3">
-            <span className="text-green-400 text-lg font-semibold">
-              {currency}
-            </span>{" "}
-            <span className="text-green-400 text-3xl font-bold">
-              {Number(item.price || 0).toLocaleString()}
-            </span>
+          <p className="mt-3 text-green-400 text-2xl font-bold">
+            {price}
           </p>
         </div>
       </Link>

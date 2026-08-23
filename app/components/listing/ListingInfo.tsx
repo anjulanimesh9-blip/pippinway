@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { formatPrice } from "@/lib/formatPrice";
 
 type ListingInfoProps = {
   title?: string;
@@ -43,10 +44,7 @@ export default function ListingInfo({
         <h1 className="mb-3 text-xl font-bold text-white sm:text-2xl">{title}</h1>
       )}
       <p className="mt-4 text-2xl font-bold text-emerald-400 sm:text-[28px]">
-        {currency}{" "}
-        {Number.isFinite(Number(price))
-          ? Number(price).toLocaleString()
-          : "0"}
+        {formatPrice(price, country)}
       </p>
 
       <div className="mt-6 border-t border-white/10 pt-4">

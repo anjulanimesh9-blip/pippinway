@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import ListingPhoto, { RELATED_AD_SIZES } from "@/app/components/ListingPhoto";
+import { formatPrice } from "@/lib/formatPrice";
 
 type RelatedAdsProps = {
   relatedAds: any[];
@@ -27,9 +28,6 @@ export default function RelatedAds({
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         {relatedAds.slice(0, 8).map((ad) => {
-          const currency =
-            currencyMap[ad.country?.trim()?.toLowerCase()] || "Rs.";
-
           return (
             <Link
               key={ad.id}
@@ -51,7 +49,7 @@ export default function RelatedAds({
               </div>
               <div className="p-3">
                 <p className="text-sm font-bold text-emerald-400">
-                  {currency} {Number(ad.price).toLocaleString()}
+                  {formatPrice(ad.price, ad.country)}
                 </p>
                 <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white">
                   {ad.title}

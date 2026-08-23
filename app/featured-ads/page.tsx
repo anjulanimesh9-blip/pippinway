@@ -16,6 +16,7 @@ import {
 } from "@/lib/listingFeatured";
 import { isEligibleForFeaturedCredit } from "@/lib/featuredCredits";
 import type { ListingRecord } from "@/lib/types/featured";
+import { formatPrice } from "@/lib/formatPrice";
 
 function ListingRow({
   listing,
@@ -48,7 +49,7 @@ function ListingRow({
           <div>
             <h3 className="font-bold text-white truncate">{listing.title}</h3>
             <p className="text-emerald-400 font-semibold">
-              {listing.currency || ""} {Number(listing.price ?? 0).toLocaleString()}
+              {formatPrice(listing.price, listing.country)}
             </p>
             <p className="text-xs text-gray-400 mt-1">
               {listing.category} • {listing.location}, {listing.country}

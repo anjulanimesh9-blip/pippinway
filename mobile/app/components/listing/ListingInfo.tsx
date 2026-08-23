@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { formatPrice } from "@/lib/formatPrice";
 
 type ListingInfoProps = {
   title: string;
   price: number;
-  currency: string;
+  currency?: string;
+  country?: string;
   category: string;
   location: string;
   createdAt: any;
@@ -16,6 +18,7 @@ export default function ListingInfo({
   title,
   price,
   currency,
+  country,
   category,
   location,
   createdAt,
@@ -56,7 +59,7 @@ export default function ListingInfo({
         </p>
 
         <h2 className="text-4xl md:text-5xl font-extrabold text-white mt-1">
-          {currency} {Number(price).toLocaleString()}
+          {formatPrice(price, country)}
         </h2>
       </div>
 

@@ -15,6 +15,7 @@ import {
   MAX_LISTING_IMAGES,
   MAX_LISTING_IMAGES_MESSAGE,
 } from "@/lib/listingImages";
+import { parseListingPrice } from "@/lib/formatPrice";
 
 export default function EditListing() {
   const params = useParams();
@@ -136,7 +137,7 @@ export default function EditListing() {
           docRef,
           {
             title,
-            price,
+            price: parseListingPrice(price),
             description,
             phone,
             imageUrls:

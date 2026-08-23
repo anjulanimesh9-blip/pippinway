@@ -31,6 +31,7 @@ import {
 } from "@/lib/listingImages";
 import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
+import { parseListingPrice } from "@/lib/formatPrice";
 
 export default function AddListing() {
   const router =
@@ -255,7 +256,7 @@ await addDoc(
   collection(db, "listings"),
   {
     title,
-    price,
+    price: parseListingPrice(price),
     country,
     location,
     category,

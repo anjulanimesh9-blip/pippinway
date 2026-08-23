@@ -1,3 +1,5 @@
+import { formatPrice } from "@/lib/formatPrice";
+
 type MyListingsProps = {
   myAds: any[];
   userCurrency: string;
@@ -48,8 +50,7 @@ export default function MyListings({
                 </p>
 
                 <p className="text-green-400 text-lg font-bold mt-2">
-                  {userCurrency}{" "}
-                  {Number(ad.price).toLocaleString()}
+                  {formatPrice(ad.price, ad.country)}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-2 mt-4">

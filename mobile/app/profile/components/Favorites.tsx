@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatPrice } from "@/lib/formatPrice";
 
 type FavoritesProps = {
   favoriteAds: any[];
@@ -50,8 +51,7 @@ export default function Favorites({
                 </p>
 
                 <p className="text-green-400 text-lg font-bold mt-2">
-                  {currencyMap[ad.country] || ""}{" "}
-                  {Number(ad.price).toLocaleString()}
+                  {formatPrice(ad.price, ad.country)}
                 </p>
 
                 <button
