@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/homepage/Hero";
@@ -40,7 +40,33 @@ export default function Home() {
     toggleFavorite,
   } = useFavorites(user);
 
-  const { featuredListings } = useFeaturedListings(listings);
+  const filters = useMemo(
+    () => ({
+      country: selectedCountry,
+      category: selectedCategory,
+      search,
+    }),
+    [selectedCountry, selectedCategory, search]
+  );
+
+  const { featuredListings, latestListings } = useFeaturedListings(
+    listings,
+    filters
+  );
+
+  const sortedLatest = useMemo(() => {
+    const next = [...latestListings];
+
+    if (sortBy === "low-price") {
+      next.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+    } else if (sortBy === "high-price") {
+      next.sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0));
+    } else if (sortBy === "oldest") {
+      next.reverse();
+    }
+
+    return next;
+  }, [latestListings, sortBy]);
 
   return (
     <main className="min-h-screen bg-[#020817] pb-20 lg:pb-0">
@@ -67,7 +93,7 @@ export default function Home() {
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           featuredListings={featuredListings}
-          latestListings={listings}
+          latestListings={sortedLatest}
           favorites={favorites}
           toggleFavorite={toggleFavorite}
           currencyMap={currencyMap}

@@ -7,6 +7,7 @@ import MobileCarousel from "./MobileCarousel";
 
 import { Listing } from "./types";
 import { shuffleArray } from "./utils";
+import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
 
@@ -26,7 +27,11 @@ export default function FeaturedAds({
 
   // Featured only
   const featured = useMemo(
-    () => listings.filter((item) => isActiveFeaturedListing(item as ListingRecord)),
+    () =>
+      listings.filter(
+        (item) =>
+          isLiveListing(item) && isActiveFeaturedListing(item as ListingRecord)
+      ),
     [listings]
   );
 

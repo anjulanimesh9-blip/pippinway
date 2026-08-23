@@ -1,15 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { isActiveFeaturedListing } from "@/lib/listingFeatured";
+import type { ListingRecord } from "@/lib/types/featured";
+import { splitFeaturedAndLatest, type HomeFilters } from "@/lib/filterListings";
 
-export default function useFeaturedListings(listings: any[]) {
-  const featuredListings = useMemo(
-    () => listings.filter(isActiveFeaturedListing),
-    [listings]
+export default function useFeaturedListings(
+  listings: ListingRecord[],
+  filters: HomeFilters
+) {
+  const { featuredListings, latestListings } = useMemo(
+    () => splitFeaturedAndLatest(listings, filters),
+    [listings, filters]
   );
 
-  return {
-    featuredListings,
-  };
+  return { featuredListings, latestListings };
 }

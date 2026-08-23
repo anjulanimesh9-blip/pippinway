@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ListingCard from "../ListingCard";
 import BannerSlider from "../Banner/BannerSlider";
+import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
 
@@ -80,13 +81,17 @@ export default function LatestListings({
   const [rotateIndex, setRotateIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const featuredAds = useMemo(
-    () => latestListings.filter((listing) => isActiveFeaturedListing(listing as ListingRecord)),
+  const liveListings = useMemo(
+    () => latestListings.filter((listing) => isLiveListing(listing)),
     [latestListings]
   );
+  const featuredAds = useMemo(
+    () => liveListings.filter((listing) => isActiveFeaturedListing(listing as ListingRecord)),
+    [liveListings]
+  );
   const regularAds = useMemo(
-    () => latestListings.filter((listing) => !isActiveFeaturedListing(listing as ListingRecord)),
-    [latestListings]
+    () => liveListings.filter((listing) => !isActiveFeaturedListing(listing as ListingRecord)),
+    [liveListings]
   );
 
   useEffect(() => {
@@ -102,7 +107,7 @@ export default function LatestListings({
     [regularAds, featuredAds, rotateIndex, bannerImages.length]
   );
 
-  if (!latestListings.length) {
+  if (!liveListings.length) {
     return (
       <div className="text-center py-16 text-gray-400">
         No listings available.

@@ -9,9 +9,25 @@ import {
   where,
 } from "firebase/firestore";
 import { getCreatedAtMs, isLiveListing } from "@/lib/filterListings";
+import type { ListingRecord } from "@/lib/types/featured";
+
+function isApproved(listing: ListingRecord): boolean {
+  const value = listing.approved as unknown;
+  return value === true || value === "true" || value === 1;
+}
+
+/** Same filter + sort as website app/hooks/useListings.ts */
+function mapListings(
+  docs: Array<{ id: string; data: () => Record<string, unknown> }>
+): ListingRecord[] {
+  return docs
+    .map((d) => ({ id: d.id, ...d.data() } as ListingRecord))
+    .filter((listing) => isApproved(listing) && isLiveListing(listing))
+    .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
+}
 
 export default function useListings() {
-  const [listings, setListings] = useState<any[]>([]);
+  const [listings, setListings] = useState<ListingRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,20 +39,7 @@ export default function useListings() {
         );
 
         const snapshot = await getDocs(q);
-
-        const data = snapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .filter(
-            (listing: any) =>
-              listing.approved === true &&
-              isLiveListing(listing)
-          )
-          .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
-
-        setListings(data);
+        setListings(mapListings(snapshot.docs));
       } catch (err) {
         console.error(err);
       } finally {
