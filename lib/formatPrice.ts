@@ -33,24 +33,33 @@ function currencyCodeForCountry(country?: string): string | undefined {
   return match ? countryCurrencies[match] : undefined;
 }
 
-export function parseListingPrice(
-  price: number | string | null | undefined
-): number {
-  if (typeof price === "number") {
-    return Number.isFinite(price) ? price : 0;
+export function parseListingPrice(price: unknown): number {
+  if (typeof price === "number" && Number.isFinite(price)) return price;
+  if (price && typeof price === "object") {
+    const rec = price as Record<string, unknown>;
+    for (const key of ["amount", "value", "price"]) {
+      if (rec[key] != null && rec[key] !== price) {
+        return parseListingPrice(rec[key]);
+      }
+    }
   }
-  const parsed = Number(String(price ?? "").replace(/[^0-9.-]/g, ""));
+
+  const raw = String(price ?? "")
+    .replace(/,/g, "")
+    .replace(/\u00a0/g, "")
+    .replace(/\s/g, "")
+    .replace(/[^0-9.-]/g, "");
+  const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function formatPrice(
-  price: number | string | null | undefined,
-  country?: string
-): string {
-  const formattedNumber = parseListingPrice(price).toLocaleString("en-US");
+export function formatPrice(price: unknown, country?: string): string {
+  const amount = parseListingPrice(price);
+  const formattedNumber = amount.toLocaleString("en-US");
   const currencyCode = currencyCodeForCountry(country);
   const display = currencyCode ? CURRENCY_DISPLAY[currencyCode] : undefined;
-  return display ? display(formattedNumber) : `$${formattedNumber}`;
+  const text = display ? display(formattedNumber) : `$${formattedNumber}`;
+  return text.includes("NaN") ? formatPrice(0, country) : text;
 }
 
 export function getRelativeTime(createdAt: unknown): string {

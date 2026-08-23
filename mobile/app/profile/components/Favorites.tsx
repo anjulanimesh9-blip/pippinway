@@ -51,7 +51,7 @@ export default function Favorites({
                 </p>
 
                 <p className="text-green-400 text-lg font-bold mt-2">
-                  {formatPrice(ad.price, ad.country)}
+                  {formatPrice(ad.price ?? ad.amount, ad.country)}
                 </p>
 
                 <button

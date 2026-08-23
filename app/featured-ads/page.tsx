@@ -49,7 +49,7 @@ function ListingRow({
           <div>
             <h3 className="font-bold text-white truncate">{listing.title}</h3>
             <p className="text-emerald-400 font-semibold">
-              {formatPrice(listing.price, listing.country)}
+              {formatPrice(listing.price ?? listing.amount, listing.country)}
             </p>
             <p className="text-xs text-gray-400 mt-1">
               {listing.category} • {listing.location}, {listing.country}

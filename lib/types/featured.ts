@@ -66,7 +66,8 @@ export interface Banner {
 export interface ListingRecord {
   id: string;
   title?: string;
-  price?: number;
+  price?: number | string;
+  amount?: unknown;
   currency?: string;
   country?: string;
   location?: string;

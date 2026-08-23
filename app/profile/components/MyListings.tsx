@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import ProfileListingCard from "./ProfileListingCard";
+import { parseListingPrice } from "@/lib/formatPrice";
 import { getListingStatus, type ListingStatus } from "../utils";
 
 type FilterKey = "all" | ListingStatus;
@@ -40,8 +41,8 @@ export default function MyListings({
     );
 
     next.sort((a, b) => {
-      const priceA = Number(a.price ?? 0);
-      const priceB = Number(b.price ?? 0);
+      const priceA = parseListingPrice(a.price ?? a.amount);
+      const priceB = parseListingPrice(b.price ?? b.amount);
       const timeA = toTime(a.createdAt);
       const timeB = toTime(b.createdAt);
 

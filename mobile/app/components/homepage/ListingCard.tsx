@@ -17,7 +17,10 @@ export default function ListingCard({
   toggleFavorite,
   currencyMap,
 }: ListingCardProps) {
-  const price = formatPrice(item.price, item.country);
+  const price = formatPrice(
+    item.price ?? (item as { amount?: unknown }).amount,
+    item.country
+  );
 
   const image =
     item.imageUrls?.[0] ||

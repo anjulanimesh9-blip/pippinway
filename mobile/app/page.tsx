@@ -18,6 +18,7 @@ import useHomeFilters from "./hooks/useHomeFilters";
 
 import bannerImages from "../lib/bannerImages";
 import currencyMap from "../lib/currencyMap";
+import { parseListingPrice } from "@/lib/formatPrice";
 
 export default function Home() {
   const { user } = useAuth();
@@ -58,9 +59,17 @@ export default function Home() {
     const next = [...latestListings];
 
     if (sortBy === "low-price") {
-      next.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+      next.sort(
+        (a, b) =>
+          parseListingPrice(a.price ?? a.amount) -
+          parseListingPrice(b.price ?? b.amount)
+      );
     } else if (sortBy === "high-price") {
-      next.sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0));
+      next.sort(
+        (a, b) =>
+          parseListingPrice(b.price ?? b.amount) -
+          parseListingPrice(a.price ?? a.amount)
+      );
     } else if (sortBy === "oldest") {
       next.reverse();
     }

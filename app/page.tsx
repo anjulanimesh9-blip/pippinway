@@ -27,6 +27,7 @@ import useFeaturedListings from "./hooks/useFeaturedListings";
 import useHomeFilters from "./hooks/useHomeFilters";
 
 import useBanners from "./hooks/useBanners";
+import { parseListingPrice } from "@/lib/formatPrice";
 
 
 
@@ -107,11 +108,15 @@ function HomePage() {
 
     if (sortBy === "low-price") {
 
-      next.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+      next.sort(
+        (a, b) => parseListingPrice(a.price ?? a.amount) - parseListingPrice(b.price ?? b.amount)
+      );
 
     } else if (sortBy === "high-price") {
 
-      next.sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0));
+      next.sort(
+        (a, b) => parseListingPrice(b.price ?? b.amount) - parseListingPrice(a.price ?? a.amount)
+      );
 
     } else if (sortBy === "oldest") {
 

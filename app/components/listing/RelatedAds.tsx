@@ -49,7 +49,7 @@ export default function RelatedAds({
               </div>
               <div className="p-3">
                 <p className="text-sm font-bold text-emerald-400">
-                  {formatPrice(ad.price, ad.country)}
+                  {formatPrice(ad.price ?? ad.amount, ad.country)}
                 </p>
                 <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white">
                   {ad.title}

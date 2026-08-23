@@ -98,7 +98,7 @@ export default function SellerListings({
               )}
 
               <p className="mt-4 text-3xl font-bold text-green-400">
-                {formatPrice(listing.price, listing.country)}
+                {formatPrice(listing.price ?? listing.amount, listing.country)}
               </p>
 
               <div className="mt-5 flex items-center justify-between">

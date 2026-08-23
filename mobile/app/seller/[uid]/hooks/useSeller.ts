@@ -28,6 +28,8 @@ export interface Listing {
   id: string;
   title: string;
   price: number | string;
+  amount?: unknown;
+  country?: string;
   imageUrls?: string[];
   imageUrl?: string;
   category?: string;

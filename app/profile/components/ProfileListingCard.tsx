@@ -42,7 +42,7 @@ function listingTitle(ad: any): string {
 }
 
 function listingPrice(ad: any): string {
-  return formatPrice(ad.price, ad.country);
+  return formatPrice(ad.price ?? ad.amount, ad.country);
 }
 
 // Keep this file on production deploys; card layout lives here.

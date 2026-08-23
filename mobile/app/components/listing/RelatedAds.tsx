@@ -68,7 +68,7 @@ export default function RelatedAds({
                 </h3>
 
                 <p className="mt-3 text-2xl font-bold text-green-400">
-                  {formatPrice(ad.price, ad.country)}
+                  {formatPrice(ad.price ?? ad.amount, ad.country)}
                 </p>
 
                 <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">

@@ -319,7 +319,7 @@ const whatsappLink =
             />
 
             <ListingInfo
-              price={item.price}
+              price={item.price ?? item.amount}
               currency={currency}
               category={item.category}
               location={item.location}
