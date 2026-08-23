@@ -1,157 +1,161 @@
 "use client";
 
-import Link from "next/link";
-
 const categories = [
-  "🌍 All Categories",
-  "🚗 Cars",
-  "🏍️ Motorbikes",
-  "🏠 Property",
-  "📱 Electronics",
-  "👕 Fashion",
-  "💼 Jobs",
-  "🛠️ Services",
-  "🐘 Animals",
-  "🛋️ Furniture",
-  "📚 Education",
-  "📦 Other",
+  "All Categories",
+  "Cars",
+  "Motorbikes",
+  "Property",
+  "Electronics",
+  "Fashion",
+  "Jobs",
+  "Services",
 ];
 
 const countries = [
   "All Countries",
-  "Singapore",
-  "India",
-  "Thailand",
-  "Zimbabwe",
-  "USA",
-  "Maldives",
   "Sri Lanka",
-  "South Africa",
+  "Zimbabwe",
+  "India",
+  "Singapore",
   "United Kingdom",
+  "USA",
   "Canada",
+];
+
+const popularSearches = [
+  "Phone",
+  "Cars",
+  "Laptop",
+  "House",
+  "Jobs",
+  "Motorbike",
 ];
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[760px] overflow-hidden rounded-3xl">
+    <section className="relative min-h-[720px] lg:min-h-[760px] overflow-hidden">
 
-      {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src="/images/banner-ad-3.jpg"
-          alt="Pippinway"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/70" />
-      </div>
+      {/* Background Image */}
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-24">
+      <img
+        src="/images/hero-bg.jpg"
+        alt="Hero"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
 
-        <div className="flex justify-center">
-  <span className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
-    🌍 Global Marketplace
-  </span>
+      {/* Overlay */}
 
-         <h1 className="mt-8 text-center text-5xl font-extrabold leading-tight text-white lg:text-7xl">
-            Buy, Sell &
-            <span className="block text-blue-400">
-              Discover Everything
-            </span>
-          </h1>
+      <div className="absolute inset-0 bg-black/50" />
 
-         <p className="mx-auto mt-6 max-w-3xl text-center text-lg text-slate-300">
-            Buy and sell vehicles, electronics, property, jobs, fashion and
-            services anywhere in the world with Pippinway.
-          </p>
+      {/* Gradient */}
 
-          {/* Search */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-[#030712]" />
 
-       <div className="mx-auto mt-10 max-w-4xl rounded-3xl bg-slate-900/80 p-6 backdrop-blur shadow-2xl">
+      {/* Content */}
 
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+     <div className="relative z-10 mx-auto flex min-h-[720px] max-w-7xl flex-col items-center justify-start pt-24 py-2.5 text-center">
+              
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-sm font-semibold text-white shadow-lg">
+          🌍 Global Marketplace
+        </span>
 
-  {/* Search */}
-  <input
-    type="text"
-    placeholder="Search..."
-    className="h-14 rounded-xl bg-slate-800 px-4 text-white outline-none"
-  />
+        <h1 className="mt-8 text-5xl font-black leading-tight tracking-tight text-white lg:text-6xl">
 
-  {/* Location */}
-  <input
-    type="text"
-    placeholder="Location"
-    className="h-14 rounded-xl bg-slate-800 px-4 text-white outline-none"
-  />
+          Find Great Deals
 
-  {/* Category */}
-  <select className="h-14 rounded-xl bg-slate-800 px-4 text-white">
-    {categories.map((category) => (
-      <option key={category}>{category}</option>
-    ))}
-  </select>
+          <span className="mt-2 block text-purple-400">
+            Anywhere in the World
+          </span>
 
-  {/* Country */}
-  <select className="h-14 rounded-xl bg-slate-800 px-4 text-white">
-    {countries.map((country) => (
-      <option key={country}>{country}</option>
-    ))}
-  </select>
+        </h1>
+                      <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
 
-  {/* Button */}
-  <button className="md:col-span-2 h-14 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-500">
-    🔍 Search
-  </button>
+          Buy, sell and connect with people around the world on
 
-</div>
+          <span className="font-semibold text-white">
+            {" "}Pippinway.
+          </span>
 
-</div>
+        </p>
 
-          
+           {/* ================= Search Box ================= */}
 
-          {/* Buttons */}
+        <div className="mt-10 w-full max-w-6xl rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-2xl shadow-2xl">
 
-         <div className="mt-10 flex justify-center gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
-            <Link
-              href="/add-listing"
-              className="rounded-xl bg-blue-600 px-8 py-4 font-semibold text-white hover:bg-blue-500"
+            {/* Search */}
+
+            <input
+              type="text"
+              placeholder="What are you looking for?"
+              className="h-12 rounded-xl border border-white/10 bg-[#111827]/90 px-4 text-white placeholder:text-slate-400 outline-none transition focus:border-purple-500"
+            />
+
+            {/* Category */}
+
+            <select
+              className="h-12 rounded-xl border border-white/10 bg-[#111827]/90 px-4 text-white outline-none transition focus:border-purple-500"
             >
-              Post Free Ad
-            </Link>
+              {categories.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
 
-            <Link
-              href="/listings"
-              className="rounded-xl border border-white/30 bg-white/10 px-8 py-4 font-semibold text-white"
+            {/* Country */}
+
+            <select
+              className="h-12 rounded-xl border border-white/10 bg-[#111827]/90 px-4 text-white outline-none transition focus:border-purple-500"
             >
-              Browse Ads
-            </Link>
+              {countries.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
 
-          </div>
+            {/* Location */}
 
-          {/* Stats */}
+            <input
+              type="text"
+              placeholder="Location"
+              className="h-12 rounded-xl border border-white/10 bg-[#111827]/90 px-4 text-white placeholder:text-slate-400 outline-none transition focus:border-purple-500"
+            />
 
-         <div className="mx-auto mt-14 grid max-w-4xl grid-cols-3 gap-5">
+            {/* Button */}
 
-            <div className="rounded-2xl bg-slate-900/70 p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-white">50K+</h3>
-              <p className="text-slate-400">Users</p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-900/70 p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-white">10K+</h3>
-              <p className="text-slate-400">Listings</p>
-            </div>
-
-            <div className="rounded-2xl bg-slate-900/70 p-6 text-center backdrop-blur">
-              <h3 className="text-3xl font-bold text-white">24/7</h3>
-              <p className="text-slate-400">Support</p>
-            </div>
+            <button
+              className="h-12 rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 font-semibold text-white transition duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/40"
+            >
+              🔍 Search
+            </button>
 
           </div>
 
         </div>
-</div>
+
+        {/* Popular Searches */}
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+
+          {[
+            "Phone",
+            "Cars",
+            "Laptop",
+            "House",
+            "Jobs",
+            "Motorbike",
+          ].map((item) => (
+            <span
+              key={item}
+              className="rounded-full bg-white/10 border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-purple-600 transition"
+            >
+              {item}
+            </span>
+          ))}
+
+        </div>
+
+      </div>
+
     </section>
   );
 }

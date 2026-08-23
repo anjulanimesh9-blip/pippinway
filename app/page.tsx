@@ -12,12 +12,13 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
+
 import Navbar from "./components/Navbar";
-import HeroSection from "./components/HeroSection";
-import SearchFilters from "./components/SearchFilters";
-import FeaturedSlider from "./components/FeaturedSlider";
-import CategorySidebar from "./components/CategorySidebar";
-import ListingGrid from "./components/ListingGrid";
+import HeroSection from "./components/homepage/Hero";
+import SearchFilters from "./components/homepage/SearchFilters";
+import FeaturedSlider from "./components/homepage/FeaturedSlider";
+import CategorySidebar from "./components/homepage/CategorySidebar";
+import ListingGrid from "./components/homepage/ListingGrid";
 import RightBanner from "./components/RightBanner";
 import BrowseCategory from "./components/BrowseCategory";
 import BrowseCountry from "./components/BrowseCountry";
@@ -239,56 +240,57 @@ export default function HomePage() {
       createdAt: new Date(),
     });
   };
+return (
+  <main className="min-h-screen bg-[#030712] text-white">
+    <Navbar />
 
-  return (
-    <main className="min-h-screen bg-[#030712] text-white">
-      <Navbar />
-      <HeroSection
-        totalListings={listings.length}
-        featuredCount={featuredListings.length}
-        activeCountry={activeCountryLabel}
-        filters={filters}
-        onQuickSearch={quickSearch}
+    <SearchFilters
+      filters={filters}
+      locations={locations}
+      onChange={updateFilters}
+    />
+
+    <HeroSection />
+
+    <FeaturedSlider
+      listings={featuredListings}
+      favoriteIds={favoriteIds}
+      onToggleFavorite={toggleFavorite}
+    />
+
+    <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 xl:grid-cols-[240px_minmax(0,1fr)_324px]">
+      <CategorySidebar
+        selectedCategory={filters.category}
+        counts={categoryCounts}
+        onSelectCategory={selectCategory}
       />
-      <SearchFilters
-        filters={filters}
-        locations={locations}
-        onChange={updateFilters}
-        onReset={() => setFilters(emptyFilters)}
-      />
-      <FeaturedSlider
-        listings={featuredListings}
+
+      <ListingGrid
+        listings={filteredListings}
         favoriteIds={favoriteIds}
+        loading={loading}
         onToggleFavorite={toggleFavorite}
       />
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 xl:grid-cols-[240px_minmax(0,1fr)_324px]">
-        <CategorySidebar
-          selectedCategory={filters.category}
-          counts={categoryCounts}
-          onSelectCategory={selectCategory}
-        />
-        <ListingGrid
-          listings={filteredListings}
-          favoriteIds={favoriteIds}
-          loading={loading}
-          onToggleFavorite={toggleFavorite}
-        />
-        <RightBanner />
-      </section>
+      <RightBanner />
+    </section>
 
-      <BrowseCategory
-        counts={categoryCounts}
-        selectedCategory={filters.category}
-        onSelectCategory={selectCategory}
-      />
-      <BrowseCountry
-        counts={countryCounts}
-        selectedCountry={filters.country}
-        onSelectCountry={selectCountry}
-      />
-      <WhyChoose />
-      <Footer />
-    </main>
-  );
+    <BrowseCategory
+      counts={categoryCounts}
+      selectedCategory={filters.category}
+      onSelectCategory={selectCategory}
+    />
+
+    <BrowseCountry
+      counts={countryCounts}
+      selectedCountry={filters.country}
+      onSelectCountry={selectCountry}
+    />
+
+    <WhyChoose />
+
+    <Footer />
+  </main>
+);
+  
 }
