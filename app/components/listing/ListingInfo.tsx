@@ -43,7 +43,10 @@ export default function ListingInfo({
         <h1 className="mb-3 text-xl font-bold text-white sm:text-2xl">{title}</h1>
       )}
       <p className="mt-4 text-2xl font-bold text-emerald-400 sm:text-[28px]">
-        {currency} {Number(price).toLocaleString()}
+        {currency}{" "}
+        {Number.isFinite(Number(price))
+          ? Number(price).toLocaleString()
+          : "0"}
       </p>
 
       <div className="mt-6 border-t border-white/10 pt-4">

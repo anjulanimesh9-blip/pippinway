@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import ListingPhoto, {
   GALLERY_MAIN_SIZES,
+  GALLERY_PHOTO_QUALITY,
   GALLERY_THUMB_SIZES,
 } from "@/app/components/ListingPhoto";
 
@@ -53,6 +54,7 @@ export default function ImageGallery({
             src={images[selectedImage]}
             alt={title}
             sizes={GALLERY_MAIN_SIZES}
+            quality={GALLERY_PHOTO_QUALITY}
             eager
             className="cursor-zoom-in object-contain bg-[#0B0E14] select-none"
           />
@@ -105,6 +107,7 @@ export default function ImageGallery({
                 src={image}
                 alt={`${title} ${index + 1}`}
                 sizes={GALLERY_THUMB_SIZES}
+                quality={GALLERY_PHOTO_QUALITY}
                 className="object-cover"
               />
             </button>
@@ -148,7 +151,8 @@ export default function ImageGallery({
             <ListingPhoto
               src={images[selectedImage]}
               alt={title}
-              sizes="95vw"
+              sizes="(max-width: 1024px) 95vw, 960px"
+              quality={GALLERY_PHOTO_QUALITY}
               eager
               className="object-contain"
             />

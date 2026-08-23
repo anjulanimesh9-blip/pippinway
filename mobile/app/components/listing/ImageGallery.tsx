@@ -116,7 +116,9 @@ export default function ImageGallery({
           src={images[selectedImage]}
           alt={title}
           onClick={() => setIsFullscreen(true)}
-          className="w-full h-[300px] sm:h-[420px] md:h-[550px] object-contain cursor-zoom-in select-none"
+          loading="eager"
+          decoding="async"
+          className="w-full h-[260px] sm:h-[340px] object-contain cursor-zoom-in select-none"
         />
 
         {/* Next */}
@@ -164,7 +166,9 @@ export default function ImageGallery({
             <img
               src={image}
               alt={`${title} ${index + 1}`}
-              className="w-20 h-20 object-cover"
+              loading="lazy"
+              decoding="async"
+              className="h-14 w-14 object-cover"
             />
           </button>
         ))}

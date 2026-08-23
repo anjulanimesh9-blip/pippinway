@@ -5,12 +5,13 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 
 export const LISTING_PHOTO_QUALITY = 65;
+export const GALLERY_PHOTO_QUALITY = 50;
 
 export const LISTING_THUMB_SIZES = "(min-width: 640px) 120px, 88px";
 export const LISTING_GRID_SIZES =
   "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 360px";
 export const FEATURED_CARD_SIZES = "(max-width: 1023px) 90vw, 32vw";
-export const GALLERY_MAIN_SIZES = "(max-width: 1024px) 100vw, 800px";
+export const GALLERY_MAIN_SIZES = "(max-width: 640px) 100vw, 640px";
 export const GALLERY_THUMB_SIZES = "76px";
 export const RELATED_AD_SIZES =
   "(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw";
@@ -24,6 +25,7 @@ type ListingPhotoProps = {
   className?: string;
   style?: CSSProperties;
   eager?: boolean;
+  quality?: number;
   fill?: boolean;
   width?: number;
   height?: number;
@@ -44,6 +46,7 @@ export default function ListingPhoto({
   className,
   style,
   eager = false,
+  quality = LISTING_PHOTO_QUALITY,
   fill = true,
   width,
   height,
@@ -80,7 +83,7 @@ export default function ListingPhoto({
     <Image
       src={safeSrc}
       alt={alt}
-      quality={LISTING_PHOTO_QUALITY}
+      quality={quality}
       sizes={sizes}
       fill={fill}
       width={fill ? undefined : width}
