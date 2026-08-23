@@ -4,6 +4,7 @@ import {
   MessageSquare,
   Package,
   ShoppingBag,
+  Users,
 } from "lucide-react";
 
 type StatsCardsProps = {
@@ -12,7 +13,17 @@ type StatsCardsProps = {
   soldAds: number;
   favorites: number;
   messages: number;
+  isAdmin?: boolean;
+  totalUsers?: number | null;
 };
+
+const USER_CARD = {
+  key: "users",
+  label: "Total Users",
+  hint: "Registered",
+  icon: Users,
+  iconWrap: "bg-cyan-500/15 text-cyan-400",
+} as const;
 
 const CARDS = [
   {
@@ -58,8 +69,11 @@ export default function StatsCards({
   soldAds,
   favorites,
   messages,
+  isAdmin = false,
+  totalUsers = null,
 }: StatsCardsProps) {
   const values = {
+    users: totalUsers ?? "—",
     total: totalAds,
     active: activeAds,
     sold: soldAds,
@@ -67,9 +81,15 @@ export default function StatsCards({
     messages,
   };
 
+  const cards = isAdmin ? [USER_CARD, ...CARDS] : CARDS;
+
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-3 xl:grid-cols-5">
-      {CARDS.map((card) => {
+    <div
+      className={`grid grid-cols-2 gap-2 sm:gap-2.5 md:grid-cols-3 ${
+        isAdmin ? "xl:grid-cols-6" : "xl:grid-cols-5"
+      }`}
+    >
+      {cards.map((card) => {
         const Icon = card.icon;
         return (
           <div

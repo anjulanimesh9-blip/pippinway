@@ -38,6 +38,7 @@ export default function ProfilePage() {
     userData,
     myAds,
     favoriteAds,
+    totalUsers,
     removeFavorite,
     addFavorite,
     deleteListing,
@@ -232,6 +233,8 @@ export default function ProfilePage() {
               soldAds={soldAds}
               favorites={favoriteAds.length}
               messages={chatRooms.length}
+              isAdmin={userData?.role === "admin"}
+              totalUsers={totalUsers}
             />
 
             <RewardsCard userId={user.uid} />

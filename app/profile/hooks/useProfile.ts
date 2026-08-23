@@ -6,6 +6,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getCountFromServer,
   getDoc,
   getDocs,
   setDoc,
@@ -21,6 +22,7 @@ export default function useProfile() {
   const [userData, setUserData] = useState<any>(null);
   const [myAds, setMyAds] = useState<any[]>([]);
   const [favoriteAds, setFavoriteAds] = useState<any[]>([]);
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -30,6 +32,7 @@ export default function useProfile() {
         setUserData(null);
         setMyAds([]);
         setFavoriteAds([]);
+        setTotalUsers(null);
         setLoading(false);
         return;
       }
@@ -39,6 +42,34 @@ export default function useProfile() {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (userData?.role !== "admin") {
+      setTotalUsers(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchTotalUsers = async () => {
+      try {
+        const snap = await getCountFromServer(collection(db, "users"));
+        if (!cancelled) {
+          setTotalUsers(snap.data().count);
+        }
+      } catch {
+        if (!cancelled) {
+          setTotalUsers(0);
+        }
+      }
+    };
+
+    fetchTotalUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userData?.role]);
 
   const loadProfile = async (currentUser: User) => {
     try {
@@ -153,6 +184,7 @@ export default function useProfile() {
     userData,
     myAds,
     favoriteAds,
+    totalUsers,
 
     fetchUserData,
     fetchMyAds,
