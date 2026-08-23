@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Eye, Heart, MapPin, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
+import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import { getListingStatus } from "../utils";
 
 type ProfileListingCardProps = {
@@ -21,6 +22,26 @@ const STATUS_STYLES: Record<string, string> = {
   draft: "text-gray-400",
 };
 
+function listingImage(ad: any): string {
+  const first =
+    ad.imageUrls?.[0] ||
+    ad.imageUrl ||
+    ad.images?.[0] ||
+    ad.photos?.[0] ||
+    ad.photo;
+  return typeof first === "string" && first.trim() ? first : "/placeholder.png";
+}
+
+function listingTitle(ad: any): string {
+  const title = String(ad.title || ad.name || "").trim();
+  return title || "Untitled listing";
+}
+
+function listingPrice(ad: any): string {
+  const raw = Number(ad.price ?? 0);
+  return formatPrice(Number.isFinite(raw) ? raw : 0, ad.country);
+}
+
 export default function ProfileListingCard({
   ad,
   view = "grid",
@@ -29,22 +50,31 @@ export default function ProfileListingCard({
   onEdit,
   onDelete,
 }: ProfileListingCardProps) {
-  const image = ad.imageUrls?.[0] || ad.imageUrl || "/placeholder.png";
+  const image = listingImage(ad);
+  const title = listingTitle(ad);
+  const price = listingPrice(ad);
   const slug = ad.slug || ad.id;
   const status = getListingStatus(ad);
-  const relativeTime = getRelativeTime(ad.createdAt);
+  const relativeTime = getRelativeTime(ad.createdAt) || "—";
   const views = ad.views || ad.viewCount || 0;
   const likes = ad.likes || ad.favoriteCount || 0;
   const comments = ad.comments || ad.commentCount || 0;
+  const isFeatured = isActiveFeaturedListing(ad);
+  const isOwnerCard = Boolean(onEdit || onDelete);
 
   const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+  const location = ad.location || ad.country || "—";
 
   if (view === "list") {
     return (
-      <div className="group relative flex overflow-hidden rounded-2xl border border-white/8 bg-[#151A22]">
-        <Link href={`/listings/${slug}`} className="relative h-28 w-36 shrink-0">
-          <img src={image} alt={ad.title} className="h-full w-full object-cover" />
-          {ad.featured === true && (
+      <div className="group relative flex overflow-hidden rounded-2xl border border-white/8 bg-[#111827]">
+        <Link href={`/listings/${slug}`} className="relative h-28 w-36 shrink-0 overflow-hidden bg-[#0B0E14]">
+          <img
+            src={image}
+            alt={title}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+          {isFeatured && (
             <span className="absolute left-2 top-2 rounded bg-[#FBB03B] px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-black">
               FEATURED
             </span>
@@ -53,28 +83,27 @@ export default function ProfileListingCard({
         <div className="flex min-w-0 flex-1 flex-col justify-between p-3">
           <div>
             <Link href={`/listings/${slug}`} className="line-clamp-1 font-semibold text-white">
-              {ad.title}
+              {title}
             </Link>
-            <p className="mt-1 text-lg font-bold text-emerald-400">
-              {formatPrice(Number(ad.price ?? 0), ad.country)}
-            </p>
+            <p className="mt-1 text-lg font-bold text-emerald-400">{price}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
             <span className="inline-flex items-center gap-1">
               <MapPin size={11} />
-              {ad.location || ad.country || "—"}
+              {location}
             </span>
             <span>{relativeTime}</span>
             <span className={STATUS_STYLES[status]}>{statusLabel}</span>
           </div>
         </div>
-        {(onEdit || onDelete) && (
+        {isOwnerCard && (
           <div className="flex flex-col justify-center gap-2 p-3">
             {onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(ad.id)}
                 className="rounded-lg bg-sky-600/20 p-2 text-sky-400 hover:bg-sky-600/30"
+                aria-label="Edit listing"
               >
                 <Pencil size={14} />
               </button>
@@ -84,6 +113,7 @@ export default function ProfileListingCard({
                 type="button"
                 onClick={() => onDelete(ad.id)}
                 className="rounded-lg bg-red-600/20 p-2 text-red-400 hover:bg-red-600/30"
+                aria-label="Delete listing"
               >
                 <Trash2 size={14} />
               </button>
@@ -95,14 +125,18 @@ export default function ProfileListingCard({
   }
 
   return (
-    <div className="group overflow-hidden rounded-2xl border border-white/8 bg-[#151A22]">
-      <div className="relative aspect-[4/3] bg-[#0B0E14]">
-        <Link href={`/listings/${slug}`} className="block h-full">
-          <img src={image} alt={ad.title} className="h-full w-full object-cover" />
+    <div className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#111827]">
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[#0B0E14]">
+        <Link href={`/listings/${slug}`} className="absolute inset-0 block">
+          <img
+            src={image}
+            alt={title}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
         </Link>
 
-        {ad.featured === true && (
-          <span className="absolute left-2 top-2 rounded bg-[#FBB03B] px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-black">
+        {isFeatured && (
+          <span className="absolute left-2 top-2 z-10 rounded bg-[#FBB03B] px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-black">
             FEATURED
           </span>
         )}
@@ -111,7 +145,8 @@ export default function ProfileListingCard({
           <button
             type="button"
             onClick={() => onToggleFavorite(ad.id)}
-            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow"
+            className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow"
+            aria-label={isFavorite ? "Remove favorite" : "Save listing"}
           >
             <Heart
               size={15}
@@ -120,13 +155,14 @@ export default function ProfileListingCard({
           </button>
         )}
 
-        {(onEdit || onDelete) && (
-          <div className="absolute bottom-2 right-2 hidden gap-1 group-hover:flex">
+        {isOwnerCard && (
+          <div className="absolute bottom-2 right-2 z-10 flex gap-1">
             {onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(ad.id)}
                 className="rounded-lg bg-black/70 p-1.5 text-white hover:bg-sky-600"
+                aria-label="Edit listing"
               >
                 <Pencil size={13} />
               </button>
@@ -136,6 +172,7 @@ export default function ProfileListingCard({
                 type="button"
                 onClick={() => onDelete(ad.id)}
                 className="rounded-lg bg-black/70 p-1.5 text-white hover:bg-red-600"
+                aria-label="Delete listing"
               >
                 <Trash2 size={13} />
               </button>
@@ -144,26 +181,24 @@ export default function ProfileListingCard({
         )}
       </div>
 
-      <div className="p-3">
+      <div className="flex flex-1 flex-col p-3">
         <Link
           href={`/listings/${slug}`}
-          className="line-clamp-1 text-sm font-semibold text-white hover:text-sky-300"
+          className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-white hover:text-sky-300"
         >
-          {ad.title}
+          {title}
         </Link>
-        <p className="mt-1 text-base font-bold text-emerald-400">
-          {formatPrice(Number(ad.price ?? 0), ad.country)}
-        </p>
+        <p className="mt-1 min-h-6 text-base font-bold leading-6 text-emerald-400">{price}</p>
 
-        <div className="mt-2 flex items-center justify-between text-[11px] text-gray-400">
+        <div className="mt-2 flex h-4 items-center justify-between gap-2 text-[11px] text-gray-400">
           <span className="inline-flex min-w-0 items-center gap-1 truncate">
             <MapPin size={11} className="shrink-0" />
-            {ad.location || ad.country || "—"}
+            {location}
           </span>
           <span className="shrink-0">{relativeTime}</span>
         </div>
 
-        <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2 text-[11px] text-gray-500">
+        <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2 text-[11px] text-gray-500">
           <div className="flex items-center gap-2.5">
             <span className="inline-flex items-center gap-1">
               <Eye size={11} />

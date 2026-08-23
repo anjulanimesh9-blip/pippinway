@@ -112,16 +112,17 @@ export default function MyListings({
           No ads in this filter yet.
         </div>
       ) : view === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {listings.map((ad) => (
-            <ProfileListingCard
-              key={ad.id}
-              ad={ad}
-              isFavorite={favoriteIds.includes(ad.id)}
-              onToggleFavorite={onToggleFavorite}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
+            <div key={ad.id} className="h-full">
+              <ProfileListingCard
+                ad={ad}
+                isFavorite={favoriteIds.includes(ad.id)}
+                onToggleFavorite={onToggleFavorite}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </div>
           ))}
         </div>
       ) : (
