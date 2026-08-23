@@ -1,14 +1,14 @@
 "use strict";
 
-const { setGlobalOptions, onInit } = require("firebase-functions/v2");
+const { setGlobalOptions } = require("firebase-functions/v2");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const crypto = require("crypto");
 
 setGlobalOptions({ region: "us-central1", maxInstances: 20 });
 
-// Lazy Admin: Firebase CLI requires this file to discover exports and times
-// out after 10s if initializeApp()/credentials I/O run at import time.
+// Do not initializeApp / onInit at import time. Firebase CLI loads this file
+// to discover exports and times out after 10s on Windows if credentials I/O runs.
 let db;
 let bucket;
 let FieldValue;
@@ -32,8 +32,6 @@ function initAdmin() {
   db = firestore.getFirestore();
   return db;
 }
-
-onInit(initAdmin);
 
 function getDb() {
   return db || initAdmin();
