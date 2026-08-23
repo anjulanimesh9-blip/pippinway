@@ -6,7 +6,6 @@ import CategorySidebar from "./CategorySidebar";
 import CategoryFilter from "./CategoryFilter";
 import RightSidebar from "./RightSidebar";
 import TrustBadges from "./TrustBadges";
-import BannerRotator, { MOBILE_SIDEBAR_BANNER_CLASS } from "./Banner/BannerRotator";
 import { bannersForPlacement } from "@/app/hooks/useBanners";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
@@ -32,7 +31,6 @@ export default function HomeContent({
   totalCount = 0,
 }: Props) {
   const infeedBanners = bannersForPlacement(banners, "infeed");
-  const sidebarBanners = bannersForPlacement(banners, "sidebar");
 
   return (
     <>
@@ -54,13 +52,6 @@ export default function HomeContent({
             />
           </div>
 
-          <div className="mb-4 lg:hidden">
-            <BannerRotator
-              banners={sidebarBanners}
-              className={MOBILE_SIDEBAR_BANNER_CLASS}
-            />
-          </div>
-
           <LatestHeading count={latestListings.length} />
 
           <LatestListings
@@ -75,7 +66,7 @@ export default function HomeContent({
 
         <aside className="hidden lg:block self-start">
           <div className="sticky top-24">
-            <RightSidebar banners={sidebarBanners} />
+            <RightSidebar />
           </div>
         </aside>
       </div>

@@ -20,7 +20,7 @@ export function getBannerPlacement(banner: Banner): BannerPlacement {
 /**
  * In-feed: infeed or missing placement (excludes sidebar + profile).
  * Profile: only explicit profile banners (no fallback to other types).
- * Sidebar: sidebar-marked first; else untagged banners (excludes profile + infeed).
+ * Sidebar banners are no longer shown; leftover docs stay in Firestore unused.
  */
 export function bannersForPlacement(
   banners: Banner[],
@@ -29,12 +29,7 @@ export function bannersForPlacement(
   if (placement === "profile") {
     return banners.filter((b) => b.placement === "profile");
   }
-  if (placement === "infeed") {
-    return banners.filter((b) => getBannerPlacement(b) === "infeed");
-  }
-  const sidebar = banners.filter((b) => b.placement === "sidebar");
-  if (sidebar.length > 0) return sidebar;
-  return banners.filter((b) => !b.placement);
+  return banners.filter((b) => getBannerPlacement(b) === "infeed");
 }
 
 function toMillis(value: unknown): number {

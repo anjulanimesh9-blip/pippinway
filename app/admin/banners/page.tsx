@@ -29,15 +29,21 @@ import {
 
 const BANNER_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
   { value: "infeed", label: "List banner (in ads)" },
-  { value: "sidebar", label: "Sidebar banner (vertical)" },
   { value: "profile", label: "Profile banner" },
 ];
 
-const PLACEMENT_HINT: Record<BannerPlacement, string> = {
+const PLACEMENT_HINT: Record<Exclude<BannerPlacement, "sidebar">, string> = {
   infeed: "Horizontal 16:5 banner inside the Latest Ads list.",
-  sidebar: "Tall 9:16 skyscraper on the homepage right sidebar.",
   profile: "16:5 banner at the top of the profile page.",
 };
+
+function typeOptionsFor(banner: Banner) {
+  if (getBannerPlacement(banner) !== "sidebar") return BANNER_TYPE_OPTIONS;
+  return [
+    { value: "sidebar" as BannerPlacement, label: "Sidebar banner (no longer used)" },
+    ...BANNER_TYPE_OPTIONS,
+  ];
+}
 
 const emptyForm = {
   title: "",
@@ -252,7 +258,9 @@ export default function AdminBannersPage() {
                 ))}
               </select>
               <p className="text-xs text-gray-500">
-                {PLACEMENT_HINT[form.placement]} {BANNER_CROP_HINT[form.placement]}
+                {form.placement === "sidebar"
+                  ? BANNER_CROP_HINT.sidebar
+                  : `${PLACEMENT_HINT[form.placement]} ${BANNER_CROP_HINT[form.placement]}`}
               </p>
             </div>
             <div className="space-y-2">
@@ -261,7 +269,7 @@ export default function AdminBannersPage() {
               </label>
               <p className="text-xs text-gray-500">
                 Uploaded photos open a crop editor: list and profile are 1600×500
-                (16:5); sidebar is 720×1280 (9:16). 1.00× zoom fills the frame.
+                (16:5). 1.00× zoom fills the frame.
               </p>
               <input
                 ref={fileInputRef}
@@ -426,7 +434,7 @@ export default function AdminBannersPage() {
                           }
                           className="rounded-lg bg-black/30 px-2 py-1 text-white"
                         >
-                          {BANNER_TYPE_OPTIONS.map((opt) => (
+                          {typeOptionsFor(banner).map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>

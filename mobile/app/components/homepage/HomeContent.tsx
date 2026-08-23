@@ -6,7 +6,6 @@ import LatestListings from "./LatestAds/LatestListings";
 import LatestHeading from "./LatestAds/LatestHeading";
 import CategorySidebar from "./CategorySidebar";
 import RightSidebar from "./RightSidebar";
-import BannerSlider from "./Banner/BannerSlider";
 
 type Props = {
   selectedCategory: string;
@@ -61,15 +60,6 @@ export default function HomeContent({
         <div className="mt-6">
           <FeaturedBanner />
         </div>
-
-        {bannerImages.length > 0 && (
-          <div className="mb-4 lg:hidden">
-            <BannerSlider
-              bannerImages={bannerImages}
-              currentBanner={currentBanner}
-            />
-          </div>
-        )}
 
         <LatestHeading />
 

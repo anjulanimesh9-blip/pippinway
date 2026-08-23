@@ -12,12 +12,6 @@ export const INFEED_BANNER_CLASS =
 /** Short on phones (~2 compact rows); taller only at lg+ so the image fills, no letterbox. */
 export const PROFILE_BANNER_CLASS =
   "relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px]";
-/** Desktop right-column skyscraper only — do not use this frame on small screens. */
-export const SIDEBAR_BANNER_CLASS =
-  "relative aspect-[9/16] w-full overflow-hidden";
-/** Mobile stand-in for the sidebar: wide ~140px strip (~2 list rows), not 9:16. */
-export const MOBILE_SIDEBAR_BANNER_CLASS =
-  "relative h-[140px] w-full overflow-hidden max-lg:h-[140px]";
 
 type Props = {
   banners: Banner[];
