@@ -65,7 +65,7 @@ export default function ProfilePage() {
   } = useChat();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<ProfileNavKey>("profile");
+  const [activeItem, setActiveItem] = useState<ProfileNavKey>("listings");
   const [activeTab, setActiveTab] = useState<ProfileTabKey>("listings");
   const [aboutText, setAboutText] = useState<string | undefined>(undefined);
 

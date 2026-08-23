@@ -15,10 +15,8 @@ type ProfileTabsProps = {
 
 const TABS: Array<{ key: ProfileTabKey; label: string }> = [
   { key: "listings", label: "My Listings" },
-  { key: "about", label: "About Me" },
+  { key: "about", label: "About" },
   { key: "reviews", label: "Reviews" },
-  { key: "saved", label: "Saved Searches" },
-  { key: "activity", label: "Activity" },
 ];
 
 export default function ProfileTabs({ activeTab, onChange }: ProfileTabsProps) {

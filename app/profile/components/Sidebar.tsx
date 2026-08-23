@@ -3,22 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowLeftRight,
-  BadgeCheck,
   Boxes,
-  CreditCard,
   Gift,
   Heart,
   HelpCircle,
   Home,
-  LayoutDashboard,
   LogOut,
   MessageSquare,
   Package,
   Settings,
   Shield,
   Star,
-  User,
 } from "lucide-react";
 
 export type ProfileNavKey =
@@ -53,31 +48,24 @@ const SIDE_LINK_CLASS =
 const NAV_ITEMS: Array<{
   key: ProfileNavKey;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: typeof Package;
 }> = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "listings", label: "My Listings", icon: Package },
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "favorites", label: "Favorites", icon: Heart },
-  { key: "profile", label: "Profile", icon: User },
   { key: "credits", label: "Featured Credits", icon: Star },
-  { key: "payments", label: "Payments", icon: CreditCard },
-  { key: "transactions", label: "Transactions", icon: ArrowLeftRight },
   { key: "packages", label: "Packages", icon: Boxes },
   { key: "settings", label: "Settings", icon: Settings },
-  { key: "help", label: "Help & Support", icon: HelpCircle },
+  { key: "help", label: "Help", icon: HelpCircle },
 ];
 
 export default function Sidebar({
   menuOpen,
   unreadCount,
   activeItem,
-  userMembership,
   isAdmin,
-  proRequest,
   onNavigate,
   onLogout,
-  onRequestPro,
   onClose,
 }: SidebarProps) {
   const handleClick = (key: ProfileNavKey) => {
@@ -185,36 +173,6 @@ export default function Sidebar({
             Logout
           </button>
         </nav>
-
-        <div className="mt-4 rounded-2xl border border-[#FBB03B]/25 bg-gradient-to-b from-[#1a1620] to-[#151A22] p-4">
-          {userMembership === "pro" ? (
-            <div className="text-center">
-              <p className="text-xs text-gray-400">Current Plan</p>
-              <p className="mt-1 flex items-center justify-center gap-2 font-bold text-[#FBB03B]">
-                <BadgeCheck size={16} />
-                Seller Pro
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="text-sm font-bold text-white">Upgrade to Seller Pro</p>
-              <ul className="mt-3 space-y-1.5 text-xs text-gray-400">
-                <li>• 30 Ads / Month</li>
-                <li>• 10 Featured Ads FREE</li>
-                <li>• Priority Listings</li>
-                <li>• Verified Seller Badge</li>
-              </ul>
-              <button
-                type="button"
-                onClick={onRequestPro}
-                disabled={proRequest}
-                className="mt-4 w-full rounded-xl bg-[#FBB03B] py-2.5 text-sm font-bold text-black transition hover:bg-[#ffc14d] disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
-              >
-                {proRequest ? "Waiting Approval" : "Upgrade Now"}
-              </button>
-            </>
-          )}
-        </div>
       </aside>
     </>
   );
