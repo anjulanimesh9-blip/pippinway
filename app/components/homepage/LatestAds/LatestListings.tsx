@@ -129,7 +129,7 @@ export default function LatestListings({
         <p className="text-gray-300 font-semibold">No listings found</p>
         <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
           {totalLive === 0
-            ? "No approved ads yet. Approve listings in Admin → Ad Approvals."
+            ? "No ads yet. Be the first to post one."
             : "Try setting Country to “All Countries” and Category to “All”."}
         </p>
         <Link

@@ -215,6 +215,8 @@ useEffect(() => {
       doc(db, "listings", id),
       {
         approved: true,
+        rejected: false,
+        status: "active",
       }
     );
 

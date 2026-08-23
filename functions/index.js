@@ -207,10 +207,9 @@ async function countListingTowardRewards(beforeSnap, afterSnap, listingId) {
   const after = afterSnap.data();
 
   const becameApproved =
-    Boolean(beforeSnap?.exists) &&
-    before?.approved !== true &&
     after.approved === true &&
-    after.rejected !== true;
+    after.rejected !== true &&
+    (!beforeSnap?.exists || before?.approved !== true);
 
   if (!becameApproved) return;
   if (after.rewardCounted === true) return;
@@ -287,7 +286,7 @@ async function countListingTowardRewards(beforeSnap, afterSnap, listingId) {
 
 /**
  * 1st-gen Firestore onWrite (not Eventarc / 2nd-gen onDocumentWritten).
- * First time a listing's `approved` flips to true (admin path), count it.
+ * Count the first time a listing is approved (create with approved:true, or admin flip).
  */
 exports.onListingWrittenForRewards = functionsV1
   .region("us-central1")

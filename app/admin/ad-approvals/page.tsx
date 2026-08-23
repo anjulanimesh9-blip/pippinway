@@ -60,6 +60,7 @@ export default function AdminAdApprovalsPage() {
       await updateDoc(doc(db, "listings", listing.id), {
         approved: true,
         rejected: false,
+        status: "active",
         approvedAt: serverTimestamp(),
         approvedBy: adminId,
       });

@@ -1,11 +1,16 @@
-import { isLiveListing } from "@/lib/filterListings";
+import { isListingFlaggedExpired } from "@/lib/filterListings";
 
 export type ListingStatus = "active" | "pending" | "sold" | "draft";
+
+function isFlag(value: unknown): boolean {
+  return value === true || value === "true" || value === 1;
+}
 
 export function getListingStatus(ad: any): ListingStatus {
   if (ad?.sold === true || ad?.status === "sold") return "sold";
   if (ad?.draft === true || ad?.status === "draft") return "draft";
-  if (ad?.approved === true && ad?.rejected !== true && isLiveListing(ad)) {
+  // approved:true wins over status==="pending". Admin reject / expired stay Pending.
+  if (isFlag(ad?.approved) && !isFlag(ad?.rejected) && !isListingFlaggedExpired(ad)) {
     return "active";
   }
   return "pending";

@@ -273,15 +273,17 @@ await addDoc(
     createdAt: new Date(),
 
     featured: false,
-    approved: false,
+    approved: true,
     rejected: false,
+    expired: false,
+    sold: false,
+    draft: false,
+    status: "active",
     rewardCounted: false,
     adType: "free",
 
     expiresAt,
     expiryDate: expiresAt,
-
-    expired: false,
   }
 );
 
