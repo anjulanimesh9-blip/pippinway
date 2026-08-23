@@ -283,6 +283,7 @@ await addDoc(
     expiryDate: expiresAt,
 
     expired: false,
+    imagesCompressed: true,
   }
 );
 

@@ -752,19 +752,23 @@ async function deleteListingOnlySubdocs(listingRef) {
 
 function isSafeToPermanentlyDelete(data, nowMs) {
   const createdAt = toValidTimestamp(data?.createdAt);
-  if (!createdAt) {
-    return { ok: false, reason: "missing_createdAt" };
-  }
   const publishedAt = toValidTimestamp(data?.publishedAt);
+  const expiresAt = toValidTimestamp(data?.expiresAt);
   const start =
-    publishedAt && publishedAt.toMillis() > createdAt.toMillis()
+    publishedAt && createdAt && publishedAt.toMillis() > createdAt.toMillis()
       ? publishedAt
-      : createdAt;
-  const ageMs = nowMs - start.toMillis();
-  if (ageMs < LISTING_TTL_MS + EXPIRY_GRACE_MS) {
-    return { ok: false, reason: "within_grace" };
+      : publishedAt || createdAt;
+  if (start) {
+    const ageMs = nowMs - start.toMillis();
+    if (ageMs < LISTING_TTL_MS + EXPIRY_GRACE_MS) {
+      return { ok: false, reason: "within_grace" };
+    }
+    return { ok: true };
   }
-  return { ok: true };
+  if (expiresAt && nowMs > expiresAt.toMillis() + EXPIRY_GRACE_MS) {
+    return { ok: true };
+  }
+  return { ok: false, reason: "missing_createdAt" };
 }
 
 async function loadExpiredListingCandidates(now) {
@@ -896,3 +900,180 @@ exports.cleanupExpiredFeatured = functionsV1
     );
     return { cleared, skipped, candidates: featuredSnap.size };
   });
+
+const LISTING_IMAGE_MAX_EDGE_PX = 1200;
+const LISTING_IMAGE_JPEG_QUALITY = 65;
+const LISTING_IMAGE_SKIP_UNDER_BYTES = 80 * 1024;
+const COMPRESS_LISTING_BATCH = 20;
+const COMPRESS_CURSOR_PATH = "_meta/listingImageCompress";
+
+async function compressListingStorageFile(path) {
+  const file = getBucket().file(path);
+  const [exists] = await file.exists();
+  if (!exists) return { changed: false, reason: "missing" };
+
+  const [meta] = await file.getMetadata();
+  if (meta.metadata?.pippinwayCompressed === "1") {
+    return { changed: false, reason: "already_marked" };
+  }
+
+  const size = Number(meta.size || 0);
+  if (size > 0 && size <= LISTING_IMAGE_SKIP_UNDER_BYTES) {
+    await file.setMetadata({
+      metadata: { ...(meta.metadata || {}), pippinwayCompressed: "1" },
+    });
+    return { changed: false, reason: "already_small", bytesBefore: size };
+  }
+
+  const [buf] = await file.download();
+  const sharp = require("sharp");
+  const image = sharp(buf, { failOn: "none" }).rotate();
+  const info = await image.metadata();
+  const width = info.width || 0;
+  const height = info.height || 0;
+  const maxEdge = Math.max(width, height);
+
+  let pipeline = image;
+  if (maxEdge > LISTING_IMAGE_MAX_EDGE_PX) {
+    pipeline = pipeline.resize({
+      width: width >= height ? LISTING_IMAGE_MAX_EDGE_PX : undefined,
+      height: height > width ? LISTING_IMAGE_MAX_EDGE_PX : undefined,
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+  }
+
+  const out = await pipeline
+    .jpeg({ quality: LISTING_IMAGE_JPEG_QUALITY, mozjpeg: true })
+    .toBuffer();
+
+  if (out.length >= size && maxEdge <= LISTING_IMAGE_MAX_EDGE_PX) {
+    await file.setMetadata({
+      metadata: { ...(meta.metadata || {}), pippinwayCompressed: "1" },
+    });
+    return { changed: false, reason: "no_gain", bytesBefore: size };
+  }
+
+  const token = meta.metadata?.firebaseStorageDownloadTokens;
+  await file.save(out, {
+    resumable: false,
+    contentType: "image/jpeg",
+    metadata: {
+      cacheControl: "public,max-age=31536000",
+      metadata: {
+        ...(meta.metadata || {}),
+        firebaseStorageDownloadTokens: token || crypto.randomUUID(),
+        pippinwayCompressed: "1",
+      },
+    },
+  });
+
+  return {
+    changed: true,
+    bytesBefore: size,
+    bytesAfter: out.length,
+  };
+}
+
+async function compressImagesForListing(snap, nowMs) {
+  const data = snap.data() || {};
+  if (data.imagesCompressed === true) {
+    return { listingId: snap.id, skipped: true, reason: "done" };
+  }
+  if (isSafeToPermanentlyDelete(data, nowMs).ok) {
+    return { listingId: snap.id, skipped: true, reason: "expired" };
+  }
+
+  const results = [];
+  for (const url of collectImageUrls(data)) {
+    const path = storagePathFromUrl(url);
+    if (!isListingStoragePath(path)) {
+      results.push({ url, changed: false, reason: "not_listing_path" });
+      continue;
+    }
+    try {
+      results.push({ url, ...(await compressListingStorageFile(path)) });
+    } catch (err) {
+      console.warn("Listing image compress failed", snap.id, path, err);
+      results.push({ url, changed: false, reason: "error" });
+    }
+  }
+
+  const failed = results.some((r) => r.reason === "error");
+  await snap.ref.update({
+    imagesCompressed: !failed,
+    imagesCompressedAt: FieldValue.serverTimestamp(),
+  });
+
+  return {
+    listingId: snap.id,
+    skipped: false,
+    compressed: results.filter((r) => r.changed).length,
+    failed,
+  };
+}
+
+async function runListingImageCompressBatch() {
+  initAdmin();
+  const nowMs = Timestamp.now().toMillis();
+  const cursorRef = getDb().doc(COMPRESS_CURSOR_PATH);
+  const cursorSnap = await cursorRef.get();
+  const lastId = cursorSnap.exists ? String(cursorSnap.data()?.lastId || "") : "";
+
+  let q = getDb().collection("listings").orderBy("__name__").limit(COMPRESS_LISTING_BATCH);
+  if (lastId) {
+    q = q.startAfter(getDb().collection("listings").doc(lastId));
+  }
+
+  const page = await q.get();
+  if (page.empty) {
+    await cursorRef.set({ lastId: "", updatedAt: FieldValue.serverTimestamp() });
+    return { processed: 0, compressed: 0, wrapped: true };
+  }
+
+  let compressed = 0;
+  for (const snap of page.docs) {
+    const result = await compressImagesForListing(snap, nowMs);
+    compressed += Number(result.compressed || 0);
+  }
+
+  const nextId = page.docs[page.docs.length - 1].id;
+  await cursorRef.set({
+    lastId: page.size < COMPRESS_LISTING_BATCH ? "" : nextId,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  return {
+    processed: page.size,
+    compressed,
+    wrapped: page.size < COMPRESS_LISTING_BATCH,
+  };
+}
+
+/**
+ * Hourly: rewrite oversized listing photos in Storage to 1200px JPEG q65
+ * (ikman-like). Same Storage path + download token so listing URLs stay valid.
+ * Skips files already ≤80KB or marked compressed. Does not touch users/chats.
+ */
+exports.compressExistingListingImages = functionsV1
+  .region("us-central1")
+  .runWith({ timeoutSeconds: 540, memory: "1GB" })
+  .pubsub.schedule("every 1 hours")
+  .timeZone("UTC")
+  .onRun(async () => {
+    const result = await runListingImageCompressBatch();
+    console.log("compressExistingListingImages", result);
+    return result;
+  });
+
+/** Admin can kick a compress batch immediately. */
+exports.compressExistingListingImagesNow = onCall(
+  { region: "us-central1", timeoutSeconds: 540, memory: "1GiB" },
+  async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "Sign in as admin.");
+    }
+    await assertAdmin(request.auth.uid);
+    return runListingImageCompressBatch();
+  }
+);

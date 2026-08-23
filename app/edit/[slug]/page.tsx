@@ -144,6 +144,7 @@ export default function EditListing() {
               updatedImages.slice(0, MAX_LISTING_IMAGES),
             imageUrl:
               updatedImages[0],
+            imagesCompressed: true,
           }
         );
 
