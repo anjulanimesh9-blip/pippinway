@@ -50,14 +50,28 @@ export default function ImageGallery({
     <>
       <div className="overflow-hidden rounded-lg border border-white/10 bg-[#0B0E14]">
         <div className="relative h-[280px] sm:h-[380px] lg:h-[420px]">
-          <ListingPhoto
-            src={images[selectedImage]}
-            alt={title}
-            sizes={GALLERY_MAIN_SIZES}
-            quality={GALLERY_PHOTO_QUALITY}
-            eager
-            className="cursor-zoom-in object-contain bg-[#0B0E14] select-none"
-          />
+          {images.map((image, index) => {
+            const isActive = index === selectedImage;
+            const isNeighbor =
+              index === (selectedImage + 1) % images.length ||
+              index === (selectedImage - 1 + images.length) % images.length;
+            return (
+              <div
+                key={`${image}-${index}`}
+                className={`absolute inset-0 ${isActive ? "z-[1]" : "invisible"}`}
+                aria-hidden={!isActive}
+              >
+                <ListingPhoto
+                  src={image}
+                  alt={title}
+                  sizes={GALLERY_MAIN_SIZES}
+                  quality={GALLERY_PHOTO_QUALITY}
+                  eager={isActive || isNeighbor}
+                  className="cursor-zoom-in object-contain bg-[#0B0E14] select-none"
+                />
+              </div>
+            );
+          })}
           <button
             type="button"
             onClick={() => setIsFullscreen(true)}

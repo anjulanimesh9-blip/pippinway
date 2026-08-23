@@ -111,15 +111,27 @@ export default function ImageGallery({
           </button>
         )}
 
-        {/* Main Image */}
-        <img
-          src={images[selectedImage]}
-          alt={title}
-          onClick={() => setIsFullscreen(true)}
-          loading="eager"
-          decoding="async"
-          className="w-full h-[260px] sm:h-[340px] object-contain cursor-zoom-in select-none"
-        />
+        {/* Main Image — keep all slides mounted so Next is instant */}
+        <div className="relative w-full h-[260px] sm:h-[340px]">
+          {images.map((image, index) => (
+            <img
+              key={`${image}-${index}`}
+              src={image}
+              alt={title}
+              onClick={() => setIsFullscreen(true)}
+              loading={
+                index === selectedImage ||
+                index === (selectedImage + 1) % images.length
+                  ? "eager"
+                  : "lazy"
+              }
+              decoding="async"
+              className={`absolute inset-0 h-full w-full object-contain cursor-zoom-in select-none ${
+                index === selectedImage ? "z-[1]" : "invisible"
+              }`}
+            />
+          ))}
+        </div>
 
         {/* Next */}
         {images.length > 1 && (
