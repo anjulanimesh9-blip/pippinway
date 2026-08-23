@@ -1,6 +1,9 @@
-export const LISTING_IMAGE_MAX_EDGE_PX = 1600;
-export const LISTING_IMAGE_JPEG_QUALITY = 0.85;
-export const LISTING_IMAGE_SKIP_UNDER_BYTES = 200 * 1024;
+/** Ikman gallery fitted.jpg is 1200×800 — match that, not phone-camera originals. */
+export const LISTING_IMAGE_MAX_EDGE_PX = 1200;
+/** ~0.62–0.70 JPEG; 0.85 is too clean vs typical ikman listing photos. */
+export const LISTING_IMAGE_JPEG_QUALITY = 0.65;
+/** Skip only tiny files (icons). 200KB let large-but-under-threshold shots through. */
+export const LISTING_IMAGE_SKIP_UNDER_BYTES = 80 * 1024;
 
 function loadImageElement(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -19,7 +22,7 @@ function canvasToJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob 
 
 /**
  * Resize/compress a listing photo before Firebase Storage upload.
- * Skips files already under ~200KB. On decode failure, returns the original file.
+ * Skips files already under ~80KB. On decode failure, returns the original file.
  */
 export async function compressListingImage(file: File): Promise<File> {
   if (file.size > 0 && file.size <= LISTING_IMAGE_SKIP_UNDER_BYTES) {

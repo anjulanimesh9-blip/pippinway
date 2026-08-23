@@ -76,7 +76,7 @@ export async function cropImageToJpeg(
   imageSrc: string,
   pixelCrop: PixelCrop,
   output: { width: number; height: number },
-  quality = 0.85
+  quality = 0.78
 ): Promise<Blob> {
   const image = await loadImage(imageSrc);
   const source = clampCrop(pixelCrop, image);
