@@ -6,12 +6,11 @@ import { formatPrice } from "@/lib/formatPrice";
 
 type RelatedAdsProps = {
   relatedAds: any[];
-  currencyMap: Record<string, string>;
+  currencyMap?: Record<string, string>;
 };
 
 export default function RelatedAds({
   relatedAds,
-  currencyMap,
 }: RelatedAdsProps) {
   if (!relatedAds.length) return null;
 

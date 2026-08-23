@@ -44,19 +44,6 @@ export default function ListingDetails() {
     params?.slug as string;
 
 
-  const currencyMap: any = {
-    singapore: "SGD $",
-    india: "₹",
-    thailand: "฿",
-    zimbabwe: "USD $",
-    usa: "USD $",
-    maldives: "MVR",
-    "sri lanka": "Rs.",
-    "south africa": "R",
-    "united kingdom": "£",
-    canada: "CAD $",
-  };
-
   const handleDelete =
     async () => {
 
@@ -205,13 +192,6 @@ const whatsappLink =
     ? `https://wa.me/${String(item.phone).replace(/\D/g, "")}`
     : "#";
 
-  const currency =
-    currencyMap[
-      item?.country
-        ?.trim()
-        ?.toLowerCase()
-    ] || "Rs.";
-
  return (
   <main className="min-h-screen bg-black text-white pb-20 lg:pb-0">
 
@@ -236,7 +216,6 @@ const whatsappLink =
         <ListingInfo
           title={item.title}
           price={item.price ?? item.amount}
-          currency={currency}
           country={item.country}
           category={item.category}
           location={item.location}
@@ -283,7 +262,6 @@ const whatsappLink =
 
         <RelatedAds
           relatedAds={relatedAds}
-          currencyMap={currencyMap}
         />
 
       </div>

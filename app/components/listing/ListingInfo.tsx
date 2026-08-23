@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/formatPrice";
 type ListingInfoProps = {
   title?: string;
   price: unknown;
-  currency: string;
+  currency?: string;
   category: string;
   location: string;
   createdAt?: any;

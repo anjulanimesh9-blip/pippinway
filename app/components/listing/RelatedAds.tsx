@@ -7,13 +7,12 @@ import { formatPrice } from "@/lib/formatPrice";
 
 type RelatedAdsProps = {
   relatedAds: any[];
-  currencyMap: Record<string, string>;
+  currencyMap?: Record<string, string>;
   sellerName?: string;
 };
 
 export default function RelatedAds({
   relatedAds,
-  currencyMap,
   sellerName,
 }: RelatedAdsProps) {
   if (!relatedAds.length) return null;

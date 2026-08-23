@@ -13,6 +13,7 @@ import {
 
 
 import { db } from "../../firebase";
+import { formatPrice } from "@/lib/formatPrice";
 import { useRouter } from "next/navigation";
 
 import {
@@ -510,7 +511,7 @@ useEffect(() => {
             </td>
 
             <td className="p-4 text-green-400 font-bold">
-              Rs. {listing.price}
+              {formatPrice(listing.price ?? listing.amount, listing.country)}
             </td>
 
             <td className="p-4 flex gap-2">
@@ -673,7 +674,7 @@ if (featuredDate) {
               </td>
 
               <td className="p-4 text-green-400 font-bold">
-                Rs. {listing.price}
+                {formatPrice(listing.price ?? listing.amount, listing.country)}
               </td>
 
               <td className="p-4 text-yellow-400 font-bold">
@@ -795,7 +796,7 @@ if (featuredDate) {
             </td>
 
             <td className="p-4 text-green-400 font-bold">
-              Rs. {listing.price}
+              {formatPrice(listing.price ?? listing.amount, listing.country)}
             </td>
 
             <td className="p-4">

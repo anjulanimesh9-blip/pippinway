@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatPrice } from "@/lib/formatPrice";
+import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 
 type ListingCardProps = {
@@ -15,12 +15,15 @@ export default function ListingCard({
   item,
   favorites,
   toggleFavorite,
-  currencyMap,
 }: ListingCardProps) {
   const price = formatPrice(
     item.price ?? (item as { amount?: unknown }).amount,
     item.country
   );
+  const locationLabel = [item.location, item.country]
+    .filter(Boolean)
+    .join(", ");
+  const relativeTime = getRelativeTime(item.createdAt);
 
   const image =
     item.imageUrls?.[0] ||
@@ -70,12 +73,18 @@ export default function ListingCard({
           </p>
 
           <p className="text-gray-400 text-xs mt-1 truncate">
-            📍 {item.location}
+            📍 {locationLabel || "Location not set"}
           </p>
 
           <p className="text-blue-400 text-xs mt-1 truncate">
             {item.category}
           </p>
+
+          {relativeTime && (
+            <p className="text-gray-500 text-xs mt-1">
+              🕒 {relativeTime}
+            </p>
+          )}
         </div>
       </Link>
 
@@ -128,16 +137,11 @@ export default function ListingCard({
           </p>
 
           <p className="text-gray-400 mt-1">
-            {item.location}
+            {locationLabel}
           </p>
 
           <p className="text-gray-500 text-sm mt-1">
-            🕒{" "}
-            {item.createdAt
-              ? new Date(
-                  item.createdAt.seconds * 1000
-                ).toLocaleDateString("en-GB")
-              : "Recently"}
+            🕒 {relativeTime || "Recently"}
           </p>
 
           <p className="mt-3 text-green-400 text-2xl font-bold">
