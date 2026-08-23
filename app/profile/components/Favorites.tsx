@@ -22,7 +22,7 @@ export default function Favorites({ favoriteAds, onRemove }: FavoritesProps) {
   return (
     <div id="favorites">
       <h2 className="mb-4 text-lg font-bold text-white">Favorites</h2>
-      <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid grid-cols-2 items-stretch gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {favoriteAds.map((ad) => (
         <div key={ad.id} className="h-full">
           <ProfileListingCard

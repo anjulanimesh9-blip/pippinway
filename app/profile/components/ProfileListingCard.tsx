@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Eye, Heart, MapPin, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { Heart, MapPin, Pencil, Trash2 } from "lucide-react";
 import ListingPhoto, {
   LISTING_GRID_SIZES,
   LISTING_THUMB_SIZES,
@@ -60,15 +60,11 @@ export default function ProfileListingCard({
   const price = listingPrice(ad);
   const slug = ad.slug || ad.id;
   const status = getListingStatus(ad);
-  const relativeTime = getRelativeTime(ad.createdAt) || "—";
-  const views = ad.views || ad.viewCount || 0;
-  const likes = ad.likes || ad.favoriteCount || 0;
-  const comments = ad.comments || ad.commentCount || 0;
-  const isFeatured = isActiveFeaturedListing(ad);
-  const isOwnerCard = Boolean(onEdit || onDelete);
-
   const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
   const location = ad.location || ad.country || "—";
+  const relativeTime = getRelativeTime(ad.createdAt) || "—";
+  const isFeatured = isActiveFeaturedListing(ad);
+  const isOwnerCard = Boolean(onEdit || onDelete);
 
   if (view === "list") {
     return (
@@ -131,8 +127,8 @@ export default function ProfileListingCard({
   }
 
   return (
-    <div className="group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-white/8 bg-[#111827]">
-      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#0B0E14]">
+    <div className="group flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-white/8 bg-[#111827]">
+      <div className="relative aspect-[2/1] w-full shrink-0 overflow-hidden bg-[#0B0E14]">
         <Link href={`/listings/${slug}`} className="absolute inset-0 block">
           <ListingPhoto
             src={image}
@@ -143,7 +139,7 @@ export default function ProfileListingCard({
         </Link>
 
         {isFeatured && (
-          <span className="absolute left-2 top-2 z-10 rounded bg-[#FBB03B] px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-black">
+          <span className="absolute left-1 top-1 z-10 rounded bg-[#FBB03B] px-1 py-px text-[8px] font-extrabold tracking-wide text-black">
             FEATURED
           </span>
         )}
@@ -152,75 +148,53 @@ export default function ProfileListingCard({
           <button
             type="button"
             onClick={() => onToggleFavorite(ad.id)}
-            className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow"
+            className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-white/95 shadow"
             aria-label={isFavorite ? "Remove favorite" : "Save listing"}
           >
             <Heart
-              size={15}
+              size={11}
               className={isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-600"}
             />
           </button>
         )}
 
         {isOwnerCard && (
-          <div className="absolute bottom-2 right-2 z-10 flex gap-1">
+          <div className="absolute bottom-1 right-1 z-10 flex gap-0.5">
             {onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(ad.id)}
-                className="rounded-lg bg-black/70 p-1.5 text-white hover:bg-sky-600"
+                className="rounded bg-black/70 p-1 text-white hover:bg-sky-600"
                 aria-label="Edit listing"
               >
-                <Pencil size={13} />
+                <Pencil size={11} />
               </button>
             )}
             {onDelete && (
               <button
                 type="button"
                 onClick={() => onDelete(ad.id)}
-                className="rounded-lg bg-black/70 p-1.5 text-white hover:bg-red-600"
+                className="rounded bg-black/70 p-1 text-white hover:bg-red-600"
                 aria-label="Delete listing"
               >
-                <Trash2 size={13} />
+                <Trash2 size={11} />
               </button>
             )}
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-2">
+      <div className="flex flex-1 flex-col px-1.5 py-1">
         <Link
           href={`/listings/${slug}`}
-          className="line-clamp-1 text-xs font-semibold leading-4 text-white hover:text-sky-300"
+          className="line-clamp-1 text-[11px] font-semibold leading-4 text-white hover:text-sky-300"
         >
           {title}
         </Link>
-        <p className="mt-0.5 text-sm font-bold leading-5 text-emerald-400">{price}</p>
-
-        <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-gray-400">
-          <span className="inline-flex min-w-0 items-center gap-1 truncate">
-            <MapPin size={10} className="shrink-0" />
-            {location}
-          </span>
-          <span className="shrink-0">{relativeTime}</span>
-        </div>
-
-        <div className="mt-auto flex items-center justify-between pt-1 text-[10px] text-gray-500">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-1">
-              <Eye size={11} />
-              {views}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Heart size={11} />
-              {likes}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <MessageCircle size={11} />
-              {comments}
-            </span>
-          </div>
-          <span className={`font-semibold ${STATUS_STYLES[status]}`}>{statusLabel}</span>
+        <p className="text-xs font-bold leading-4 text-emerald-400">{price}</p>
+        <div className="mt-0.5 flex items-center justify-between gap-1 text-[9px] text-gray-400">
+          <span className="truncate">{location}</span>
+          <span className={`shrink-0 font-semibold ${STATUS_STYLES[status]}`}>{statusLabel}</span>
         </div>
       </div>
     </div>
