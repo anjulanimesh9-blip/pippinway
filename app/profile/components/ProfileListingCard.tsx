@@ -42,6 +42,7 @@ function listingPrice(ad: any): string {
   return formatPrice(Number.isFinite(raw) ? raw : 0, ad.country);
 }
 
+// Keep this file on production deploys; card layout lives here.
 export default function ProfileListingCard({
   ad,
   view = "grid",
