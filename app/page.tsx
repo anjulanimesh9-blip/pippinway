@@ -196,6 +196,8 @@ function HomePage() {
 
           totalCount={listings.length}
 
+          filterKey={`${selectedCountry}|${selectedCategory}|${search}|${location}|${sortBy}`}
+
         />
 
       </section>

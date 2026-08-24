@@ -15,6 +15,7 @@ import { getCreatedAtMs, isLiveListing } from "@/lib/filterListings";
 import type { ListingRecord } from "@/lib/types/featured";
 
 export const HOME_LATEST_LIMIT = 80;
+export const HOME_PAGE_SIZE = 20;
 export const HOME_FEATURED_LIMIT = 24;
 export const HOME_FALLBACK_LIMIT = 120;
 

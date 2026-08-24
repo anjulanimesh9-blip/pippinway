@@ -2,11 +2,13 @@
 
 import LatestListings from "./LatestAds/LatestListings";
 import LatestHeading from "./LatestAds/LatestHeading";
+import LatestPager from "./LatestAds/LatestPager";
 import CategorySidebar from "./CategorySidebar";
 import CategoryFilter from "./CategoryFilter";
 import RightSidebar from "./RightSidebar";
 import TrustBadges from "./TrustBadges";
 import { bannersForPlacement } from "@/app/hooks/useBanners";
+import usePagedListings from "@/app/hooks/usePagedListings";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
 type Props = {
@@ -18,6 +20,7 @@ type Props = {
   banners: Banner[];
   loading?: boolean;
   totalCount?: number;
+  filterKey?: string;
 };
 
 export default function HomeContent({
@@ -29,8 +32,11 @@ export default function HomeContent({
   banners,
   loading = false,
   totalCount = 0,
+  filterKey = "",
 }: Props) {
   const infeedBanners = bannersForPlacement(banners, "infeed");
+  const { pageItems, total, from, to, hasPrev, hasNext, goPrev, goNext } =
+    usePagedListings(latestListings, filterKey);
 
   return (
     <>
@@ -52,16 +58,30 @@ export default function HomeContent({
             />
           </div>
 
-          <LatestHeading count={latestListings.length} />
+          <LatestHeading
+            count={pageItems.length}
+            total={total}
+            from={from}
+            to={to}
+          />
 
           <LatestListings
-            latestListings={latestListings}
+            latestListings={pageItems}
             favorites={favorites}
             toggleFavorite={toggleFavorite}
             banners={infeedBanners}
             loading={loading}
             totalLive={totalCount}
           />
+
+          {!loading && (
+            <LatestPager
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrev={goPrev}
+              onNext={goNext}
+            />
+          )}
         </main>
 
         <aside className="hidden lg:block self-start">
