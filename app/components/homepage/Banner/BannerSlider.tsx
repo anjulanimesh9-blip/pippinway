@@ -1,6 +1,7 @@
 "use client";
 
 import BannerFitImage from "./BannerFitImage";
+import { BANNER_ROW_HEIGHT_CLASS } from "./BannerRotator";
 
 type BannerSliderProps = {
   bannerImages: string[];
@@ -19,7 +20,7 @@ export default function BannerSlider({
   if (!src) return null;
 
   return (
-    <div className="relative my-5 w-full overflow-hidden rounded-2xl border-2 border-yellow-500/50 aspect-[16/7] lg:aspect-[16/5]">
+    <div className={`relative my-5 w-full overflow-hidden rounded-2xl border-2 border-yellow-500/50 ${BANNER_ROW_HEIGHT_CLASS}`}>
       <div className="relative h-full w-full overflow-hidden">
         <BannerFitImage src={src} alt="Advertisement" fitMode="auto" eager />
       </div>

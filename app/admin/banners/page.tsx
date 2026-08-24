@@ -22,7 +22,10 @@ import type { Banner, BannerFitMode, BannerPlacement } from "@/lib/types/feature
 import { getBannerPlacement } from "@/app/hooks/useBanners";
 import BannerCropModal from "./BannerCropModal";
 import BannerFitImage from "@/app/components/homepage/Banner/BannerFitImage";
-import { PROFILE_BANNER_CLASS } from "@/app/components/homepage/Banner/BannerRotator";
+import {
+  INFEED_BANNER_CLASS,
+  PROFILE_BANNER_CLASS,
+} from "@/app/components/homepage/Banner/BannerRotator";
 import {
   BANNER_CROP_ASPECT,
   BANNER_CROP_FRAME_CLASS,
@@ -413,7 +416,7 @@ export default function AdminBannersPage() {
                         ? "mx-auto h-64"
                         : form.placement === "profile"
                           ? PROFILE_BANNER_CLASS
-                          : "w-full aspect-[16/7] lg:aspect-[16/5]"
+                          : INFEED_BANNER_CLASS
                     }`}
                     style={
                       form.placement === "sidebar"

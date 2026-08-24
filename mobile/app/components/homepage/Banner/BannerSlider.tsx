@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import BannerFitImage from "./BannerFitImage";
+import { BANNER_ROW_HEIGHT_CLASS } from "@/app/components/homepage/Banner/BannerRotator";
 
 type BannerSliderProps = {
   bannerImages: string[];
@@ -35,7 +36,7 @@ export default function BannerSlider({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] aspect-[16/7] lg:aspect-[16/5]"
+      className={`relative w-full overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] ${BANNER_ROW_HEIGHT_CLASS}`}
       aria-roledescription="carousel"
       aria-label="Advertisement"
     >
