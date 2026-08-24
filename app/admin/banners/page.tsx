@@ -18,14 +18,20 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db, storage } from "@/app/firebase";
 import Navbar from "@/app/components/Navbar";
-import type { Banner, BannerPlacement } from "@/lib/types/featured";
+import type { Banner, BannerFitMode, BannerPlacement } from "@/lib/types/featured";
 import { getBannerPlacement } from "@/app/hooks/useBanners";
 import BannerCropModal from "./BannerCropModal";
+import BannerFitImage from "@/app/components/homepage/Banner/BannerFitImage";
 import {
   BANNER_CROP_ASPECT,
   BANNER_CROP_FRAME_CLASS,
   BANNER_CROP_HINT,
 } from "@/lib/bannerCrop";
+import {
+  isValidHttpImageUrl,
+  preloadBannerImage,
+  resolveBannerFitMode,
+} from "@/lib/bannerFit";
 
 const BANNER_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
   { value: "infeed", label: "List banner (in ads)" },
@@ -45,6 +51,19 @@ function typeOptionsFor(banner: Banner) {
   ];
 }
 
+const FIT_MODE_OPTIONS: { value: BannerFitMode; label: string; hint: string }[] = [
+  {
+    value: "auto",
+    label: "Auto Fit (Recommended)",
+    hint: "Shows the entire image. Empty space is filled with a blurred copy of the same photo.",
+  },
+  {
+    value: "cover",
+    label: "Crop to Fill",
+    hint: "Fills the banner frame. Cropping is optional — use the crop editor if you want a specific cut.",
+  },
+];
+
 const emptyForm = {
   title: "",
   imageUrl: "",
@@ -53,6 +72,7 @@ const emptyForm = {
   startDate: "",
   endDate: "",
   placement: "infeed" as BannerPlacement,
+  fitMode: "auto" as BannerFitMode,
   linkType: "none" as Banner["linkType"],
   externalUrl: "",
   listingId: "",
@@ -86,12 +106,18 @@ export default function AdminBannersPage() {
   const [filePreview, setFilePreview] = useState("");
   const [cropOpen, setCropOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [urlStatus, setUrlStatus] = useState<"idle" | "loading" | "ok" | "error">(
+    "idle"
+  );
+  const [imageError, setImageError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetImageState = () => {
     setImageFile(null);
     setSourceFile(null);
     setCropOpen(false);
+    setUrlStatus("idle");
+    setImageError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -114,6 +140,40 @@ export default function AdminBannersPage() {
     setFilePreview(url);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
+
+  useEffect(() => {
+    const pastedUrl = form.imageUrl.trim();
+    if (imageFile || !pastedUrl) {
+      setUrlStatus("idle");
+      if (!imageFile) setImageError("");
+      return;
+    }
+    if (!isValidHttpImageUrl(pastedUrl)) {
+      setUrlStatus("error");
+      setImageError("Enter a valid image URL (http or https).");
+      return;
+    }
+    setUrlStatus("loading");
+    setImageError("");
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      preloadBannerImage(pastedUrl)
+        .then(() => {
+          if (cancelled) return;
+          setUrlStatus("ok");
+          setImageError("");
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setUrlStatus("error");
+          setImageError("Could not load this image URL. Check the link and try again.");
+        });
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [form.imageUrl, imageFile]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -143,13 +203,22 @@ export default function AdminBannersPage() {
   const createBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     const pastedUrl = form.imageUrl.trim();
-    if (sourceFile && !imageFile) {
-      alert("Confirm the crop for your uploaded image, or paste an Image URL.");
+    if (!imageFile && !pastedUrl) {
+      setImageError("Upload a banner image or paste an Image URL.");
       return;
     }
-    if (!imageFile && !pastedUrl) {
-      alert("Upload a banner image or paste an Image URL.");
-      return;
+    if (!imageFile && pastedUrl) {
+      if (!isValidHttpImageUrl(pastedUrl)) {
+        setImageError("Enter a valid image URL (http or https).");
+        return;
+      }
+      try {
+        await preloadBannerImage(pastedUrl);
+      } catch {
+        setUrlStatus("error");
+        setImageError("Could not load this image URL. Check the link and try again.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -170,6 +239,7 @@ export default function AdminBannersPage() {
         country: form.country || "All",
         priority: Number(form.priority),
         placement: form.placement,
+        fitMode: resolveBannerFitMode(form.fitMode),
         startDate: form.startDate ? new Date(form.startDate) : new Date(),
         endDate: form.endDate
           ? new Date(form.endDate)
@@ -201,6 +271,10 @@ export default function AdminBannersPage() {
 
   const updatePlacement = async (banner: Banner, placement: BannerPlacement) => {
     await updateDoc(doc(db, "banners", banner.id), { placement });
+  };
+
+  const updateFitMode = async (banner: Banner, fitMode: BannerFitMode) => {
+    await updateDoc(doc(db, "banners", banner.id), { fitMode });
   };
 
   const removeBanner = async (id: string) => {
@@ -247,7 +321,6 @@ export default function AdminBannersPage() {
                 onChange={(e) => {
                   const placement = e.target.value as BannerPlacement;
                   setForm({ ...form, placement });
-                  if (sourceFile) setCropOpen(true);
                 }}
                 className="w-full rounded-xl bg-black/30 px-4 py-2 text-white"
               >
@@ -260,16 +333,47 @@ export default function AdminBannersPage() {
               <p className="text-xs text-gray-500">
                 {form.placement === "sidebar"
                   ? BANNER_CROP_HINT.sidebar
-                  : `${PLACEMENT_HINT[form.placement]} ${BANNER_CROP_HINT[form.placement]}`}
+                  : PLACEMENT_HINT[form.placement]}
               </p>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-300">
+                Image fit
+              </label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {FIT_MODE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setForm({ ...form, fitMode: opt.value });
+                      if (opt.value === "auto" && sourceFile) {
+                        setImageFile(sourceFile);
+                      }
+                    }}
+                    className={`rounded-xl border px-4 py-3 text-left ${
+                      form.fitMode === opt.value
+                        ? "border-blue-500 bg-blue-500/15 text-white"
+                        : "border-white/10 bg-black/20 text-gray-300 hover:border-white/20"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{opt.label}</span>
+                    <span className="mt-1 block text-xs text-gray-400">
+                      {opt.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-300">
                 Banner image
               </label>
               <p className="text-xs text-gray-500">
-                Uploaded photos open a crop editor: list and profile are 1600×500
-                (16:5). 1.00× zoom fills the frame.
+                Upload a file or paste a URL. Preview below matches the live banner.
+                {form.fitMode === "cover"
+                  ? " Cropping is optional for Crop to Fill."
+                  : " Auto Fit shows the whole image — no crop needed."}
               </p>
               <input
                 ref={fileInputRef}
@@ -279,42 +383,55 @@ export default function AdminBannersPage() {
                   const file = e.target.files?.[0] ?? null;
                   e.target.value = "";
                   if (!file) return;
-                  setImageFile(null);
                   setSourceFile(file);
-                  setCropOpen(true);
+                  setImageFile(file);
+                  setImageError("");
                 }}
                 className="w-full rounded-xl bg-black/30 px-4 py-2 text-white file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1 file:text-sm file:font-semibold file:text-white"
               />
               <input
                 type="text"
-                placeholder="Or paste Image URL (skips crop)"
+                placeholder="Or paste Image URL"
                 value={form.imageUrl}
                 onChange={(e) =>
                   setForm({ ...form, imageUrl: e.target.value })
                 }
                 className="w-full rounded-xl bg-black/30 px-4 py-2 text-white"
               />
-              {(filePreview || form.imageUrl.trim()) && (
+              {urlStatus === "loading" && (
+                <p className="text-xs text-gray-400">Loading image preview…</p>
+              )}
+              {imageError && (
+                <p className="text-sm text-red-400">{imageError}</p>
+              )}
+              {(filePreview || urlStatus === "ok") && (
                 <div className="space-y-2">
                   <div
-                    className={`mt-2 overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${
-                      form.placement === "sidebar" ? "mx-auto h-64" : "w-full"
+                    className={`relative mt-2 overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${
+                      form.placement === "sidebar"
+                        ? "mx-auto h-64"
+                        : "w-full aspect-[16/7] lg:aspect-[16/5]"
                     }`}
-                    style={{ aspectRatio: String(BANNER_CROP_ASPECT[form.placement]) }}
+                    style={
+                      form.placement === "sidebar"
+                        ? { aspectRatio: String(BANNER_CROP_ASPECT.sidebar) }
+                        : undefined
+                    }
                   >
-                    <img
+                    <BannerFitImage
                       src={filePreview || form.imageUrl.trim()}
                       alt="Banner preview"
-                      className="h-full w-full object-cover"
+                      fitMode={form.fitMode}
+                      eager
                     />
                   </div>
-                  {sourceFile && (
+                  {sourceFile && form.fitMode === "cover" && (
                     <button
                       type="button"
                       onClick={() => setCropOpen(true)}
                       className="text-sm font-semibold text-blue-400 hover:text-blue-300"
                     >
-                      Adjust crop
+                      Crop image (optional)
                     </button>
                   )}
                 </div>
@@ -382,7 +499,11 @@ export default function AdminBannersPage() {
             </div>
             <button
               type="submit"
-              disabled={saving || cropOpen}
+              disabled={
+                saving ||
+                cropOpen ||
+                (!imageFile && (!form.imageUrl.trim() || urlStatus !== "ok"))
+              }
               className="rounded-xl bg-green-600 px-5 py-2 font-bold text-white disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save Banner"}
@@ -399,17 +520,23 @@ export default function AdminBannersPage() {
                 key={banner.id}
                 className="flex gap-4 rounded-2xl border border-white/10 bg-[#111827] p-4"
               >
-                <img
-                  src={banner.imageUrl}
-                  alt=""
-                  className="shrink-0 rounded-xl object-cover"
+                <div
+                  className="relative shrink-0 overflow-hidden rounded-xl"
                   style={{
                     aspectRatio: String(
                       BANNER_CROP_ASPECT[getBannerPlacement(banner)]
                     ),
                     height: getBannerPlacement(banner) === "sidebar" ? 128 : 64,
                   }}
-                />
+                >
+                  <BannerFitImage
+                    src={banner.imageUrl}
+                    alt=""
+                    fitMode={banner.fitMode}
+                    sizes="220px"
+                    eager
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
@@ -439,6 +566,22 @@ export default function AdminBannersPage() {
                               {opt.label}
                             </option>
                           ))}
+                        </select>
+                      </label>
+                      <label className="mt-2 flex items-center gap-2 text-sm text-gray-300">
+                        <span className="text-gray-400">Fit</span>
+                        <select
+                          value={resolveBannerFitMode(banner.fitMode)}
+                          onChange={(e) =>
+                            updateFitMode(
+                              banner,
+                              e.target.value as BannerFitMode
+                            )
+                          }
+                          className="rounded-lg bg-black/30 px-2 py-1 text-white"
+                        >
+                          <option value="auto">Auto Fit (Recommended)</option>
+                          <option value="cover">Crop to Fill</option>
                         </select>
                       </label>
                     </div>

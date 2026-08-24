@@ -101,7 +101,35 @@ img{
 
 }
 
-/* Backup only. Live banners use inline BANNER_SLOT_IMG_STYLE. */
+/* Absolute fill for banner layers. object-fit is per modifier. */
+.banner-fit-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.banner-fit-bg,
+.banner-fit-fg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.banner-fit-bg {
+  z-index: 0;
+  pointer-events: none;
+  transform: scale(1.08);
+  filter: blur(20px);
+}
+.banner-fit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.25);
+}
+.banner-fit-fg {
+  z-index: 2;
+}
 img.banner-slot-img{
   position:absolute !important;
   inset:0 !important;
@@ -109,8 +137,13 @@ img.banner-slot-img{
   height:100% !important;
   max-width:none !important;
   max-height:none !important;
-  object-fit:cover !important;
   object-position:center !important;
+}
+img.banner-slot-img--cover{
+  object-fit:cover !important;
+}
+img.banner-slot-img--contain{
+  object-fit:contain !important;
 }
 
 button{

@@ -48,6 +48,9 @@ export interface FeaturedPackagePurchase {
 
 export type BannerPlacement = "infeed" | "sidebar" | "profile";
 
+/** Auto Fit contains the full image; Crop to Fill covers the slot. */
+export type BannerFitMode = "auto" | "cover";
+
 export interface Banner {
   id: string;
   active?: boolean;
@@ -61,6 +64,8 @@ export interface Banner {
   externalUrl?: string;
   /** Missing on older banners; treat as in-feed (never profile). */
   placement?: BannerPlacement;
+  /** Missing on older banners; treat as Auto Fit. */
+  fitMode?: BannerFitMode;
 }
 
 export interface ListingRecord {

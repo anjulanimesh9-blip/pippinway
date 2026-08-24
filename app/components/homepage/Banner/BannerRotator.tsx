@@ -6,12 +6,12 @@ import bannerImages, { isUsableBannerSrc } from "@/lib/bannerImages";
 import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
 
-/** In-feed / list banners: compact ~140px strip on phone/Capacitor (max-lg). Taller only on desktop. Never 9:16. */
+/** In-feed / list banners: 16:5 on desktop; slightly taller on mobile so Auto Fit never crops logos/QR. */
 export const INFEED_BANNER_CLASS =
-  "relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px]";
-/** Short on phones (~2 compact rows); taller only at lg+ so the image fills, no letterbox. */
+  "relative w-full overflow-hidden aspect-[16/7] lg:aspect-[16/5]";
+/** Same slot as list banners so Auto Fit and Crop to Fill match across surfaces. */
 export const PROFILE_BANNER_CLASS =
-  "relative h-[140px] w-full overflow-hidden max-lg:h-[140px] lg:h-[240px] xl:h-[280px]";
+  "relative w-full overflow-hidden aspect-[16/7] lg:aspect-[16/5]";
 
 type Props = {
   banners: Banner[];
@@ -123,6 +123,7 @@ export default function BannerRotator({
           <FirestoreBanner
             banner={slide}
             framed={false}
+            eager={isActive}
             onImageError={() =>
               setFailedIds((current) => {
                 if (current.has(slide.id)) return current;

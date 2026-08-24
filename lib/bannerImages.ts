@@ -7,9 +7,9 @@ const bannerImages = [
 ];
 
 /**
- * Inline cover fill. Tailwind v4 / globals `img { height: auto }` beats
- * utility `h-full` and can beat a class on replaced <img>s, leaving a
- * landscape strip at the top of a tall slot. Inline height:100% + cover wins.
+ * Absolute fill. Tailwind v4 / globals `img { height: auto }` beats
+ * utility `h-full`. Inline height:100% wins. object-fit is set per layer
+ * (contain vs cover) by BannerFitImage — do not force cover here.
  */
 export const BANNER_SLOT_IMG_STYLE: CSSProperties = {
   position: "absolute",
@@ -18,8 +18,17 @@ export const BANNER_SLOT_IMG_STYLE: CSSProperties = {
   height: "100%",
   maxWidth: "none",
   maxHeight: "none",
-  objectFit: "cover",
   objectPosition: "center",
+};
+
+export const BANNER_CONTAIN_IMG_STYLE: CSSProperties = {
+  ...BANNER_SLOT_IMG_STYLE,
+  objectFit: "contain",
+};
+
+export const BANNER_COVER_IMG_STYLE: CSSProperties = {
+  ...BANNER_SLOT_IMG_STYLE,
+  objectFit: "cover",
 };
 
 export function isUsableBannerSrc(src: unknown): src is string {

@@ -1,21 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import ListingPhoto, {
-  BANNER_INFEED_SIZES,
-} from "@/app/components/ListingPhoto";
+import { BANNER_INFEED_SIZES } from "@/app/components/ListingPhoto";
 import type { Banner } from "@/lib/types/featured";
-import { BANNER_SLOT_IMG_STYLE, isUsableBannerSrc } from "@/lib/bannerImages";
+import { isUsableBannerSrc } from "@/lib/bannerImages";
+import BannerFitImage from "./BannerFitImage";
 
 type Props = {
   banner: Banner | null;
   framed?: boolean;
+  eager?: boolean;
   onImageError?: () => void;
 };
 
 export default function FirestoreBanner({
   banner,
   framed = true,
+  eager = false,
   onImageError,
 }: Props) {
   if (!banner || !isUsableBannerSrc(banner.imageUrl)) return null;
@@ -29,12 +30,12 @@ export default function FirestoreBanner({
       }
       style={{ position: "relative", width: "100%", height: "100%" }}
     >
-      <ListingPhoto
+      <BannerFitImage
         src={banner.imageUrl.trim()}
         alt="Advertisement"
+        fitMode={banner.fitMode}
         sizes={BANNER_INFEED_SIZES}
-        className="banner-slot-img"
-        style={BANNER_SLOT_IMG_STYLE}
+        eager={eager}
         onError={onImageError}
       />
     </div>

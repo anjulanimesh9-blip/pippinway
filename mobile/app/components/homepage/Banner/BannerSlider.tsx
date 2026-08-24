@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BANNER_SLOT_IMG_STYLE } from "@/lib/bannerImages";
+import BannerFitImage from "./BannerFitImage";
 
 type BannerSliderProps = {
   bannerImages: string[];
@@ -35,7 +35,7 @@ export default function BannerSlider({
 
   return (
     <div
-      className="relative h-[140px] w-full overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)]"
+      className="relative w-full overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] aspect-[16/7] lg:aspect-[16/5]"
       aria-roledescription="carousel"
       aria-label="Advertisement"
     >
@@ -53,11 +53,11 @@ export default function BannerSlider({
             className="relative h-full w-full overflow-hidden"
             style={{ position: "relative", width: "100%", height: "100%" }}
           >
-            <img
+            <BannerFitImage
               src={slide.src}
               alt="Advertisement"
-              className="banner-slot-img"
-              style={BANNER_SLOT_IMG_STYLE}
+              fitMode="auto"
+              eager={slideIndex === activeIndex}
               onError={() =>
                 setFailed((current) => {
                   if (current.has(slide.key)) return current;
