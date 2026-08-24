@@ -24,6 +24,7 @@ export interface FeaturedPackageSnapshot {
   packageDurationDays: number;
   packagePrice: number;
   packageCurrency: string;
+  country?: string;
 }
 
 export function buildPackageSnapshot(pkg: FeaturedPackage): FeaturedPackageSnapshot {
@@ -34,5 +35,6 @@ export function buildPackageSnapshot(pkg: FeaturedPackage): FeaturedPackageSnaps
     packageDurationDays: getPackageDurationDays(pkg),
     packagePrice: Number(pkg.price ?? 0),
     packageCurrency: pkg.currency ?? "",
+    country: pkg.country,
   };
 }

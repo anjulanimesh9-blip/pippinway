@@ -22,6 +22,18 @@ export interface FeaturedPackage {
   displayOrder?: number;
   description?: string;
   createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
+/** Firestore: payment_settings/{country} — Sri Lanka bank* fields; Zimbabwe ecoCashNumber. */
+export interface PaymentSettings {
+  country: string;
+  accountName: string;
+  qrImage?: string;
+  bankName?: string;
+  accountNumber?: string;
+  branch?: string;
+  ecoCashNumber?: string;
 }
 
 export interface FeaturedPackagePurchase {

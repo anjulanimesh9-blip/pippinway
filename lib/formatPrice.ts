@@ -23,7 +23,7 @@ const CURRENCY_DISPLAY: Record<string, (amount: string) => string> = {
   MVR: (n) => `MVR ${n}`,
 };
 
-function currencyCodeForCountry(country?: string): string | undefined {
+export function currencyCodeForCountry(country?: string): string | undefined {
   if (!country) return undefined;
   if (countryCurrencies[country]) return countryCurrencies[country];
   const lower = country.trim().toLowerCase();

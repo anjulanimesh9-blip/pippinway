@@ -48,7 +48,7 @@ export default function FeaturedPackagesPage() {
                       {snapshot.packageCurrency} {snapshot.packagePrice}
                     </p>
                     <Link
-                      href={`/featured-packages/checkout?packageId=${encodeURIComponent(snapshot.packageId)}&packageName=${encodeURIComponent(snapshot.packageName)}&packageCredits=${snapshot.packageCredits}&packageDurationDays=${snapshot.packageDurationDays}&packagePrice=${snapshot.packagePrice}&packageCurrency=${encodeURIComponent(snapshot.packageCurrency)}`}
+                      href={`/featured-packages/checkout?packageId=${encodeURIComponent(snapshot.packageId)}&packageName=${encodeURIComponent(snapshot.packageName)}&packageCredits=${snapshot.packageCredits}&packageDurationDays=${snapshot.packageDurationDays}&packagePrice=${snapshot.packagePrice}&packageCurrency=${encodeURIComponent(snapshot.packageCurrency)}${snapshot.country ? `&country=${encodeURIComponent(snapshot.country)}` : ""}`}
                       className="mt-3 inline-block rounded-xl bg-violet-600 px-5 py-2 font-bold text-white hover:bg-violet-500"
                     >
                       Buy Now
