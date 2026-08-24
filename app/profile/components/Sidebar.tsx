@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Boxes,
   Gift,
@@ -50,7 +51,6 @@ const NAV_ITEMS: Array<{
   label: string;
   icon: typeof Package;
 }> = [
-  { key: "listings", label: "My Listings", icon: Package },
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "favorites", label: "Favorites", icon: Heart },
   { key: "credits", label: "Featured Credits", icon: Star },
@@ -68,6 +68,10 @@ export default function Sidebar({
   onLogout,
   onClose,
 }: SidebarProps) {
+  const pathname = usePathname();
+  const listingsActive =
+    pathname === "/profile/listings" || pathname.startsWith("/profile/listings/");
+
   const handleClick = (key: ProfileNavKey) => {
     onNavigate(key);
     onClose?.();
@@ -129,6 +133,23 @@ export default function Sidebar({
           >
             <Gift size={18} />
             <span>🎡 Rewards</span>
+          </Link>
+
+          <Link
+            href="/profile/listings"
+            onClick={() => onClose?.()}
+            className={`
+              relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm
+              transition
+              ${
+                listingsActive
+                  ? "bg-[#2563eb] font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.35)]"
+                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+              }
+            `}
+          >
+            <Package size={18} />
+            <span>My Listings</span>
           </Link>
 
           {NAV_ITEMS.map((item) => {

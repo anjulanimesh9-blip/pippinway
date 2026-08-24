@@ -14,8 +14,8 @@ type ProfileTabsProps = {
 };
 
 const TABS: Array<{ key: ProfileTabKey; label: string }> = [
-  { key: "listings", label: "My Listings" },
   { key: "about", label: "About" },
+  { key: "listings", label: "My Listings" },
   { key: "reviews", label: "Reviews" },
 ];
 
