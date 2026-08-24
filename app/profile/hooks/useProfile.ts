@@ -38,13 +38,13 @@ function mergeListingSnaps(
   return [...byId.values()];
 }
 
-async function countOrNull(q: ReturnType<typeof query>) {
-  try {
-    const snap = await getCountFromServer(q);
-    return snap.data().count;
-  } catch {
-    return null;
-  }
+function cheapAdsCount(userData: any): number {
+  const raw =
+    userData?.rewardApprovedAdsCount ??
+    userData?.listingsCount ??
+    userData?.adsCount ??
+    0;
+  return Number(raw) || 0;
 }
 
 async function fetchOwnerListingsFirstPage(uid: string) {
@@ -77,13 +77,11 @@ export default function useProfile() {
   const [listingsLoaded, setListingsLoaded] = useState(false);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [favoritesLoaded, setFavoritesLoaded] = useState(false);
-  const [countsLoading, setCountsLoading] = useState(true);
 
   const [userData, setUserData] = useState<any>(null);
   const [myAds, setMyAds] = useState<any[]>([]);
   const [favoriteAds, setFavoriteAds] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [adsCount, setAdsCount] = useState(0);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
   const loadIdRef = useRef(0);
@@ -109,14 +107,12 @@ export default function useProfile() {
         setMyAds([]);
         setFavoriteAds([]);
         setFavoriteIds([]);
-        setAdsCount(0);
         setTotalUsers(null);
         setUserDataLoading(false);
         setListingsLoading(false);
         setListingsLoaded(false);
         setFavoritesLoading(false);
         setFavoritesLoaded(false);
-        setCountsLoading(false);
         return;
       }
 
@@ -129,13 +125,8 @@ export default function useProfile() {
       setUserDataLoading(true);
       setListingsLoading(false);
       setFavoritesLoading(false);
-      setCountsLoading(true);
       const loadId = ++loadIdRef.current;
-      const still = () => loadIdRef.current === loadId;
-      void Promise.all([
-        fetchUserData(currentUser, still),
-        fetchAdsCount(currentUser, still),
-      ]);
+      void fetchUserData(currentUser, () => loadIdRef.current === loadId);
     });
 
     return unsubscribe;
@@ -187,24 +178,6 @@ export default function useProfile() {
       if (still()) setUserData(null);
     } finally {
       if (still()) setUserDataLoading(false);
-    }
-  };
-
-  const fetchAdsCount = async (
-    currentUser: User,
-    still: () => boolean = () => true
-  ) => {
-    try {
-      const total = await countOrNull(
-        query(collection(db, "listings"), where("ownerId", "==", currentUser.uid))
-      );
-      if (!still()) return;
-      setAdsCount(total ?? 0);
-    } catch (error) {
-      console.error("Profile ads count error:", error);
-      if (still()) setAdsCount(0);
-    } finally {
-      if (still()) setCountsLoading(false);
     }
   };
 
@@ -355,7 +328,6 @@ export default function useProfile() {
     await deleteDoc(doc(db, "listings", listingId));
 
     setMyAds((prev) => prev.filter((ad: any) => ad.id !== listingId));
-    setAdsCount((prev) => Math.max(0, prev - 1));
   };
 
   const requestProSeller = async () => {
@@ -371,6 +343,8 @@ export default function useProfile() {
     }));
   };
 
+  const adsCount = listingsLoaded ? myAds.length : cheapAdsCount(userData);
+
   return {
     loading,
     userDataLoading,
@@ -378,7 +352,7 @@ export default function useProfile() {
     listingsLoaded,
     favoritesLoading,
     favoritesLoaded,
-    countsLoading,
+    countsLoading: userDataLoading,
 
     user,
 
