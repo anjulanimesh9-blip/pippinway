@@ -52,8 +52,9 @@ export default function ProfileListingsPage() {
   } = useChat();
 
   useEffect(() => {
+    if (!user) return;
     void loadMyListings();
-  }, [loadMyListings]);
+  }, [user, loadMyListings]);
 
   const displayName =
     userData?.displayName ||

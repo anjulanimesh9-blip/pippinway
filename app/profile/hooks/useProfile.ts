@@ -9,19 +9,13 @@ import {
   getCountFromServer,
   getDoc,
   getDocs,
-  limit,
-  orderBy,
   query,
   QuerySnapshot,
   setDoc,
-  startAfter,
   updateDoc,
   where,
-  type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
-
-export const PROFILE_LISTINGS_FIRST_PAGE = 24;
 
 function listingFromSnap(d: { id: string; data: () => Record<string, unknown> }) {
   return { id: d.id, ...d.data() };
@@ -49,95 +43,34 @@ function cheapAdsCount(userData: any): number {
   return Number(raw) || 0;
 }
 
-async function countOrNull(q: ReturnType<typeof query>) {
+function toTime(value: unknown): number {
+  if (!value) return 0;
+  if (typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (typeof (value as { seconds?: number }).seconds === "number") {
+    return (value as { seconds: number }).seconds * 1000;
+  }
+  const date = value instanceof Date ? value : new Date(value as string | number);
+  return isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+async function queryOwnedListings(
+  field: "ownerId" | "ownerEmail",
+  value: string
+) {
+  const listingsRef = collection(db, "listings");
   try {
-    const snap = await getCountFromServer(q);
-    return snap.data().count;
-  } catch {
+    return await getDocs(query(listingsRef, where(field, "==", value)));
+  } catch (error) {
+    console.error(`Profile listings ${field} query error:`, error);
     return null;
   }
 }
 
-async function fetchOwnerListingsFirstPage(uid: string) {
-  const listingsRef = collection(db, "listings");
-  try {
-    return await getDocs(
-      query(
-        listingsRef,
-        where("ownerId", "==", uid),
-        orderBy("createdAt", "desc"),
-        limit(PROFILE_LISTINGS_FIRST_PAGE)
-      )
-    );
-  } catch {
-    return await getDocs(
-      query(
-        listingsRef,
-        where("ownerId", "==", uid),
-        limit(PROFILE_LISTINGS_FIRST_PAGE)
-      )
-    );
-  }
-}
-
-async function fetchAllWhere(
-  listingsRef: ReturnType<typeof collection>,
-  field: "ownerId" | "ownerEmail",
-  value: string,
-  firstSnap?: QuerySnapshot | null
-) {
-  const pages: QuerySnapshot[] = firstSnap ? [firstSnap] : [];
-
-  try {
-    let last: QueryDocumentSnapshot | undefined =
-      firstSnap?.docs[firstSnap.docs.length - 1];
-    let size = firstSnap?.size ?? PROFILE_LISTINGS_FIRST_PAGE;
-
-    if (!firstSnap) {
-      const first = await getDocs(
-        query(
-          listingsRef,
-          where(field, "==", value),
-          orderBy("createdAt", "desc"),
-          limit(PROFILE_LISTINGS_FIRST_PAGE)
-        )
-      );
-      pages.push(first);
-      last = first.docs[first.docs.length - 1];
-      size = first.size;
-    }
-
-    while (size >= PROFILE_LISTINGS_FIRST_PAGE && last) {
-      const snap = await getDocs(
-        query(
-          listingsRef,
-          where(field, "==", value),
-          orderBy("createdAt", "desc"),
-          startAfter(last),
-          limit(PROFILE_LISTINGS_FIRST_PAGE)
-        )
-      );
-      pages.push(snap);
-      last = snap.docs[snap.docs.length - 1];
-      size = snap.size;
-    }
-  } catch {
-    pages.push(await getDocs(query(listingsRef, where(field, "==", value))));
-    return pages;
-  }
-
-  try {
-    pages.push(await getDocs(query(listingsRef, where(field, "==", value))));
-  } catch {
-    // ordered pages already loaded
-  }
-
-  return pages;
-}
-
 export default function useProfile() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => auth.currentUser);
+  const [loading, setLoading] = useState(!auth.currentUser);
   const [userDataLoading, setUserDataLoading] = useState(true);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [listingsLoaded, setListingsLoaded] = useState(false);
@@ -148,12 +81,10 @@ export default function useProfile() {
   const [myAds, setMyAds] = useState<any[]>([]);
   const [favoriteAds, setFavoriteAds] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [serverAdsCount, setServerAdsCount] = useState<number | null>(null);
-  const [countsLoading, setCountsLoading] = useState(true);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
   const loadIdRef = useRef(0);
-  const userRef = useRef<User | null>(null);
+  const userRef = useRef<User | null>(auth.currentUser);
   const listingsRequestedRef = useRef(false);
   const favoritesRequestedRef = useRef(false);
   const favoriteIdsRef = useRef<string[]>([]);
@@ -163,6 +94,7 @@ export default function useProfile() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      const prevUid = userRef.current?.uid;
       userRef.current = currentUser;
       setUser(currentUser);
       setLoading(false);
@@ -175,14 +107,16 @@ export default function useProfile() {
         setMyAds([]);
         setFavoriteAds([]);
         setFavoriteIds([]);
-        setServerAdsCount(null);
         setTotalUsers(null);
         setUserDataLoading(false);
         setListingsLoading(false);
         setListingsLoaded(false);
         setFavoritesLoading(false);
         setFavoritesLoaded(false);
-        setCountsLoading(false);
+        return;
+      }
+
+      if (prevUid === currentUser.uid) {
         return;
       }
 
@@ -195,17 +129,18 @@ export default function useProfile() {
       setUserDataLoading(true);
       setListingsLoading(false);
       setFavoritesLoading(false);
-      setCountsLoading(true);
       const loadId = ++loadIdRef.current;
-      const still = () => loadIdRef.current === loadId;
-      void Promise.all([
-        fetchUserData(currentUser, still),
-        fetchAdsCount(currentUser, still),
-      ]);
+      void fetchUserData(currentUser, () => loadIdRef.current === loadId);
     });
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const loadId = loadIdRef.current;
+    void fetchUserData(user, () => loadIdRef.current === loadId);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (userData?.role !== "admin") {
@@ -256,59 +191,31 @@ export default function useProfile() {
     }
   };
 
-  const fetchAdsCount = async (
-    currentUser: User,
-    still: () => boolean = () => true
-  ) => {
-    try {
-      const total = await countOrNull(
-        query(collection(db, "listings"), where("ownerId", "==", currentUser.uid))
-      );
-      if (!still()) return;
-      setServerAdsCount(total);
-    } catch (error) {
-      console.error("Profile ads count error:", error);
-      if (still()) setServerAdsCount(null);
-    } finally {
-      if (still()) setCountsLoading(false);
-    }
-  };
-
   const fetchMyAds = async (
     currentUser: User,
     still: () => boolean = () => true
   ) => {
-    const listingsRef = collection(db, "listings");
-
     try {
-      const firstSnap = await fetchOwnerListingsFirstPage(currentUser.uid);
-      if (!still()) return;
-      setMyAds(firstSnap.docs.map(listingFromSnap));
-      setListingsLoading(false);
-      setListingsLoaded(true);
-
-      const [ownerPages, emailPages] = await Promise.all([
-        fetchAllWhere(listingsRef, "ownerId", currentUser.uid, firstSnap),
+      const [byOwnerId, byEmail] = await Promise.all([
+        queryOwnedListings("ownerId", currentUser.uid),
         currentUser.email
-          ? fetchAllWhere(listingsRef, "ownerEmail", currentUser.email).catch(
-              (error) => {
-                console.error("Profile listings email query error:", error);
-                return [];
-              }
-            )
-          : Promise.resolve([]),
+          ? queryOwnedListings("ownerEmail", currentUser.email)
+          : Promise.resolve(null),
       ]);
 
       if (!still()) return;
-      const ads = mergeListingSnaps(...ownerPages, ...emailPages);
+
+      const ads = mergeListingSnaps(byOwnerId, byEmail).sort(
+        (a, b) => toTime(b.createdAt) - toTime(a.createdAt)
+      );
       setMyAds(ads);
       setListingsLoaded(true);
     } catch (error) {
       console.error("Profile listings error:", error);
       listingsRequestedRef.current = false;
-      if (still()) {
-        setListingsLoading(false);
-      }
+      if (still()) setListingsLoaded(false);
+    } finally {
+      if (still()) setListingsLoading(false);
     }
   };
 
@@ -427,9 +334,7 @@ export default function useProfile() {
     }));
   };
 
-  const adsCount = listingsLoaded
-    ? myAds.length
-    : serverAdsCount ?? cheapAdsCount(userData);
+  const adsCount = listingsLoaded ? myAds.length : cheapAdsCount(userData);
 
   return {
     loading,
@@ -438,7 +343,7 @@ export default function useProfile() {
     listingsLoaded,
     favoritesLoading,
     favoritesLoaded,
-    countsLoading,
+    countsLoading: userDataLoading,
 
     user,
 

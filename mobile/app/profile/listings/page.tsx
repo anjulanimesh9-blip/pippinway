@@ -64,8 +64,9 @@ export default function ProfileListingsPage() {
   } = useChat();
 
   useEffect(() => {
+    if (!user) return;
     void loadMyListings();
-  }, [loadMyListings]);
+  }, [user, loadMyListings]);
 
   const handleLogout = async () => {
     await signOut(auth);
