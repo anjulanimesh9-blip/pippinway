@@ -14,8 +14,10 @@ import {
   query,
   QuerySnapshot,
   setDoc,
+  startAfter,
   updateDoc,
   where,
+  type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 
@@ -47,6 +49,15 @@ function cheapAdsCount(userData: any): number {
   return Number(raw) || 0;
 }
 
+async function countOrNull(q: ReturnType<typeof query>) {
+  try {
+    const snap = await getCountFromServer(q);
+    return snap.data().count;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchOwnerListingsFirstPage(uid: string) {
   const listingsRef = collection(db, "listings");
   try {
@@ -69,6 +80,61 @@ async function fetchOwnerListingsFirstPage(uid: string) {
   }
 }
 
+async function fetchAllWhere(
+  listingsRef: ReturnType<typeof collection>,
+  field: "ownerId" | "ownerEmail",
+  value: string,
+  firstSnap?: QuerySnapshot | null
+) {
+  const pages: QuerySnapshot[] = firstSnap ? [firstSnap] : [];
+
+  try {
+    let last: QueryDocumentSnapshot | undefined =
+      firstSnap?.docs[firstSnap.docs.length - 1];
+    let size = firstSnap?.size ?? PROFILE_LISTINGS_FIRST_PAGE;
+
+    if (!firstSnap) {
+      const first = await getDocs(
+        query(
+          listingsRef,
+          where(field, "==", value),
+          orderBy("createdAt", "desc"),
+          limit(PROFILE_LISTINGS_FIRST_PAGE)
+        )
+      );
+      pages.push(first);
+      last = first.docs[first.docs.length - 1];
+      size = first.size;
+    }
+
+    while (size >= PROFILE_LISTINGS_FIRST_PAGE && last) {
+      const snap = await getDocs(
+        query(
+          listingsRef,
+          where(field, "==", value),
+          orderBy("createdAt", "desc"),
+          startAfter(last),
+          limit(PROFILE_LISTINGS_FIRST_PAGE)
+        )
+      );
+      pages.push(snap);
+      last = snap.docs[snap.docs.length - 1];
+      size = snap.size;
+    }
+  } catch {
+    pages.push(await getDocs(query(listingsRef, where(field, "==", value))));
+    return pages;
+  }
+
+  try {
+    pages.push(await getDocs(query(listingsRef, where(field, "==", value))));
+  } catch {
+    // ordered pages already loaded
+  }
+
+  return pages;
+}
+
 export default function useProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +148,8 @@ export default function useProfile() {
   const [myAds, setMyAds] = useState<any[]>([]);
   const [favoriteAds, setFavoriteAds] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [serverAdsCount, setServerAdsCount] = useState<number | null>(null);
+  const [countsLoading, setCountsLoading] = useState(true);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
   const loadIdRef = useRef(0);
@@ -107,12 +175,14 @@ export default function useProfile() {
         setMyAds([]);
         setFavoriteAds([]);
         setFavoriteIds([]);
+        setServerAdsCount(null);
         setTotalUsers(null);
         setUserDataLoading(false);
         setListingsLoading(false);
         setListingsLoaded(false);
         setFavoritesLoading(false);
         setFavoritesLoaded(false);
+        setCountsLoading(false);
         return;
       }
 
@@ -125,8 +195,13 @@ export default function useProfile() {
       setUserDataLoading(true);
       setListingsLoading(false);
       setFavoritesLoading(false);
+      setCountsLoading(true);
       const loadId = ++loadIdRef.current;
-      void fetchUserData(currentUser, () => loadIdRef.current === loadId);
+      const still = () => loadIdRef.current === loadId;
+      void Promise.all([
+        fetchUserData(currentUser, still),
+        fetchAdsCount(currentUser, still),
+      ]);
     });
 
     return unsubscribe;
@@ -181,6 +256,24 @@ export default function useProfile() {
     }
   };
 
+  const fetchAdsCount = async (
+    currentUser: User,
+    still: () => boolean = () => true
+  ) => {
+    try {
+      const total = await countOrNull(
+        query(collection(db, "listings"), where("ownerId", "==", currentUser.uid))
+      );
+      if (!still()) return;
+      setServerAdsCount(total);
+    } catch (error) {
+      console.error("Profile ads count error:", error);
+      if (still()) setServerAdsCount(null);
+    } finally {
+      if (still()) setCountsLoading(false);
+    }
+  };
+
   const fetchMyAds = async (
     currentUser: User,
     still: () => boolean = () => true
@@ -194,36 +287,27 @@ export default function useProfile() {
       setListingsLoading(false);
       setListingsLoaded(true);
 
-      const needFullOwnerQuery =
-        firstSnap.size >= PROFILE_LISTINGS_FIRST_PAGE;
-
-      const [byOwnerId, byEmail] = await Promise.all([
-        needFullOwnerQuery
-          ? getDocs(
-              query(listingsRef, where("ownerId", "==", currentUser.uid))
-            )
-          : Promise.resolve(firstSnap),
+      const [ownerPages, emailPages] = await Promise.all([
+        fetchAllWhere(listingsRef, "ownerId", currentUser.uid, firstSnap),
         currentUser.email
-          ? getDocs(
-              query(
-                listingsRef,
-                where("ownerEmail", "==", currentUser.email)
-              )
+          ? fetchAllWhere(listingsRef, "ownerEmail", currentUser.email).catch(
+              (error) => {
+                console.error("Profile listings email query error:", error);
+                return [];
+              }
             )
-          : Promise.resolve(null),
+          : Promise.resolve([]),
       ]);
 
       if (!still()) return;
-      const ads = mergeListingSnaps(byOwnerId, byEmail);
+      const ads = mergeListingSnaps(...ownerPages, ...emailPages);
       setMyAds(ads);
-      setAdsCount(ads.length);
       setListingsLoaded(true);
     } catch (error) {
       console.error("Profile listings error:", error);
       listingsRequestedRef.current = false;
       if (still()) {
         setListingsLoading(false);
-        setListingsLoaded(false);
       }
     }
   };
@@ -343,7 +427,9 @@ export default function useProfile() {
     }));
   };
 
-  const adsCount = listingsLoaded ? myAds.length : cheapAdsCount(userData);
+  const adsCount = listingsLoaded
+    ? myAds.length
+    : serverAdsCount ?? cheapAdsCount(userData);
 
   return {
     loading,
@@ -352,7 +438,7 @@ export default function useProfile() {
     listingsLoaded,
     favoritesLoading,
     favoritesLoaded,
-    countsLoading: userDataLoading,
+    countsLoading,
 
     user,
 
