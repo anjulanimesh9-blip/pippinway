@@ -22,6 +22,7 @@ import type { Banner, BannerFitMode, BannerPlacement } from "@/lib/types/feature
 import { getBannerPlacement } from "@/app/hooks/useBanners";
 import BannerCropModal from "./BannerCropModal";
 import BannerFitImage from "@/app/components/homepage/Banner/BannerFitImage";
+import { PROFILE_BANNER_CLASS } from "@/app/components/homepage/Banner/BannerRotator";
 import {
   BANNER_CROP_ASPECT,
   BANNER_CROP_FRAME_CLASS,
@@ -410,7 +411,9 @@ export default function AdminBannersPage() {
                     className={`relative mt-2 overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${
                       form.placement === "sidebar"
                         ? "mx-auto h-64"
-                        : "w-full aspect-[16/7] lg:aspect-[16/5]"
+                        : form.placement === "profile"
+                          ? PROFILE_BANNER_CLASS
+                          : "w-full aspect-[16/7] lg:aspect-[16/5]"
                     }`}
                     style={
                       form.placement === "sidebar"

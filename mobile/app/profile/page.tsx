@@ -2,6 +2,7 @@
 
 import { auth } from "../firebase";
 import ProfileHeader from "./components/ProfileHeader";
+import ProfileHeroBanner from "./components/ProfileHeroBanner";
 import Sidebar from "./components/Sidebar";
 import StatsCards from "./components/StatsCards";
 import FeaturedAds from "./components/FeaturedAds";
@@ -201,6 +202,8 @@ const greeting =
 
 
         <div className="mx-auto w-full max-w-[1700px] space-y-8">
+
+<ProfileHeroBanner country={userData?.country} />
           
 <ProfileHeader
   greeting={greeting}

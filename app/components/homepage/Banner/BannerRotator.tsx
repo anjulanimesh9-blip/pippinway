@@ -9,9 +9,13 @@ import FirestoreBanner from "./FirestoreBanner";
 /** In-feed / list banners: 16:5 on desktop; slightly taller on mobile so Auto Fit never crops logos/QR. */
 export const INFEED_BANNER_CLASS =
   "relative w-full overflow-hidden aspect-[16/7] lg:aspect-[16/5]";
-/** Same slot as list banners so Auto Fit and Crop to Fill match across surfaces. */
+/**
+ * Profile bar is a compact strip, not a 16:5 panel. A 1600px-wide 16:5 slot
+ * is ~500px tall; a square flyer with contain must not grow the bar.
+ * Auto Fit still contain-fits the flyer; extra width is blur fill.
+ */
 export const PROFILE_BANNER_CLASS =
-  "relative w-full overflow-hidden aspect-[16/7] lg:aspect-[16/5]";
+  "relative w-full shrink-0 overflow-hidden h-[180px] max-h-[180px] lg:h-[160px] lg:max-h-[160px]";
 
 type Props = {
   banners: Banner[];
