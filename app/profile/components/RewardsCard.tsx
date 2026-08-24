@@ -1,15 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import useRewards from "@/app/hooks/useRewards";
-import {
-  MEGA_CYCLE,
-  NORMAL_CYCLE,
-  normalSpinTrackDisplay,
-} from "@/lib/rewards";
+import { EMPTY_REWARDS, MEGA_CYCLE, NORMAL_CYCLE, normalSpinTrackDisplay } from "@/lib/rewards";
 
 type RewardsCardProps = {
-  userId: string;
+  userData?: any;
+  loading?: boolean;
 };
 
 function MiniBar({ current, total }: { current: number; total: number }) {
@@ -24,8 +20,19 @@ function MiniBar({ current, total }: { current: number; total: number }) {
   );
 }
 
-export default function RewardsCard({ userId }: RewardsCardProps) {
-  const { rewards, loading } = useRewards(userId);
+export default function RewardsCard({
+  userData,
+  loading = false,
+}: RewardsCardProps) {
+  const rewards = userData
+    ? {
+        availableSpins: Number(userData.availableSpins ?? 0),
+        availableMegaSpins: Number(userData.availableMegaSpins ?? 0),
+        rewardNormalProgress: Number(userData.rewardNormalProgress ?? 0),
+        rewardMegaProgress: Number(userData.rewardMegaProgress ?? 0),
+        rewardApprovedAdsCount: Number(userData.rewardApprovedAdsCount ?? 0),
+      }
+    : EMPTY_REWARDS;
   const spinReady =
     rewards.availableSpins > 0 || rewards.availableMegaSpins > 0;
   const normalTrack = normalSpinTrackDisplay(

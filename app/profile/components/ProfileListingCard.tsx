@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Heart, MapPin, Pencil, Trash2 } from "lucide-react";
 import ListingPhoto, {
-  LISTING_GRID_SIZES,
   LISTING_THUMB_SIZES,
 } from "@/app/components/ListingPhoto";
 import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
@@ -18,6 +17,10 @@ type ProfileListingCardProps = {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
 };
+
+const PROFILE_GRID_SIZES =
+  "(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px";
+const PROFILE_PHOTO_QUALITY = 40;
 
 const STATUS_STYLES: Record<string, string> = {
   active: "text-emerald-400",
@@ -73,6 +76,7 @@ export default function ProfileListingCard({
             src={image}
             alt={title}
             sizes={LISTING_THUMB_SIZES}
+            quality={PROFILE_PHOTO_QUALITY}
             className="object-cover object-center"
           />
           {isFeatured && (
@@ -132,7 +136,8 @@ export default function ProfileListingCard({
           <ListingPhoto
             src={image}
             alt={title}
-            sizes={LISTING_GRID_SIZES}
+            sizes={PROFILE_GRID_SIZES}
+            quality={PROFILE_PHOTO_QUALITY}
             className="object-cover object-center"
           />
         </Link>

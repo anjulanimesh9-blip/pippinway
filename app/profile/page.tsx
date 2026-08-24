@@ -31,13 +31,17 @@ import {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const user = auth.currentUser;
 
   const {
     loading,
+    userDataLoading,
+    listingsLoading,
+    favoritesLoading,
+    user,
     userData,
     myAds,
     favoriteAds,
+    favoriteIds,
     totalUsers,
     removeFavorite,
     addFavorite,
@@ -79,7 +83,6 @@ export default function ProfilePage() {
 
   const activeAds = myAds.filter((ad) => getListingStatus(ad) === "active").length;
   const soldAds = myAds.filter((ad) => getListingStatus(ad) === "sold").length;
-  const favoriteIds = favoriteAds.map((ad) => ad.id);
 
   const score = useMemo(
     () =>
@@ -231,13 +234,14 @@ export default function ProfilePage() {
               totalAds={myAds.length}
               activeAds={activeAds}
               soldAds={soldAds}
-              favorites={favoriteAds.length}
+              favorites={favoriteIds.length}
               messages={chatRooms.length}
               isAdmin={userData?.role === "admin"}
               totalUsers={totalUsers}
+              listingsLoading={listingsLoading}
             />
 
-            <RewardsCard userId={user.uid} />
+            <RewardsCard userData={userData} loading={userDataLoading} />
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
               <div className="space-y-4">
@@ -253,6 +257,7 @@ export default function ProfilePage() {
                   <MyListings
                     myAds={myAds}
                     favoriteIds={favoriteIds}
+                    loading={listingsLoading}
                     onEdit={(id) => router.push(`/edit/${id}`)}
                     onDelete={deleteListing}
                     onToggleFavorite={(id) => {
@@ -269,6 +274,7 @@ export default function ProfilePage() {
                 {activeTab === "favorites" && (
                   <Favorites
                     favoriteAds={favoriteAds}
+                    loading={favoritesLoading}
                     onRemove={removeFavorite}
                   />
                 )}

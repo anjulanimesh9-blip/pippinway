@@ -11,6 +11,7 @@ type FilterKey = "all" | ListingStatus;
 type MyListingsProps = {
   myAds: any[];
   favoriteIds: string[];
+  loading?: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
@@ -27,6 +28,7 @@ const FILTERS: Array<{ key: FilterKey; label: string }> = [
 export default function MyListings({
   myAds,
   favoriteIds,
+  loading = false,
   onEdit,
   onDelete,
   onToggleFavorite,
@@ -108,7 +110,22 @@ export default function MyListings({
         </div>
       </div>
 
-      {listings.length === 0 ? (
+      {loading && listings.length === 0 ? (
+        <div className="grid grid-cols-2 items-stretch gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          {Array.from({ length: 8 }, (_, index) => (
+            <div
+              key={index}
+              className="overflow-hidden rounded-lg border border-white/8 bg-[#111827]"
+            >
+              <div className="aspect-[2/1] animate-pulse bg-white/5" />
+              <div className="space-y-1 px-1.5 py-1">
+                <div className="h-3 w-3/4 animate-pulse rounded bg-white/5" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-white/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : listings.length === 0 ? (
         <div className="rounded-2xl border border-white/8 bg-[#151A22] py-16 text-center text-gray-500">
           No ads in this filter yet.
         </div>

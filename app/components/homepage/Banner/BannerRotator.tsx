@@ -26,6 +26,7 @@ type Props = {
   fallbackImages?: string[];
   startOffset?: number;
   className?: string;
+  eager?: boolean;
 };
 
 function toFirestoreSlides(banners: Banner[]): Banner[] {
@@ -50,6 +51,7 @@ export default function BannerRotator({
   fallbackImages = bannerImages,
   startOffset = 0,
   className = "",
+  eager = true,
 }: Props) {
   const firestoreSlides = useMemo(() => toFirestoreSlides(banners), [banners]);
   const fallbackSlides = useMemo(
@@ -131,7 +133,7 @@ export default function BannerRotator({
           <FirestoreBanner
             banner={slide}
             framed={false}
-            eager={isActive}
+            eager={eager && isActive}
             onImageError={() =>
               setFailedIds((current) => {
                 if (current.has(slide.id)) return current;

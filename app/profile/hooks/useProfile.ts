@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import {
   collection,
@@ -9,37 +9,95 @@ import {
   getCountFromServer,
   getDoc,
   getDocs,
+  limit,
+  orderBy,
   query,
+  QuerySnapshot,
   setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 
+export const PROFILE_LISTINGS_FIRST_PAGE = 24;
+
+function listingFromSnap(d: { id: string; data: () => Record<string, unknown> }) {
+  return { id: d.id, ...d.data() };
+}
+
+function mergeListingSnaps(
+  ...snaps: Array<QuerySnapshot | null | undefined>
+) {
+  const byId = new Map<string, any>();
+  for (const snap of snaps) {
+    if (!snap) continue;
+    for (const d of snap.docs) {
+      byId.set(d.id, listingFromSnap(d));
+    }
+  }
+  return [...byId.values()];
+}
+
+async function fetchOwnerListingsFirstPage(uid: string) {
+  const listingsRef = collection(db, "listings");
+  try {
+    return await getDocs(
+      query(
+        listingsRef,
+        where("ownerId", "==", uid),
+        orderBy("createdAt", "desc"),
+        limit(PROFILE_LISTINGS_FIRST_PAGE)
+      )
+    );
+  } catch {
+    return await getDocs(
+      query(
+        listingsRef,
+        where("ownerId", "==", uid),
+        limit(PROFILE_LISTINGS_FIRST_PAGE)
+      )
+    );
+  }
+}
+
 export default function useProfile() {
   const [user, setUser] = useState<User | null>(null);
-
   const [loading, setLoading] = useState(true);
+  const [userDataLoading, setUserDataLoading] = useState(true);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
 
   const [userData, setUserData] = useState<any>(null);
   const [myAds, setMyAds] = useState<any[]>([]);
   const [favoriteAds, setFavoriteAds] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
+  const loadIdRef = useRef(0);
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setLoading(false);
 
       if (!currentUser) {
+        loadIdRef.current += 1;
         setUserData(null);
         setMyAds([]);
         setFavoriteAds([]);
+        setFavoriteIds([]);
         setTotalUsers(null);
-        setLoading(false);
+        setUserDataLoading(false);
+        setListingsLoading(false);
+        setFavoritesLoading(false);
         return;
       }
 
-      await loadProfile(currentUser);
+      setUserDataLoading(true);
+      setListingsLoading(true);
+      setFavoritesLoading(true);
+      const loadId = ++loadIdRef.current;
+      void loadProfile(currentUser, loadId);
     });
 
     return unsubscribe;
@@ -73,83 +131,119 @@ export default function useProfile() {
     };
   }, [userData?.role]);
 
-  const loadProfile = async (currentUser: User) => {
-    try {
-      setLoading(true);
+  const loadProfile = async (currentUser: User, loadId: number) => {
+    const still = () => loadIdRef.current === loadId;
 
+    try {
       await Promise.all([
-        fetchUserData(currentUser),
-        fetchMyAds(currentUser),
-        fetchFavorites(currentUser),
+        fetchUserData(currentUser, still),
+        fetchMyAds(currentUser, still),
+        fetchFavorites(currentUser, still),
       ]);
     } catch (error) {
       console.error("Profile loading error:", error);
+    }
+  };
+
+  const fetchUserData = async (
+    currentUser: User,
+    still: () => boolean = () => true
+  ) => {
+    try {
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      if (!still()) return;
+
+      if (snap.exists()) {
+        setUserData(snap.data());
+      } else {
+        setUserData(null);
+      }
+    } catch (error) {
+      console.error("Profile user data error:", error);
+      if (still()) setUserData(null);
     } finally {
-      setLoading(false);
+      if (still()) setUserDataLoading(false);
     }
   };
 
-  const fetchUserData = async (currentUser: User) => {
-    const snap = await getDoc(doc(db, "users", currentUser.uid));
-
-    if (snap.exists()) {
-      setUserData(snap.data());
-    } else {
-      setUserData(null);
-    }
-  };
-
-  const fetchMyAds = async (currentUser: User) => {
+  const fetchMyAds = async (
+    currentUser: User,
+    still: () => boolean = () => true
+  ) => {
     const listingsRef = collection(db, "listings");
-    const [byOwnerId, byEmail] = await Promise.all([
-      getDocs(query(listingsRef, where("ownerId", "==", currentUser.uid))),
-      currentUser.email
-        ? getDocs(query(listingsRef, where("ownerEmail", "==", currentUser.email)))
-        : Promise.resolve(null),
-    ]);
 
-    const byId = new Map<string, any>();
-    for (const snap of [byOwnerId, byEmail]) {
-      if (!snap) continue;
-      for (const d of snap.docs) {
-        byId.set(d.id, { id: d.id, ...d.data() });
-      }
+    try {
+      const firstSnap = await fetchOwnerListingsFirstPage(currentUser.uid);
+      if (!still()) return;
+      setMyAds(firstSnap.docs.map(listingFromSnap));
+      setListingsLoading(false);
+
+      const needFullOwnerQuery =
+        firstSnap.size >= PROFILE_LISTINGS_FIRST_PAGE;
+
+      const [byOwnerId, byEmail] = await Promise.all([
+        needFullOwnerQuery
+          ? getDocs(
+              query(listingsRef, where("ownerId", "==", currentUser.uid))
+            )
+          : Promise.resolve(firstSnap),
+        currentUser.email
+          ? getDocs(
+              query(
+                listingsRef,
+                where("ownerEmail", "==", currentUser.email)
+              )
+            )
+          : Promise.resolve(null),
+      ]);
+
+      if (!still()) return;
+      setMyAds(mergeListingSnaps(byOwnerId, byEmail));
+    } catch (error) {
+      console.error("Profile listings error:", error);
+      if (still()) setListingsLoading(false);
     }
-
-    setMyAds([...byId.values()]);
   };
 
-  const fetchFavorites = async (currentUser: User) => {
-    const favSnapshot = await getDocs(
-      collection(db, "users", currentUser.uid, "favorites")
-    );
+  const fetchFavorites = async (
+    currentUser: User,
+    still: () => boolean = () => true
+  ) => {
+    try {
+      const favSnapshot = await getDocs(
+        collection(db, "users", currentUser.uid, "favorites")
+      );
+      if (!still()) return;
 
-    const ads: any[] = [];
+      const ids = favSnapshot.docs.map((fav) => fav.id);
+      setFavoriteIds(ids);
 
-    for (const fav of favSnapshot.docs) {
-      const listing = await getDoc(doc(db, "listings", fav.id));
+      const ads = (
+        await Promise.all(
+          ids.map(async (id) => {
+            const listing = await getDoc(doc(db, "listings", id));
+            if (!listing.exists()) return null;
+            return { id: listing.id, ...listing.data() };
+          })
+        )
+      ).filter(Boolean);
 
-      if (listing.exists()) {
-        ads.push({
-          id: listing.id,
-          ...listing.data(),
-        });
-      }
+      if (!still()) return;
+      setFavoriteAds(ads);
+    } catch (error) {
+      console.error("Profile favorites error:", error);
+    } finally {
+      if (still()) setFavoritesLoading(false);
     }
-
-    setFavoriteAds(ads);
   };
 
   const removeFavorite = async (listingId: string) => {
     if (!user) return;
 
-    await deleteDoc(
-      doc(db, "users", user.uid, "favorites", listingId)
-    );
+    await deleteDoc(doc(db, "users", user.uid, "favorites", listingId));
 
-    setFavoriteAds((prev) =>
-      prev.filter((ad: any) => ad.id !== listingId)
-    );
+    setFavoriteIds((prev) => prev.filter((id) => id !== listingId));
+    setFavoriteAds((prev) => prev.filter((ad: any) => ad.id !== listingId));
   };
 
   const addFavorite = async (ad: any) => {
@@ -159,6 +253,9 @@ export default function useProfile() {
       createdAt: new Date(),
     });
 
+    setFavoriteIds((prev) =>
+      prev.includes(ad.id) ? prev : [...prev, ad.id]
+    );
     setFavoriteAds((prev) =>
       prev.some((item: any) => item.id === ad.id) ? prev : [...prev, ad]
     );
@@ -167,9 +264,7 @@ export default function useProfile() {
   const deleteListing = async (listingId: string) => {
     await deleteDoc(doc(db, "listings", listingId));
 
-    setMyAds((prev) =>
-      prev.filter((ad: any) => ad.id !== listingId)
-    );
+    setMyAds((prev) => prev.filter((ad: any) => ad.id !== listingId));
   };
 
   const requestProSeller = async () => {
@@ -187,12 +282,16 @@ export default function useProfile() {
 
   return {
     loading,
+    userDataLoading,
+    listingsLoading,
+    favoritesLoading,
 
     user,
 
     userData,
     myAds,
     favoriteAds,
+    favoriteIds,
     totalUsers,
 
     fetchUserData,
@@ -206,7 +305,11 @@ export default function useProfile() {
 
     reloadProfile: () => {
       if (user) {
-        loadProfile(user);
+        setUserDataLoading(true);
+        setListingsLoading(true);
+        setFavoritesLoading(true);
+        const loadId = ++loadIdRef.current;
+        void loadProfile(user, loadId);
       }
     },
   };

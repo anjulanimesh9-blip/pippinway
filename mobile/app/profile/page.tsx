@@ -26,10 +26,14 @@ export default function ProfilePage() {
   const router = useRouter();
   const {
   loading,
+  userDataLoading,
+  listingsLoading,
+  favoritesLoading,
   user,
   userData,
   myAds,
   favoriteAds,
+  favoriteIds,
   removeFavorite,
   deleteListing,
   requestProSeller,
@@ -237,11 +241,12 @@ onOpenChat={openChat}
   totalAds={myAds.length}
   featuredUsed={featuredAdsUsed}
   featuredCredits={userData?.featuredCredits || 0}
-  favorites={favoriteAds.length}
+  favorites={favoriteIds.length}
   unreadMessages={unreadCount}
+  listingsLoading={listingsLoading}
 />
 
-<RewardsCard userId={user.uid} />
+<RewardsCard userData={userData} loading={userDataLoading} />
         
 <QuickActions
   onAddListing={() => router.push("/add-listing")}
@@ -259,6 +264,7 @@ onOpenChat={openChat}
   <Favorites
     favoriteAds={favoriteAds}
     currencyMap={currencyMap}
+    loading={favoritesLoading}
     onRemove={removeFavorite}
   />
 </div>
@@ -267,6 +273,7 @@ onOpenChat={openChat}
 <MyListings
   myAds={myAds}
   userCurrency={userCurrency}
+  loading={listingsLoading}
   onEdit={(id) => router.push(`/edit/${id}`)}
   onDelete={deleteListing}
 />

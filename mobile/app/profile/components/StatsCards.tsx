@@ -11,6 +11,7 @@ type StatsCardsProps = {
   featuredCredits: number;
   favorites: number;
   unreadMessages: number;
+  listingsLoading?: boolean;
 };
 
 export default function StatsCards({
@@ -19,6 +20,7 @@ export default function StatsCards({
   featuredCredits,
   favorites,
   unreadMessages,
+  listingsLoading = false,
 }: StatsCardsProps) {
   const card =
     "rounded-xl border border-white/10 bg-[#0f172a] p-4 shadow-lg transition hover:border-cyan-500/30";
@@ -34,7 +36,7 @@ export default function StatsCards({
         </div>
 
         <h2 className="mt-3 text-3xl font-bold text-white">
-          {totalAds}
+          {listingsLoading && totalAds === 0 ? "—" : totalAds}
         </h2>
       </div>
 

@@ -17,6 +17,10 @@ export default function ProfileHeroBanner({ country }: Props) {
   if (profileBanners.length === 0) return null;
 
   return (
-    <BannerRotator banners={profileBanners} className={PROFILE_BANNER_CLASS} />
+    <BannerRotator
+      banners={profileBanners}
+      className={PROFILE_BANNER_CLASS}
+      eager={false}
+    />
   );
 }

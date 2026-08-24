@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import useRewards from "../../hooks/useRewards";
 import {
   MEGA_CYCLE,
   NORMAL_CYCLE,
@@ -10,7 +9,8 @@ import {
 } from "../../../lib/rewards";
 
 type RewardsCardProps = {
-  userId: string;
+  userData?: any;
+  loading?: boolean;
 };
 
 function ProgressRow({
@@ -55,8 +55,25 @@ function ProgressRow({
   );
 }
 
-export default function RewardsCard({ userId }: RewardsCardProps) {
-  const { rewards, loading } = useRewards(userId);
+export default function RewardsCard({
+  userData,
+  loading = false,
+}: RewardsCardProps) {
+  const rewards = userData
+    ? {
+        availableSpins: Number(userData.availableSpins ?? 0),
+        availableMegaSpins: Number(userData.availableMegaSpins ?? 0),
+        rewardNormalProgress: Number(userData.rewardNormalProgress ?? 0),
+        rewardMegaProgress: Number(userData.rewardMegaProgress ?? 0),
+        rewardApprovedAdsCount: Number(userData.rewardApprovedAdsCount ?? 0),
+      }
+    : {
+        availableSpins: 0,
+        availableMegaSpins: 0,
+        rewardNormalProgress: 0,
+        rewardMegaProgress: 0,
+        rewardApprovedAdsCount: 0,
+      };
   const spinReady =
     rewards.availableSpins > 0 || rewards.availableMegaSpins > 0;
   const normalTrack = normalSpinTrackDisplay(
