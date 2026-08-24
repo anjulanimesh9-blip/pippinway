@@ -17,7 +17,6 @@ import {
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db, storage } from "@/app/firebase";
-import Navbar from "@/app/components/Navbar";
 import type { Banner, BannerFitMode, BannerPlacement } from "@/lib/types/featured";
 import { getBannerPlacement } from "@/app/hooks/useBanners";
 import BannerCropModal from "./BannerCropModal";
@@ -287,9 +286,8 @@ export default function AdminBannersPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#020817]">
-      <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-3xl font-bold text-white">Banner Ads</h1>
           <button
@@ -630,6 +628,6 @@ export default function AdminBannersPage() {
           setCropOpen(false);
         }}
       />
-    </main>
+    </div>
   );
 }

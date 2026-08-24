@@ -14,7 +14,6 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/app/firebase";
-import Navbar from "@/app/components/Navbar";
 import { sendNotification } from "@/lib/sendNotification";
 import type { ListingRecord } from "@/lib/types/featured";
 
@@ -103,9 +102,8 @@ export default function AdminAdApprovalsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#020817]">
-      <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl font-bold text-white mb-6">Normal Ad Approvals</h1>
         {listings.length === 0 ? (
           <p className="text-gray-400">No pending ads.</p>
@@ -140,6 +138,6 @@ export default function AdminAdApprovalsPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

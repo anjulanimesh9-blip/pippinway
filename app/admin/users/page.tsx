@@ -9,12 +9,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase";
-import { useRouter } from "next/navigation";
 
 export default function AdminUsersPage() {
-  const router =
-    useRouter();
-
   const [users,
     setUsers] =
     useState<any[]>(
@@ -201,59 +197,16 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#020817] text-white flex items-center justify-center text-2xl">
+      <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
         Loading Users...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white flex">
+    <div className="p-4 sm:p-6 lg:p-8">
 
-      {/* Sidebar */}
-      <div className="w-72 bg-[#0f172a] border-r border-gray-800 p-6">
-
-        <h1 className="text-3xl font-bold mb-10">
-          ⚙️ Admin
-        </h1>
-
-        <div className="space-y-4">
-
-          <button
-            onClick={() =>
-              router.push(
-                "/admin"
-              )
-            }
-            className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
-          >
-            📊 Dashboard
-          </button>
-
-          <button
-            className="w-full bg-blue-600 rounded-2xl p-4 text-left"
-          >
-            👥 Users
-          </button>
-
-          <button
-            onClick={() =>
-              router.push(
-                "/admin/listings"
-              )
-            }
-            className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
-          >
-            📦 Listings
-          </button>
-
-        </div>
-      </div>
-
-      {/* Main */}
-      <div className="flex-1 p-8">
-
-        <h1 className="text-4xl font-bold mb-8">
+        <h1 className="text-2xl font-bold mb-6 sm:text-3xl">
           Users Management
         </h1>
 
@@ -480,7 +433,6 @@ export default function AdminUsersPage() {
 
           </table>
         </div>
-      </div>
     </div>
   );
 }

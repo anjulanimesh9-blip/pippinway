@@ -12,7 +12,6 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/app/firebase";
-import Navbar from "@/app/components/Navbar";
 import {
   CASH_PAYMENT_24H_MESSAGE,
   STATUS_PAID,
@@ -152,9 +151,8 @@ export default function AdminRewardsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#020817]">
-      <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white">Rewards</h1>
@@ -323,6 +321,6 @@ export default function AdminRewardsPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

@@ -13,7 +13,6 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/app/firebase";
-import Navbar from "@/app/components/Navbar";
 import type { FeaturedPackage } from "@/lib/types/featured";
 
 export default function AdminFeaturedPackagesPage() {
@@ -85,9 +84,8 @@ export default function AdminFeaturedPackagesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#020817]">
-      <Navbar />
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-8">
         <h1 className="text-3xl font-bold text-white">Featured Package Settings</h1>
 
         <form onSubmit={createPackage} className="rounded-2xl border border-white/10 bg-[#111827] p-5 grid gap-4 md:grid-cols-2">
@@ -159,6 +157,6 @@ export default function AdminFeaturedPackagesPage() {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

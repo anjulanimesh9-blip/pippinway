@@ -363,62 +363,19 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#020817] text-white flex items-center justify-center text-2xl">
+      <div className="flex min-h-[50vh] items-center justify-center text-gray-400">
         Loading Listings...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white flex">
-
-      {/* Sidebar */}
-      <div className="w-72 bg-[#0f172a] border-r border-gray-800 p-6">
-
-        <h1 className="text-3xl font-bold mb-10">
-          ⚙️ Admin
-        </h1>
-
-        <div className="space-y-4">
-
-          <button
-            onClick={() =>
-              router.push(
-                "/admin"
-              )
-            }
-            className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
-          >
-            📊 Dashboard
-          </button>
-
-          <button
-            onClick={() =>
-              router.push(
-                "/admin/users"
-              )
-            }
-            className="w-full bg-[#111827] hover:bg-[#1f2937] rounded-2xl p-4 text-left"
-          >
-            👥 Users
-          </button>
-
-          <button
-            className="w-full bg-blue-600 rounded-2xl p-4 text-left"
-          >
-            📦 Listings
-          </button>
-
-        </div>
-      </div>
-
-      {/* Main */}
-      <div className="flex-1 p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-2xl font-bold sm:text-3xl">
             Listings Management
           </h1>
 
@@ -431,7 +388,7 @@ useEffect(() => {
                 e.target.value
               )
             }
-            className="bg-[#111827] border border-gray-700 rounded-xl px-4 py-3 w-[300px] outline-none"
+            className="w-full bg-[#111827] border border-gray-700 rounded-xl px-4 py-3 sm:w-[300px] outline-none"
           />
         </div>
 
@@ -850,8 +807,6 @@ if (featuredDate) {
     </tbody>
   </table>
 </div>
-
-      </div>
     </div>
   );
 }

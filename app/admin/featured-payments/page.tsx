@@ -15,7 +15,6 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/app/firebase";
-import Navbar from "@/app/components/Navbar";
 import { buildCreditLot } from "@/lib/featuredCredits";
 import { sendNotification } from "@/lib/sendNotification";
 import type { FeaturedCreditLot, FeaturedPackagePurchase } from "@/lib/types/featured";
@@ -186,9 +185,8 @@ export default function AdminFeaturedPaymentsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#020817]">
-      <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl font-bold text-white mb-6">Featured Payment Approvals</h1>
         {message && <p className="mb-4 text-yellow-300">{message}</p>}
         {purchases.length === 0 ? (
@@ -241,6 +239,6 @@ export default function AdminFeaturedPaymentsPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
