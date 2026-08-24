@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { Menu } from "lucide-react";
+import { auth, db } from "@/app/firebase";
 import AdminSidebar from "./AdminSidebar";
 
 export default function AdminShell({
@@ -11,11 +14,37 @@ export default function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [adminReady, setAdminReady] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || snap.data().role !== "admin") {
+        router.push("/");
+        return;
+      }
+      setAdminReady(true);
+    });
+    return unsub;
+  }, [router]);
+
+  if (!adminReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#020817] text-gray-400">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[#020817] text-white">

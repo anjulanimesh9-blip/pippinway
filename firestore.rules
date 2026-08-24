@@ -21,6 +21,30 @@ service cloud.firestore {
       return isAdminEmail() || isRoleAdmin();
     }
 
+    function isSafeUserSelfCreate(userId) {
+      return request.auth.uid == userId &&
+        !request.resource.data.keys().hasAny(rewardUserFields()) &&
+        request.resource.data.get('role', 'user') == 'user' &&
+        request.resource.data.get('featuredCredits', 0) == 0 &&
+        (
+          !request.resource.data.keys().hasAny(['featuredCreditLots']) ||
+          request.resource.data.featuredCreditLots.size() == 0
+        ) &&
+        request.resource.data.get('membership', 'free') == 'free' &&
+        request.resource.data.get('proApproved', false) != true &&
+        request.resource.data.get('verifiedSeller', false) != true;
+    }
+
+    function adminOnlyUserFields() {
+      return [
+        'role',
+        'membership',
+        'proApproved',
+        'verifiedSeller',
+        'monthlyAdLimit'
+      ];
+    }
+
     function userCreditBalance() {
       return resource.data.featuredCredits == null
         ? 0
@@ -143,10 +167,7 @@ service cloud.firestore {
 
       allow create: if isSignedIn() && (
         isAdmin() ||
-        (
-          request.auth.uid == userId &&
-          !request.resource.data.keys().hasAny(rewardUserFields())
-        )
+        isSafeUserSelfCreate(userId)
       );
 
       allow update: if isSignedIn() && (
@@ -154,7 +175,7 @@ service cloud.firestore {
         (
           request.auth.uid == userId &&
           !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['role']) &&
+            .hasAny(adminOnlyUserFields()) &&
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(rewardUserFields()) &&
           (
@@ -206,7 +227,10 @@ service cloud.firestore {
         request.resource.data.get('expired', false) != true &&
         request.resource.data.get('sold', false) != true &&
         request.resource.data.get('draft', false) != true &&
-        request.resource.data.get('rewardCounted', false) != true;
+        request.resource.data.get('rewardCounted', false) != true &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.get('featured', false) != true &&
+        request.resource.data.get('adType', 'free') != 'featured';
       allow update: if isSignedIn() && (
         isAdmin() ||
         (
@@ -246,7 +270,13 @@ service cloud.firestore {
       );
       allow create: if isSignedIn() &&
         request.resource.data.userId == request.auth.uid &&
-        request.resource.data.status == 'pending';
+        request.resource.data.status == 'pending' &&
+        !request.resource.data.keys().hasAny([
+          'approvedAt',
+          'approvedBy',
+          'rejectedAt',
+          'rejectedBy'
+        ]);
       allow update, delete: if isAdmin();
     }
 

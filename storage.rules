@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminEmail() {
+      return isSignedIn() &&
+        request.auth.token.email == 'anjulanimesh9@gmail.com';
+    }
+
+    function isRoleAdmin() {
+      return isSignedIn() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isAdmin() {
+      return isAdminEmail() || isRoleAdmin();
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isReasonableSize() {
+      return request.resource.size < 15 * 1024 * 1024;
+    }
+
+    function canUploadImage() {
+      return isImage() && isReasonableSize();
+    }
+
+    match /listings/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() && canUploadImage();
+    }
+
+    match /profile-images/{userId} {
+      allow read: if true;
+      allow write: if isSignedIn() &&
+        request.auth.uid == userId &&
+        canUploadImage();
+    }
+
+    match /featured_receipts/{userId}/{fileName} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+      allow write: if isSignedIn() &&
+        request.auth.uid == userId &&
+        canUploadImage();
+    }
+
+    match /payment_settings/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && canUploadImage();
+    }
+
+    match /banners/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && canUploadImage();
+    }
+
+    match /notifications/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && canUploadImage();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
