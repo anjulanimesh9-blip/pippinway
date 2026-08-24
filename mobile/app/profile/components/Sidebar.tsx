@@ -1,17 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type SidebarProps = {
   menuOpen: boolean;
   unreadCount: number;
   userMembership?: string;
-  onDashboard: () => void;
-  onMyListings: () => void;
   onAddListing: () => void;
   onMessages: () => void;
   onFavorites: () => void;
-  onRewards: () => void;
   onSettings: () => void;
   onLogout: () => void;
   onClose?: () => void;
@@ -21,18 +20,20 @@ export default function Sidebar({
   menuOpen,
   unreadCount,
   userMembership,
-  onDashboard,
-  onMyListings,
   onAddListing,
   onMessages,
   onFavorites,
-  onRewards,
   onSettings,
   onLogout,
   onClose,
 }: SidebarProps) {
+  const pathname = usePathname();
   const itemClass =
     "flex items-center gap-3 w-full rounded-2xl px-5 py-4 text-left transition hover:bg-[#1e293b]";
+  const activeClass = `${itemClass} bg-blue-600`;
+  const listingsActive =
+    pathname === "/profile/listings" || pathname.startsWith("/profile/listings/");
+  const profileActive = pathname === "/profile";
 
   const handleClick = (callback: () => void) => {
     callback();
@@ -41,13 +42,12 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Overlay */}
       {menuOpen && (
-  <div
-    className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-    onClick={onClose}
-  />
-)}
+        <div
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
       <aside
         className={`
@@ -76,19 +76,21 @@ export default function Sidebar({
         </div>
 
         <div className="space-y-2">
-          <button
-            onClick={() => handleClick(onDashboard)}
-            className={`${itemClass} bg-blue-600`}
+          <Link
+            href="/profile"
+            onClick={() => onClose?.()}
+            className={profileActive ? activeClass : itemClass}
           >
-            🏠 Dashboard
-          </button>
+            Profile
+          </Link>
 
-          <button
-            onClick={() => handleClick(onMyListings)}
-            className={itemClass}
+          <Link
+            href="/profile/listings"
+            onClick={() => onClose?.()}
+            className={listingsActive ? activeClass : itemClass}
           >
             📦 My Listings
-          </button>
+          </Link>
 
           <button
             onClick={() => handleClick(onAddListing)}
@@ -117,12 +119,13 @@ export default function Sidebar({
             ❤️ Favorites
           </button>
 
-          <button
-            onClick={() => handleClick(onRewards)}
+          <Link
+            href="/rewards"
+            onClick={() => onClose?.()}
             className={itemClass}
           >
             🎡 Rewards
-          </button>
+          </Link>
 
           <button
             onClick={() => handleClick(onSettings)}

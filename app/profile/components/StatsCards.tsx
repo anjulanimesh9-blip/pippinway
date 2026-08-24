@@ -4,7 +4,7 @@ type StatsCardsProps = {
   totalAds: number;
   activeAds: number;
   soldAds: number | null;
-  favorites: number;
+  favorites: number | null;
   messages: number;
   isAdmin?: boolean;
   totalUsers?: number | null;
@@ -30,7 +30,7 @@ export default function StatsCards({
     { label: "Ads", value: countsReady ? totalAds : "—" },
     { label: "Active", value: listingsLoaded ? activeAds : "—" },
     { label: "Sold", value: soldAds == null ? "—" : soldAds },
-    { label: "Saved", value: favorites },
+    { label: "Saved", value: favorites == null ? "—" : favorites },
     { label: "Chats", value: messages },
   ];
 

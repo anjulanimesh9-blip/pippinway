@@ -15,6 +15,7 @@ import {
   Settings,
   Shield,
   Star,
+  User,
 } from "lucide-react";
 
 export type ProfileNavKey =
@@ -113,6 +114,23 @@ export default function Sidebar({
           <Link href="/" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
             <Home size={18} />
             <span>Home</span>
+          </Link>
+
+          <Link
+            href="/profile"
+            onClick={() => onClose?.()}
+            className={`
+              relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm
+              transition
+              ${
+                pathname === "/profile"
+                  ? "bg-[#2563eb] font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.35)]"
+                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+              }
+            `}
+          >
+            <User size={18} />
+            <span>Profile</span>
           </Link>
 
           {isAdmin && (

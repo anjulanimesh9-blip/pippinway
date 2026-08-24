@@ -1,7 +1,11 @@
 "use client";
 
-import { formatPrice } from "@/lib/formatPrice";
+import { useMemo, useState } from "react";
+import { formatPrice, parseListingPrice } from "@/lib/formatPrice";
 import ListingPhoto from "@/app/components/ListingPhoto";
+import { getListingStatus, type ListingStatus } from "@/app/profile/utils";
+
+type FilterKey = "all" | ListingStatus;
 
 type MyListingsProps = {
   myAds: any[];
@@ -10,6 +14,14 @@ type MyListingsProps = {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 };
+
+const FILTERS: Array<{ key: FilterKey; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "pending", label: "Pending" },
+  { key: "sold", label: "Sold" },
+  { key: "draft", label: "Draft" },
+];
 
 function listingImage(ad: any): string {
   const first =
@@ -21,13 +33,47 @@ function listingImage(ad: any): string {
   return typeof first === "string" && first.trim() ? first : "/placeholder.png";
 }
 
+function toTime(value: unknown): number {
+  if (!value) return 0;
+  if (typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (typeof (value as { seconds?: number }).seconds === "number") {
+    return (value as { seconds: number }).seconds * 1000;
+  }
+  const date = value instanceof Date ? value : new Date(value as string | number);
+  return isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
 export default function MyListings({
   myAds,
-  userCurrency,
   loading = false,
   onEdit,
   onDelete,
 }: MyListingsProps) {
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [sortBy, setSortBy] = useState("newest");
+
+  const listings = useMemo(() => {
+    const next = myAds.filter((ad) =>
+      filter === "all" ? true : getListingStatus(ad) === filter
+    );
+
+    next.sort((a, b) => {
+      const priceA = parseListingPrice(a.price ?? a.amount);
+      const priceB = parseListingPrice(b.price ?? b.amount);
+      const timeA = toTime(a.createdAt);
+      const timeB = toTime(b.createdAt);
+
+      if (sortBy === "low-price") return priceA - priceB;
+      if (sortBy === "high-price") return priceB - priceA;
+      if (sortBy === "oldest") return timeA - timeB;
+      return timeB - timeA;
+    });
+
+    return next;
+  }, [myAds, filter, sortBy]);
+
   return (
     <div
       id="my-listings"
@@ -37,8 +83,38 @@ export default function MyListings({
         My Ads
       </h2>
 
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setFilter(item.key)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                filter === item.key
+                  ? "bg-[#2563eb] text-white"
+                  : "bg-[#151A22] text-gray-400 hover:text-white"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="rounded-xl border border-white/10 bg-[#151A22] px-3 py-2 text-xs text-gray-300 outline-none"
+        >
+          <option value="newest">Sort by: Newest</option>
+          <option value="oldest">Sort by: Oldest</option>
+          <option value="high-price">Sort by: Price High</option>
+          <option value="low-price">Sort by: Price Low</option>
+        </select>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-        {loading && myAds.length === 0 ? (
+        {loading && listings.length === 0 ? (
           Array.from({ length: 8 }, (_, index) => (
             <div
               key={index}
@@ -51,12 +127,12 @@ export default function MyListings({
               </div>
             </div>
           ))
-        ) : myAds.length === 0 ? (
+        ) : listings.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 py-10">
-            No ads yet.
+            No ads in this filter yet.
           </div>
         ) : (
-          myAds.map((ad) => (
+          listings.map((ad) => (
             <div
               key={ad.id}
               className="bg-[#111827] border border-gray-800 rounded-[22px] overflow-hidden"
