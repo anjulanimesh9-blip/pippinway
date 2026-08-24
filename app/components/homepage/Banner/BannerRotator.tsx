@@ -7,12 +7,12 @@ import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
 
 /**
- * One listing-row strip. Homepage list thumbs are h-[88px] / sm:h-[120px];
- * profile My Listings list-row image is h-20 (80px). Do not use aspect-ratio —
- * a 16:5 slot at 1600px is ~500px tall. Auto Fit contain + blur fills the width.
+ * ~1.5× a profile My Listings grid card. Card ≈ 140px mobile (2-col,
+ * aspect-[2/1] image + ~54px text) and ~160–180px on lg/xl. 2× would be
+ * ~280–360px — stay under that. Do not use aspect-ratio (16:5 at 1600px ≈ 500px).
  */
 export const BANNER_ROW_HEIGHT_CLASS =
-  "h-[88px] max-h-[88px] sm:h-[120px] sm:max-h-[120px]";
+  "h-[210px] max-h-[210px] lg:h-[240px] lg:max-h-[240px] xl:h-[270px] xl:max-h-[270px]";
 
 /** In-feed / list banners: same compact row as a listing, not a 16:5 hero. */
 export const INFEED_BANNER_CLASS =
