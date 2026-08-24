@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { auth } from "../firebase";
@@ -36,13 +36,19 @@ export default function ProfilePage() {
     loading,
     userDataLoading,
     listingsLoading,
+    listingsLoaded,
     favoritesLoading,
+    countsLoading,
     user,
     userData,
     myAds,
     favoriteAds,
     favoriteIds,
+    adsCount,
+    soldCount,
     totalUsers,
+    loadMyListings,
+    loadFavorites,
     removeFavorite,
     addFavorite,
     deleteListing,
@@ -69,9 +75,14 @@ export default function ProfilePage() {
   } = useChat();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<ProfileNavKey>("listings");
-  const [activeTab, setActiveTab] = useState<ProfileTabKey>("listings");
+  const [activeItem, setActiveItem] = useState<ProfileNavKey>("profile");
+  const [activeTab, setActiveTab] = useState<ProfileTabKey>("about");
   const [aboutText, setAboutText] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (activeTab === "listings") void loadMyListings();
+    if (activeTab === "favorites") void loadFavorites();
+  }, [activeTab, loadMyListings, loadFavorites]);
 
   const displayName =
     userData?.displayName ||
@@ -93,13 +104,13 @@ export default function ProfilePage() {
         phone: userData?.phone,
         membership: userData?.membership,
         verifiedSeller: userData?.verifiedSeller,
-        totalAds: myAds.length,
+        totalAds: adsCount,
         activeAds,
         repliedChats: chatRooms.filter((chat: any) => chat.lastSender === user?.email)
           .length,
         totalChats: chatRooms.length,
       }),
-    [userData, myAds.length, activeAds, chatRooms, user?.email]
+    [userData, adsCount, activeAds, chatRooms, user?.email]
   );
 
   const handleLogout = async () => {
@@ -111,18 +122,20 @@ export default function ProfilePage() {
     setActiveItem(key);
 
     if (key === "dashboard" || key === "profile") {
-      setActiveTab("listings");
+      setActiveTab("about");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     if (key === "listings") {
+      void loadMyListings();
       setActiveTab("listings");
       document.getElementById("my-listings")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
     if (key === "favorites") {
+      void loadFavorites();
       setActiveTab("favorites");
       return;
     }
@@ -231,14 +244,15 @@ export default function ProfilePage() {
             />
 
             <StatsCards
-              totalAds={myAds.length}
+              totalAds={adsCount}
               activeAds={activeAds}
-              soldAds={soldAds}
+              soldAds={listingsLoaded ? soldAds : soldCount}
               favorites={favoriteIds.length}
               messages={chatRooms.length}
               isAdmin={userData?.role === "admin"}
               totalUsers={totalUsers}
-              listingsLoading={listingsLoading}
+              listingsLoaded={listingsLoaded}
+              countsReady={!countsLoading}
             />
 
             <RewardsCard userData={userData} loading={userDataLoading} />
@@ -248,6 +262,8 @@ export default function ProfilePage() {
                 <ProfileTabs
                   activeTab={activeTab}
                   onChange={(tab) => {
+                    if (tab === "listings") void loadMyListings();
+                    if (tab === "favorites") void loadFavorites();
                     setActiveTab(tab);
                     setActiveItem(tab === "listings" ? "listings" : "profile");
                   }}

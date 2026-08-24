@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import {
   collection,
@@ -38,6 +38,15 @@ function mergeListingSnaps(
   return [...byId.values()];
 }
 
+async function countOrNull(q: ReturnType<typeof query>) {
+  try {
+    const snap = await getCountFromServer(q);
+    return snap.data().count;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchOwnerListingsFirstPage(uid: string) {
   const listingsRef = collection(db, "listings");
   try {
@@ -64,38 +73,67 @@ export default function useProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [userDataLoading, setUserDataLoading] = useState(true);
-  const [listingsLoading, setListingsLoading] = useState(true);
-  const [favoritesLoading, setFavoritesLoading] = useState(true);
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [listingsLoaded, setListingsLoaded] = useState(false);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [favoritesLoaded, setFavoritesLoaded] = useState(false);
+  const [countsLoading, setCountsLoading] = useState(true);
 
   const [userData, setUserData] = useState<any>(null);
   const [myAds, setMyAds] = useState<any[]>([]);
   const [favoriteAds, setFavoriteAds] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [adsCount, setAdsCount] = useState(0);
+  const [soldCount, setSoldCount] = useState<number | null>(null);
+  const [featuredCount, setFeaturedCount] = useState<number | null>(null);
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
   const loadIdRef = useRef(0);
+  const userRef = useRef<User | null>(null);
+  const listingsRequestedRef = useRef(false);
+  const favoritesRequestedRef = useRef(false);
+  const favoriteIdsRef = useRef<string[]>([]);
+
+  userRef.current = user;
+  favoriteIdsRef.current = favoriteIds;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      userRef.current = currentUser;
       setUser(currentUser);
       setLoading(false);
 
       if (!currentUser) {
         loadIdRef.current += 1;
+        listingsRequestedRef.current = false;
+        favoritesRequestedRef.current = false;
         setUserData(null);
         setMyAds([]);
         setFavoriteAds([]);
         setFavoriteIds([]);
+        setAdsCount(0);
+        setSoldCount(null);
+        setFeaturedCount(null);
         setTotalUsers(null);
         setUserDataLoading(false);
         setListingsLoading(false);
+        setListingsLoaded(false);
         setFavoritesLoading(false);
+        setFavoritesLoaded(false);
+        setCountsLoading(false);
         return;
       }
 
+      listingsRequestedRef.current = false;
+      favoritesRequestedRef.current = false;
+      setMyAds([]);
+      setFavoriteAds([]);
+      setListingsLoaded(false);
+      setFavoritesLoaded(false);
       setUserDataLoading(true);
-      setListingsLoading(true);
-      setFavoritesLoading(true);
+      setListingsLoading(false);
+      setFavoritesLoading(false);
+      setCountsLoading(true);
       const loadId = ++loadIdRef.current;
       void loadProfile(currentUser, loadId);
     });
@@ -137,8 +175,8 @@ export default function useProfile() {
     try {
       await Promise.all([
         fetchUserData(currentUser, still),
-        fetchMyAds(currentUser, still),
-        fetchFavorites(currentUser, still),
+        fetchFavoriteIds(currentUser, still),
+        fetchListingCounts(currentUser, still),
       ]);
     } catch (error) {
       console.error("Profile loading error:", error);
@@ -166,6 +204,49 @@ export default function useProfile() {
     }
   };
 
+  const fetchListingCounts = async (
+    currentUser: User,
+    still: () => boolean = () => true
+  ) => {
+    const listingsRef = collection(db, "listings");
+
+    try {
+      const [total, sold, featured] = await Promise.all([
+        countOrNull(
+          query(listingsRef, where("ownerId", "==", currentUser.uid))
+        ),
+        countOrNull(
+          query(
+            listingsRef,
+            where("ownerId", "==", currentUser.uid),
+            where("sold", "==", true)
+          )
+        ),
+        countOrNull(
+          query(
+            listingsRef,
+            where("ownerId", "==", currentUser.uid),
+            where("featured", "==", true)
+          )
+        ),
+      ]);
+
+      if (!still()) return;
+      setAdsCount(total ?? 0);
+      setSoldCount(sold);
+      setFeaturedCount(featured);
+    } catch (error) {
+      console.error("Profile listing counts error:", error);
+      if (still()) {
+        setAdsCount(0);
+        setSoldCount(null);
+        setFeaturedCount(null);
+      }
+    } finally {
+      if (still()) setCountsLoading(false);
+    }
+  };
+
   const fetchMyAds = async (
     currentUser: User,
     still: () => boolean = () => true
@@ -177,6 +258,7 @@ export default function useProfile() {
       if (!still()) return;
       setMyAds(firstSnap.docs.map(listingFromSnap));
       setListingsLoading(false);
+      setListingsLoaded(true);
 
       const needFullOwnerQuery =
         firstSnap.size >= PROFILE_LISTINGS_FIRST_PAGE;
@@ -198,14 +280,21 @@ export default function useProfile() {
       ]);
 
       if (!still()) return;
-      setMyAds(mergeListingSnaps(byOwnerId, byEmail));
+      const ads = mergeListingSnaps(byOwnerId, byEmail);
+      setMyAds(ads);
+      setAdsCount(ads.length);
+      setListingsLoaded(true);
     } catch (error) {
       console.error("Profile listings error:", error);
-      if (still()) setListingsLoading(false);
+      listingsRequestedRef.current = false;
+      if (still()) {
+        setListingsLoading(false);
+        setListingsLoaded(false);
+      }
     }
   };
 
-  const fetchFavorites = async (
+  const fetchFavoriteIds = async (
     currentUser: User,
     still: () => boolean = () => true
   ) => {
@@ -214,9 +303,26 @@ export default function useProfile() {
         collection(db, "users", currentUser.uid, "favorites")
       );
       if (!still()) return;
+      setFavoriteIds(favSnapshot.docs.map((fav) => fav.id));
+    } catch (error) {
+      console.error("Profile favorite ids error:", error);
+    }
+  };
 
-      const ids = favSnapshot.docs.map((fav) => fav.id);
-      setFavoriteIds(ids);
+  const fetchFavoriteAds = async (
+    currentUser: User,
+    still: () => boolean = () => true
+  ) => {
+    try {
+      let ids = favoriteIdsRef.current;
+      if (ids.length === 0) {
+        const favSnapshot = await getDocs(
+          collection(db, "users", currentUser.uid, "favorites")
+        );
+        if (!still()) return;
+        ids = favSnapshot.docs.map((fav) => fav.id);
+        setFavoriteIds(ids);
+      }
 
       const ads = (
         await Promise.all(
@@ -230,12 +336,34 @@ export default function useProfile() {
 
       if (!still()) return;
       setFavoriteAds(ads);
+      setFavoritesLoaded(true);
     } catch (error) {
       console.error("Profile favorites error:", error);
+      favoritesRequestedRef.current = false;
     } finally {
       if (still()) setFavoritesLoading(false);
     }
   };
+
+  const loadMyListings = useCallback(() => {
+    const currentUser = userRef.current;
+    if (!currentUser || listingsRequestedRef.current) return;
+
+    listingsRequestedRef.current = true;
+    setListingsLoading(true);
+    const loadId = loadIdRef.current;
+    return fetchMyAds(currentUser, () => loadIdRef.current === loadId);
+  }, []);
+
+  const loadFavorites = useCallback(() => {
+    const currentUser = userRef.current;
+    if (!currentUser || favoritesRequestedRef.current) return;
+
+    favoritesRequestedRef.current = true;
+    setFavoritesLoading(true);
+    const loadId = loadIdRef.current;
+    return fetchFavoriteAds(currentUser, () => loadIdRef.current === loadId);
+  }, []);
 
   const removeFavorite = async (listingId: string) => {
     if (!user) return;
@@ -265,6 +393,7 @@ export default function useProfile() {
     await deleteDoc(doc(db, "listings", listingId));
 
     setMyAds((prev) => prev.filter((ad: any) => ad.id !== listingId));
+    setAdsCount((prev) => Math.max(0, prev - 1));
   };
 
   const requestProSeller = async () => {
@@ -284,7 +413,10 @@ export default function useProfile() {
     loading,
     userDataLoading,
     listingsLoading,
+    listingsLoaded,
     favoritesLoading,
+    favoritesLoaded,
+    countsLoading,
 
     user,
 
@@ -292,11 +424,15 @@ export default function useProfile() {
     myAds,
     favoriteAds,
     favoriteIds,
+    adsCount,
+    soldCount,
+    featuredCount,
     totalUsers,
 
     fetchUserData,
     fetchMyAds,
-    fetchFavorites,
+    loadMyListings,
+    loadFavorites,
 
     removeFavorite,
     addFavorite,
@@ -305,11 +441,29 @@ export default function useProfile() {
 
     reloadProfile: () => {
       if (user) {
+        const shouldReloadListings = listingsRequestedRef.current;
+        const shouldReloadFavorites = favoritesRequestedRef.current;
         setUserDataLoading(true);
-        setListingsLoading(true);
-        setFavoritesLoading(true);
+        setCountsLoading(true);
+        if (shouldReloadListings) {
+          setListingsLoading(true);
+          setListingsLoaded(false);
+        }
+        if (shouldReloadFavorites) {
+          setFavoritesLoading(true);
+          setFavoritesLoaded(false);
+        }
         const loadId = ++loadIdRef.current;
-        void loadProfile(user, loadId);
+        void (async () => {
+          await loadProfile(user, loadId);
+          if (loadIdRef.current !== loadId) return;
+          if (shouldReloadListings) {
+            await fetchMyAds(user, () => loadIdRef.current === loadId);
+          }
+          if (shouldReloadFavorites) {
+            await fetchFavoriteAds(user, () => loadIdRef.current === loadId);
+          }
+        })();
       }
     },
   };

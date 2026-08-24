@@ -3,12 +3,13 @@ import { Users } from "lucide-react";
 type StatsCardsProps = {
   totalAds: number;
   activeAds: number;
-  soldAds: number;
+  soldAds: number | null;
   favorites: number;
   messages: number;
   isAdmin?: boolean;
   totalUsers?: number | null;
-  listingsLoading?: boolean;
+  listingsLoaded?: boolean;
+  countsReady?: boolean;
 };
 
 export default function StatsCards({
@@ -19,19 +20,16 @@ export default function StatsCards({
   messages,
   isAdmin = false,
   totalUsers = null,
-  listingsLoading = false,
+  listingsLoaded = false,
+  countsReady = false,
 }: StatsCardsProps) {
-  const adsValue = listingsLoading && totalAds === 0 ? "—" : totalAds;
-  const activeValue = listingsLoading && totalAds === 0 ? "—" : activeAds;
-  const soldValue = listingsLoading && totalAds === 0 ? "—" : soldAds;
-
   const items = [
     ...(isAdmin
       ? [{ label: "Users", value: totalUsers ?? "—" }]
       : []),
-    { label: "Ads", value: adsValue },
-    { label: "Active", value: activeValue },
-    { label: "Sold", value: soldValue },
+    { label: "Ads", value: countsReady ? totalAds : "—" },
+    { label: "Active", value: listingsLoaded ? activeAds : "—" },
+    { label: "Sold", value: soldAds == null ? "—" : soldAds },
     { label: "Saved", value: favorites },
     { label: "Chats", value: messages },
   ];

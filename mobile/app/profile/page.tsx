@@ -28,12 +28,18 @@ export default function ProfilePage() {
   loading,
   userDataLoading,
   listingsLoading,
+  listingsLoaded,
   favoritesLoading,
+  countsLoading,
   user,
   userData,
   myAds,
   favoriteAds,
   favoriteIds,
+  adsCount,
+  featuredCount,
+  loadMyListings,
+  loadFavorites,
   removeFavorite,
   deleteListing,
   requestProSeller,
@@ -42,12 +48,10 @@ export default function ProfilePage() {
   const [menuOpen,
     setMenuOpen] =
     useState(false);
-  const featuredAdsUsed =
-    myAds.filter(
-      (ad) =>
-        ad.featured ===
-        true
-    ).length;
+  const [listingsVisible, setListingsVisible] = useState(false);
+  const featuredAdsUsed = listingsLoaded
+    ? myAds.filter((ad) => ad.featured === true).length
+    : featuredCount ?? 0;
   
 
  const {
@@ -78,6 +82,22 @@ export default function ProfilePage() {
  
 const favoritesRef = useRef<HTMLDivElement>(null);
 const settingsRef = useRef<HTMLDivElement>(null);
+const listingsRef = useRef<HTMLDivElement>(null);
+
+  const openMyListings = () => {
+    setListingsVisible(true);
+    void loadMyListings();
+    requestAnimationFrame(() => {
+      listingsRef.current?.scrollIntoView({ behavior: "smooth" });
+    });
+  };
+
+  const openFavorites = () => {
+    void loadFavorites();
+    favoritesRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  };
   
   const featuredAdsRemaining =
     (userData?.featuredCredits ||
@@ -140,7 +160,7 @@ const greeting =
     unreadCount={unreadCount}
     userMembership={userData?.membership}
     onDashboard={() => router.push("/profile")}
-    onMyListings={() => router.push("/")}
+    onMyListings={openMyListings}
     onAddListing={() => router.push("/add-listing")}
     onMessages={() => {
       if (chatRooms.length > 0) {
@@ -149,11 +169,7 @@ const greeting =
         setShowMessages(true);
       }
     }}
-    onFavorites={() => {
-      favoritesRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }}
+    onFavorites={openFavorites}
     onRewards={() => router.push("/rewards")}
     onSettings={() => router.push("/profile/settings")}
     onLogout={handleLogout}
@@ -167,7 +183,7 @@ const greeting =
     unreadCount={unreadCount}
     userMembership={userData?.membership}
     onDashboard={() => router.push("/profile")}
-    onMyListings={() => router.push("/")}
+    onMyListings={openMyListings}
     onAddListing={() => router.push("/add-listing")}
     onMessages={() => {
       if (chatRooms.length > 0) {
@@ -176,11 +192,7 @@ const greeting =
         setShowMessages(true);
       }
     }}
-    onFavorites={() => {
-      favoritesRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }}
+    onFavorites={openFavorites}
     onRewards={() => router.push("/rewards")}
     onSettings={() => router.push("/profile/settings")}
     onLogout={handleLogout}
@@ -238,12 +250,12 @@ onOpenChat={openChat}
 />
               
 <StatsCards
-  totalAds={myAds.length}
-  featuredUsed={featuredAdsUsed}
+  totalAds={adsCount}
+  featuredUsed={listingsLoaded ? featuredAdsUsed : featuredCount ?? 0}
   featuredCredits={userData?.featuredCredits || 0}
   favorites={favoriteIds.length}
   unreadMessages={unreadCount}
-  listingsLoading={listingsLoading}
+  countsReady={!countsLoading}
 />
 
 <RewardsCard userData={userData} loading={userDataLoading} />
@@ -270,6 +282,8 @@ onOpenChat={openChat}
 </div>
 
 
+<div ref={listingsRef}>
+{listingsVisible ? (
 <MyListings
   myAds={myAds}
   userCurrency={userCurrency}
@@ -277,6 +291,27 @@ onOpenChat={openChat}
   onEdit={(id) => router.push(`/edit/${id}`)}
   onDelete={deleteListing}
 />
+) : (
+<div
+  id="my-listings"
+  className="bg-[#0f172a] border border-gray-800 rounded-[28px] p-5 shadow-xl"
+>
+  <h2 className="text-2xl font-bold mb-5 border-b border-gray-800 pb-3">
+    My Ads
+  </h2>
+  <p className="text-gray-400 text-sm mb-4">
+    Click My Listings to load your ads.
+  </p>
+  <button
+    type="button"
+    onClick={openMyListings}
+    className="rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-3"
+  >
+    My Listings
+  </button>
+</div>
+)}
+</div>
 
 <div ref={settingsRef} className="mt-8">
   <div className="bg-[#111827] rounded-2xl p-6 border border-white/10">
