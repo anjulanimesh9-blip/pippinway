@@ -9,6 +9,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  type QuerySnapshot,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/app/firebase";
@@ -31,6 +32,40 @@ import {
 type AdminRewardRow = RewardHistoryItem & {
   userId: string;
 };
+
+function createdAtMillis(value: unknown): number {
+  if (!value) return 0;
+  if (typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (typeof (value as { toDate?: () => Date }).toDate === "function") {
+    return (value as { toDate: () => Date }).toDate().getTime();
+  }
+  if (typeof (value as { seconds?: number }).seconds === "number") {
+    return (value as { seconds: number }).seconds * 1000;
+  }
+  const parsed = new Date(value as string | number);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
+function mapHistoryDocs(
+  snapshot: QuerySnapshot,
+  sortClientSide: boolean
+): AdminRewardRow[] {
+  const rows = snapshot.docs.map((d) => {
+    const data = d.data();
+    const userId = String(data.userId || d.ref.parent.parent?.id || "");
+    return {
+      id: d.id,
+      userId,
+      ...(data as Omit<RewardHistoryItem, "id">),
+    };
+  });
+  if (sortClientSide) {
+    rows.sort((a, b) => createdAtMillis(b.createdAt) - createdAtMillis(a.createdAt));
+  }
+  return rows;
+}
 
 function nextCashAction(status: RewardHistoryStatus | string): {
   label: string;
@@ -73,31 +108,37 @@ export default function AdminRewardsPage() {
 
   useEffect(() => {
     if (!adminId) return;
-    const historyQuery = query(
-      collectionGroup(db, "rewardHistory"),
-      orderBy("createdAt", "desc")
-    );
-    const unsub = onSnapshot(
-      historyQuery,
-      (snapshot) => {
-        setRows(
-          snapshot.docs.map((d) => {
-            const data = d.data();
-            const userId = String(data.userId || d.ref.parent.parent?.id || "");
-            return {
-              id: d.id,
-              userId,
-              ...(data as Omit<RewardHistoryItem, "id">),
-            };
-          })
-        );
-      },
-      (err) => {
-        console.error("Admin rewards history error:", err);
-        setMessage("Could not load reward history. Deploy Firestore indexes if prompted.");
-      }
-    );
-    return unsub;
+    let cancelled = false;
+    let unsub = () => {};
+
+    const listen = (withOrder: boolean) => {
+      const historyQuery = withOrder
+        ? query(collectionGroup(db, "rewardHistory"), orderBy("createdAt", "desc"))
+        : query(collectionGroup(db, "rewardHistory"));
+      unsub = onSnapshot(
+        historyQuery,
+        (snapshot) => {
+          setRows(mapHistoryDocs(snapshot, !withOrder));
+        },
+        (err) => {
+          console.error("Admin rewards history error:", err);
+          if (withOrder && !cancelled) {
+            unsub();
+            listen(false);
+            return;
+          }
+          setMessage(
+            "Could not load reward history. Deploy Firestore indexes if prompted."
+          );
+        }
+      );
+    };
+
+    listen(true);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, [adminId]);
 
   const visible = useMemo(() => {
