@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  collection,
   collectionGroup,
   doc,
   getDoc,
-  onSnapshot,
-  orderBy,
+  getDocs,
   query,
   type QuerySnapshot,
 } from "firebase/firestore";
@@ -48,23 +48,66 @@ function createdAtMillis(value: unknown): number {
   return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
 }
 
+const USER_HISTORY_BATCH = 20;
+
+function formatFirestoreError(err: unknown): string {
+  const code =
+    err && typeof err === "object" && "code" in err
+      ? String((err as { code: unknown }).code || "")
+      : "";
+  const message =
+    err instanceof Error
+      ? err.message
+      : err && typeof err === "object" && "message" in err
+        ? String((err as { message: unknown }).message || "")
+        : String(err);
+  if (code && message) return `${code}: ${message}`;
+  return message || code || "Could not load reward history.";
+}
+
 function mapHistoryDocs(
   snapshot: QuerySnapshot,
-  sortClientSide: boolean
+  fallbackUserId?: string
 ): AdminRewardRow[] {
-  const rows = snapshot.docs.map((d) => {
+  return snapshot.docs.map((d) => {
     const data = d.data();
-    const userId = String(data.userId || d.ref.parent.parent?.id || "");
+    const userId = String(
+      data.userId || fallbackUserId || d.ref.parent.parent?.id || ""
+    );
     return {
       id: d.id,
       userId,
       ...(data as Omit<RewardHistoryItem, "id">),
     };
   });
-  if (sortClientSide) {
-    rows.sort((a, b) => createdAtMillis(b.createdAt) - createdAtMillis(a.createdAt));
-  }
+}
+
+function sortByCreatedAt(rows: AdminRewardRow[]): AdminRewardRow[] {
+  rows.sort((a, b) => createdAtMillis(b.createdAt) - createdAtMillis(a.createdAt));
   return rows;
+}
+
+async function loadViaCollectionGroup(): Promise<AdminRewardRow[]> {
+  const snapshot = await getDocs(query(collectionGroup(db, "rewardHistory")));
+  return sortByCreatedAt(mapHistoryDocs(snapshot));
+}
+
+async function loadViaPerUserHistory(): Promise<AdminRewardRow[]> {
+  const usersSnap = await getDocs(collection(db, "users"));
+  const uids = usersSnap.docs.map((d) => d.id);
+  const rows: AdminRewardRow[] = [];
+
+  for (let i = 0; i < uids.length; i += USER_HISTORY_BATCH) {
+    const chunk = uids.slice(i, i + USER_HISTORY_BATCH);
+    const snaps = await Promise.all(
+      chunk.map((uid) => getDocs(collection(db, "users", uid, "rewardHistory")))
+    );
+    snaps.forEach((snap, index) => {
+      rows.push(...mapHistoryDocs(snap, chunk[index]));
+    });
+  }
+
+  return sortByCreatedAt(rows);
 }
 
 function nextCashAction(status: RewardHistoryStatus | string): {
@@ -89,6 +132,7 @@ export default function AdminRewardsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [references, setReferences] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -106,40 +150,30 @@ export default function AdminRewardsPage() {
     return unsubAuth;
   }, [router]);
 
+  const loadHistory = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
+    try {
+      let next: AdminRewardRow[];
+      try {
+        next = await loadViaCollectionGroup();
+      } catch (groupErr) {
+        console.error("Admin rewards collectionGroup failed:", groupErr);
+        next = await loadViaPerUserHistory();
+      }
+      setRows(next);
+      if (!quiet) setMessage(null);
+    } catch (err) {
+      console.error("Admin rewards history error:", err);
+      setMessage(formatFirestoreError(err));
+    } finally {
+      if (!quiet) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!adminId) return;
-    let cancelled = false;
-    let unsub = () => {};
-
-    const listen = (withOrder: boolean) => {
-      const historyQuery = withOrder
-        ? query(collectionGroup(db, "rewardHistory"), orderBy("createdAt", "desc"))
-        : query(collectionGroup(db, "rewardHistory"));
-      unsub = onSnapshot(
-        historyQuery,
-        (snapshot) => {
-          setRows(mapHistoryDocs(snapshot, !withOrder));
-        },
-        (err) => {
-          console.error("Admin rewards history error:", err);
-          if (withOrder && !cancelled) {
-            unsub();
-            listen(false);
-            return;
-          }
-          setMessage(
-            "Could not load reward history. Deploy Firestore indexes if prompted."
-          );
-        }
-      );
-    };
-
-    listen(true);
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-  }, [adminId]);
+    void loadHistory();
+  }, [adminId, loadHistory]);
 
   const visible = useMemo(() => {
     if (filter === "cash") return rows.filter(isCashReward);
@@ -174,6 +208,7 @@ export default function AdminRewardsPage() {
           ? "Marked paid. The customer was notified."
           : "Moved to payment processing."
       );
+      await loadHistory(true);
     } catch (err) {
       setMessage(
         err instanceof Error ? err.message : "Could not update this reward."
@@ -237,7 +272,9 @@ export default function AdminRewardsPage() {
 
         {message && <p className="mb-4 text-yellow-300">{message}</p>}
 
-        {visible.length === 0 ? (
+        {loading ? (
+          <p className="text-gray-400">Loading rewards...</p>
+        ) : visible.length === 0 ? (
           <p className="text-gray-400">No rewards in this view.</p>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-gray-800 bg-[#111827]">

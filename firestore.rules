@@ -305,11 +305,9 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /{path=**}/rewardHistory/{spinId} {
-      allow read: if isAdmin() || (
-        isSignedIn() &&
-        resource.data.userId == request.auth.uid
-      );
+    // Admin collection-group read. Owners still use nested /users/{uid}/rewardHistory.
+    match /{path=**}/rewardHistory/{id} {
+      allow read: if isAdmin();
       allow write: if false;
     }
 
