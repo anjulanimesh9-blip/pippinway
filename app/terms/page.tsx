@@ -124,8 +124,15 @@ export default function TermsPage() {
         </h2>
         <p>
           Do not run advance-fee scams, fake payment receipts, or “too good to
-          be true” ads. Listing pages remind users to report suspicious ads.
-          Report them through{" "}
+          be true” ads. There is no in-app Report listing button. Email the
+          listing page link to{" "}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-[#FBB03B] hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>{" "}
+          or use{" "}
           <Link href="/contact" className="text-[#FBB03B] hover:underline">
             Contact / Help
           </Link>

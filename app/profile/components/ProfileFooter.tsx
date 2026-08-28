@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FaFacebookF, FaInstagram, FaXTwitter } from "react-icons/fa6";
+import { FaFacebookF } from "react-icons/fa6";
 
 export default function ProfileFooter() {
   return (
@@ -22,6 +22,9 @@ export default function ProfileFooter() {
           <Link href="/terms" className="hover:text-white">
             Terms
           </Link>
+          <Link href="/safety" className="hover:text-white">
+            Safety
+          </Link>
           <div className="ml-2 flex items-center gap-2">
             <a
               href="https://www.facebook.com/profile.php?id=61589186823471"
@@ -31,24 +34,6 @@ export default function ProfileFooter() {
               aria-label="Facebook"
             >
               <FaFacebookF size={12} />
-            </a>
-            <a
-              href="https://x.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 hover:text-white"
-              aria-label="X"
-            >
-              <FaXTwitter size={12} />
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 hover:text-white"
-              aria-label="Instagram"
-            >
-              <FaInstagram size={12} />
             </a>
           </div>
         </div>

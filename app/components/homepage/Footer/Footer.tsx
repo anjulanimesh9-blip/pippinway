@@ -6,6 +6,7 @@ const QUICK_LINKS = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact / Help" },
+  { href: "/safety", label: "Safety" },
   { href: "/add-listing", label: "Add Listing" },
   { href: "/login", label: "Login" },
 ];
@@ -30,6 +31,9 @@ const COUNTRIES = [
 const LEGAL_LINKS = [
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact / Help" },
+  { href: "/safety", label: "Safety" },
+  { href: "/guides/buying-safely", label: "Buying Safely" },
+  { href: "/guides/selling-safely", label: "Selling Safely" },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms & Conditions" },
 ];
@@ -46,8 +50,9 @@ export default function Footer() {
               className="mb-4 w-[220px]"
             />
             <p className="text-xs leading-7 text-gray-400 md:text-lg">
-              Buy, sell and explore products worldwide with Pippinway —
-              trusted, fast and easy.
+              Buy, sell and explore classified ads worldwide with Pippinway —
+              browse listings, contact sellers, and read our safety tips before
+              you meet or pay.
             </p>
           </div>
 

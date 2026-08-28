@@ -60,11 +60,21 @@ const TOPICS: Array<{ title: string; body: ReactNode }> = [
     title: "Reporting a suspicious listing",
     body: (
       <>
-        Listing pages include a safety notice asking you not to send money
-        before inspecting an item and to report ads that look fraudulent. There
-        is no separate public report form in the app today. Describe the listing
-        (title and page link) through Help in your profile or Pippinway’s
-        Facebook page so the team can review it.
+        There is no in-app Report listing button today. Email the listing page
+        link (for example https://www.pippinway.com/listings/…) and a short
+        description to{" "}
+        <a
+          href={`mailto:${SUPPORT_EMAIL}`}
+          className="text-[#FBB03B] hover:underline"
+        >
+          {SUPPORT_EMAIL}
+        </a>
+        . You can also use Help in your profile, which opens Pippinway’s
+        Facebook page. More guidance is on the{" "}
+        <Link href="/safety" className="text-[#FBB03B] hover:underline">
+          Safety Center
+        </Link>
+        .
       </>
     ),
   },
@@ -113,6 +123,23 @@ const TOPICS: Array<{ title: string; body: ReactNode }> = [
           Delete Account
         </Link>{" "}
         or the Danger Zone in profile settings if you are signed in.
+      </>
+    ),
+  },
+  {
+    title: "Technical problems",
+    body: (
+      <>
+        If a page fails to load, you cannot sign in, photos will not upload, or
+        chat will not open, email{" "}
+        <a
+          href={`mailto:${SUPPORT_EMAIL}`}
+          className="text-[#FBB03B] hover:underline"
+        >
+          {SUPPORT_EMAIL}
+        </a>{" "}
+        with the page URL, the device or browser you used, and what you
+        expected to happen. Do not send passwords.
       </>
     ),
   },

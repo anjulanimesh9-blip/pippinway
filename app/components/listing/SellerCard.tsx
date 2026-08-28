@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck } from "lucide-react";
 
 type SellerCardProps = {
   uid?: string;
@@ -23,7 +22,6 @@ export default function SellerCard({ uid, name, location }: SellerCardProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <h3 className="truncate font-semibold text-white">{displayName}</h3>
-            <BadgeCheck size={16} className="shrink-0 text-sky-400" />
           </div>
           <p className="text-xs text-gray-400">Member</p>
           {location && (

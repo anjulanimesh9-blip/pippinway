@@ -238,6 +238,34 @@ export default function AboutPage() {
           .
         </p>
       </section>
+
+      <section>
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          Buying and selling more safely
+        </h2>
+        <p>
+          Pippinway does not inspect every item and does not guarantee
+          transactions. Read the{" "}
+          <Link href="/safety" className="text-[#FBB03B] hover:underline">
+            Safety Center
+          </Link>
+          ,{" "}
+          <Link
+            href="/guides/buying-safely"
+            className="text-[#FBB03B] hover:underline"
+          >
+            Buying safely
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/guides/selling-safely"
+            className="text-[#FBB03B] hover:underline"
+          >
+            Selling safely
+          </Link>{" "}
+          before you meet someone or send money.
+        </p>
+      </section>
     </LegalPageShell>
   );
 }
