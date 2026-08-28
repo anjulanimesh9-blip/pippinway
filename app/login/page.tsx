@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "../firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 
-export default function LoginPage() {
+function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] =
@@ -19,6 +20,10 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] =
   useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = safeAuthReturnUrl(
+    searchParams.get("returnUrl") || searchParams.get("redirect")
+  );
 
   const handleLogin = async (e: any) => {
   e.preventDefault();
@@ -35,7 +40,7 @@ export default function LoginPage() {
 
 setLoginError(false);
 
-router.push("/profile"); 
+router.push(returnUrl); 
     } catch (error: any) {
   const code = error?.code ? String(error.code) : "";
   const message = error?.message ? String(error.message) : "";
@@ -156,5 +161,19 @@ const handleResetPassword =
         </form>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
+          Loading...
+        </div>
+      }
+    >
+      <LoginPage />
+    </Suspense>
   );
 }

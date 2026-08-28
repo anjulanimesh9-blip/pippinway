@@ -74,7 +74,7 @@ const [checkingAuth, setCheckingAuth] =
       auth,
       (currentUser) => {
   if (!currentUser) {
-    router.push("/login");
+    router.push("/login?returnUrl=/add-listing");
     return;
   }
 

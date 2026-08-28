@@ -12,6 +12,7 @@ import DeleteModal from "@/app/components/listing/DeleteModal";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/homepage/Footer/Footer";
+import { useGuestAuthPrompt } from "../../components/GuestAuthPrompt";
 import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
@@ -50,6 +51,7 @@ export default function ListingClient() {
 
   const router = useRouter();
   const params = useParams();
+  const { requireAuth } = useGuestAuthPrompt();
 
   const slug =
     params?.slug as string;
@@ -88,7 +90,7 @@ export default function ListingClient() {
    
 const startChat = async () => {
   if (!currentUser?.email) {
-    alert("Please login first.");
+    requireAuth(`/listings/${slug}`);
     return;
   }
 

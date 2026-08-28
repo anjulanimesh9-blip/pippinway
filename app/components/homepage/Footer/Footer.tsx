@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GuestAuthLink } from "../../GuestAuthPrompt";
 
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
@@ -59,15 +60,25 @@ export default function Footer() {
           <div>
             <h3 className="mb-4 text-lg font-bold text-white">Quick Links</h3>
             <div className="flex flex-col gap-3 text-gray-400">
-              {QUICK_LINKS.map((link) => (
-                <Link
-                  key={link.href + link.label}
-                  href={link.href}
-                  className="transition hover:text-[#FBB03B]"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {QUICK_LINKS.map((link) =>
+                link.href === "/add-listing" ? (
+                  <GuestAuthLink
+                    key={link.href + link.label}
+                    href={link.href}
+                    className="transition hover:text-[#FBB03B]"
+                  >
+                    {link.label}
+                  </GuestAuthLink>
+                ) : (
+                  <Link
+                    key={link.href + link.label}
+                    href={link.href}
+                    className="transition hover:text-[#FBB03B]"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
             </div>
           </div>
 

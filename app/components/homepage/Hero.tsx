@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { GuestAuthLink } from "../GuestAuthPrompt";
 
 export default function Hero() {
   return (    
@@ -57,12 +57,12 @@ export default function Hero() {
   </div>
 
   <div className="grid grid-cols-2 gap-3 mt-6">
-    <Link
+    <GuestAuthLink
       href="/add-listing"
       className="bg-blue-600 rounded-2xl py-3 text-center font-semibold text-white"
     >
       ➕ Post Ad
-    </Link>
+    </GuestAuthLink>
 
     <button
       onClick={() =>
@@ -115,12 +115,12 @@ export default function Hero() {
 
       {/* Buttons */}
       <div className="flex flex-wrap gap-4 mt-6">
-<Link
+<GuestAuthLink
   href="/add-listing"
   className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-5 rounded-[24px] font-semibold hover:scale-105 transition flex items-center gap-3"
 >
   ➕ Post Ad
-</Link>
+</GuestAuthLink>
 
         <button
           onClick={() =>

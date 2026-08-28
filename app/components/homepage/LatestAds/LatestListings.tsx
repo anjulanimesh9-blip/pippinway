@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import ListingCard from "../ListingCard";
 import BannerRotator from "../Banner/BannerRotator";
+import { GuestAuthLink } from "../../GuestAuthPrompt";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
@@ -132,12 +132,12 @@ export default function LatestListings({
             ? "No ads yet. Be the first to post one."
             : "Try setting Country to “All Countries” and Category to “All”."}
         </p>
-        <Link
+        <GuestAuthLink
           href="/add-listing"
           className="inline-block mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500"
         >
           + Post an Ad
-        </Link>
+        </GuestAuthLink>
       </div>
     );
   }

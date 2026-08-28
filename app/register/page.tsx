@@ -1,15 +1,17 @@
 "use client";
 
 import React, {
+  Suspense,
   useState,
 } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 
-export default function RegisterPage() {
+function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -23,6 +25,10 @@ const [errors, setErrors] = useState({
   const [successMessage, setSuccessMessage] =
   useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = safeAuthReturnUrl(
+    searchParams.get("returnUrl") || searchParams.get("redirect")
+  );
 
   const handleRegister = async (
   e: React.FormEvent
@@ -94,7 +100,7 @@ await setDoc(
   }
 );
 
-  router.push("/profile");
+  router.push(returnUrl);
     } catch (error: any) {
       setSuccessMessage(
   "❌ something went wrong. please try again."
@@ -236,4 +242,18 @@ await setDoc(
     </div>
   </>
 );
+}
+
+export default function Register() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
+          Loading...
+        </div>
+      }
+    >
+      <RegisterPage />
+    </Suspense>
+  );
 }

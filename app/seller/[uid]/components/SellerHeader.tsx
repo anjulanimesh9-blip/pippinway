@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { GuestAuthLink } from "@/app/components/GuestAuthPrompt";
 import {
   FaCheckCircle,
   FaWhatsapp,
@@ -183,13 +183,13 @@ export default function SellerHeader({
                         {/* Action Buttons */}
             <div className="mt-8 flex flex-wrap gap-4">
 
-              <Link
+              <GuestAuthLink
                 href="/chat"
                 className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 font-semibold text-white shadow-lg transition duration-300 hover:scale-[1.02]"
               >
                 <BsChatDotsFill className="text-lg" />
                 Message Seller
-              </Link>
+              </GuestAuthLink>
 
               {seller.whatsapp && (
                 <a

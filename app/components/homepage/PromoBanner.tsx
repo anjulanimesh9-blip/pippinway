@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { GuestAuthLink } from "../GuestAuthPrompt";
 
 export default function PromoBanner() {
   return (
@@ -28,12 +28,12 @@ export default function PromoBanner() {
 
           <div className="flex gap-3 mt-5">
 
-            <Link
+            <GuestAuthLink
               href="/add-listing"
               className="bg-white text-purple-700 font-semibold px-5 py-3 rounded-xl"
             >
               ➕ Post Free Ad
-            </Link>
+            </GuestAuthLink>
 
             <button className="border border-white/30 text-white px-5 py-3 rounded-xl hover:bg-white/10 transition">
               Learn More

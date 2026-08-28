@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { GuestAuthProvider } from "./components/GuestAuthPrompt";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -89,7 +90,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <GuestAuthProvider>{children}</GuestAuthProvider>
 
         {/* Meta Pixel */}
         <Script id="meta-pixel" strategy="afterInteractive">

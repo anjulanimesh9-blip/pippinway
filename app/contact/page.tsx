@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import LegalPageShell from "@/app/components/legal/LegalPageShell";
+import { GuestAuthLink } from "@/app/components/GuestAuthPrompt";
 import { FACEBOOK_PAGE, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -31,9 +32,9 @@ const TOPICS: Array<{ title: string; body: ReactNode }> = [
     body: (
       <>
         Sign in and open{" "}
-        <Link href="/profile/settings" className="text-[#FBB03B] hover:underline">
+        <GuestAuthLink href="/profile/settings" className="text-[#FBB03B] hover:underline">
           Profile settings
-        </Link>{" "}
+        </GuestAuthLink>{" "}
         to update your display name, phone, country, photo or password. If you
         cannot sign in, use Help from the profile menu after you recover access,
         or the Facebook page linked below.
@@ -45,13 +46,13 @@ const TOPICS: Array<{ title: string; body: ReactNode }> = [
     body: (
       <>
         To post, edit or remove your own ads, use{" "}
-        <Link href="/add-listing" className="text-[#FBB03B] hover:underline">
+        <GuestAuthLink href="/add-listing" className="text-[#FBB03B] hover:underline">
           Add Listing
-        </Link>{" "}
+        </GuestAuthLink>{" "}
         and{" "}
-        <Link href="/profile/listings" className="text-[#FBB03B] hover:underline">
+        <GuestAuthLink href="/profile/listings" className="text-[#FBB03B] hover:underline">
           My Listings
-        </Link>
+        </GuestAuthLink>
         . On an ad you own, Edit and Delete appear on the listing page.
       </>
     ),

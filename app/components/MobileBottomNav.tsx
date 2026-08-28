@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GuestAuthLink } from "./GuestAuthPrompt";
 
 interface MobileBottomNavProps {
   unreadCount?: number;
@@ -34,16 +35,16 @@ export default function MobileBottomNav({
           Categories
         </Link>
 
-        <Link
+        <GuestAuthLink
           href="/add-listing"
           className="flex items-center justify-center"
         >
           <div className="w-14 h-14 -mt-8 rounded-full bg-violet-600 flex items-center justify-center text-white text-3xl shadow-xl border-4 border-[#020817]">
             +
           </div>
-        </Link>
+        </GuestAuthLink>
 
-        <Link
+        <GuestAuthLink
           href="/messages"
           className={`relative ${itemClass(
             pathname.startsWith("/messages")
@@ -57,15 +58,15 @@ export default function MobileBottomNav({
               {unreadCount}
             </span>
           )}
-        </Link>
+        </GuestAuthLink>
 
-        <Link
+        <GuestAuthLink
           href="/profile"
           className={itemClass(pathname.startsWith("/profile"))}
         >
           <span className="text-2xl">👤</span>
           Profile
-        </Link>
+        </GuestAuthLink>
 
       </div>
     </nav>

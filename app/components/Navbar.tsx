@@ -15,6 +15,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth } from "../firebase";
+import { GuestAuthLink, useGuestAuthPrompt } from "./GuestAuthPrompt";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] =
@@ -28,6 +29,7 @@ const [showNotifications, setShowNotifications] = useState(false);
 
   const router =
     useRouter();
+  const { requireAuth } = useGuestAuthPrompt();
 
     const {
   notifications,
@@ -128,9 +130,9 @@ useEffect(() => {
     Home
   </Link>
 
-  <Link href="/add-listing">
+  <GuestAuthLink href="/add-listing">
     Add Listing
-  </Link>
+  </GuestAuthLink>
   <a
   href="https://www.facebook.com/profile.php?id=61589186823471"
   target="_blank"
@@ -216,9 +218,9 @@ useEffect(() => {
 
 </div>
 
-      <Link href="/profile">
+      <GuestAuthLink href="/profile">
         Profile
-      </Link>
+      </GuestAuthLink>
 
       <button
         onClick={() =>
@@ -276,7 +278,7 @@ useEffect(() => {
       className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
       onClick={() => {
         setMenuOpen(false);
-        router.push("/add-listing");
+        requireAuth("/add-listing");
       }}
     >
       Add Listing
@@ -316,7 +318,7 @@ useEffect(() => {
           className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
           onClick={() => {
             setMenuOpen(false);
-            router.push("/profile");
+            requireAuth("/profile");
           }}
         >
           Profile

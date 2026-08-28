@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GuestAuthLink } from "@/app/components/GuestAuthPrompt";
 import LegalPageShell from "@/app/components/legal/LegalPageShell";
 import { FACEBOOK_PAGE, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
@@ -160,9 +161,9 @@ export default function AboutPage() {
         <p>
           Sign in (or register with email, password, phone and country), then
           open{" "}
-          <Link href="/add-listing" className="text-[#FBB03B] hover:underline">
+          <GuestAuthLink href="/add-listing" className="text-[#FBB03B] hover:underline">
             Add Listing
-          </Link>
+          </GuestAuthLink>
           . You add a title, price, country, city, category, WhatsApp number,
           description and up to four photos. After you publish, the ad can
           appear in Latest Ads when it is live. You can edit or delete your
