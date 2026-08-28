@@ -11,6 +11,7 @@ import RelatedAds from "@/app/components/listing/RelatedAds";
 import DeleteModal from "@/app/components/listing/DeleteModal";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/homepage/Footer/Footer";
 import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
@@ -393,6 +394,7 @@ const whatsappLink =
         onDelete={handleDelete}
       />
 
+      <Footer />
       <MobileBottomNav />
     </main>
   );

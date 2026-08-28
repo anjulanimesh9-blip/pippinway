@@ -10,13 +10,16 @@ export default function ProfileFooter() {
         <p>© 2026 Pippinway.com — All Rights Reserved</p>
 
         <div className="flex flex-wrap items-center gap-4">
-          <Link href="/" className="hover:text-white">
+          <Link href="/about" className="hover:text-white">
             About Us
           </Link>
-          <Link href="/" className="hover:text-white">
+          <Link href="/contact" className="hover:text-white">
+            Contact / Help
+          </Link>
+          <Link href="/privacy" className="hover:text-white">
             Privacy Policy
           </Link>
-          <Link href="/" className="hover:text-white">
+          <Link href="/terms" className="hover:text-white">
             Terms
           </Link>
           <div className="ml-2 flex items-center gap-2">

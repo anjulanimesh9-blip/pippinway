@@ -1,6 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/privacy-policy",
+        destination: "/privacy",
+        permanent: true,
+      },
+      {
+        source: "/post ad",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     qualities: [50, 65, 75],
     minimumCacheTTL: 604800,

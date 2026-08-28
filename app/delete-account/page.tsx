@@ -98,7 +98,7 @@ export default function DeleteAccountPage() {
               For more information about how Pippinway handles personal data,
               please see our{" "}
               <a
-                href="/privacy-policy"
+                href="/privacy"
                 className="font-medium text-purple-600 hover:underline"
               >
                 Privacy Policy

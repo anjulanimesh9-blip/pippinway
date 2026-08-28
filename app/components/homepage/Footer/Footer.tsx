@@ -2,99 +2,119 @@
 
 import Link from "next/link";
 
+const QUICK_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact / Help" },
+  { href: "/add-listing", label: "Add Listing" },
+  { href: "/login", label: "Login" },
+];
+
+const CATEGORIES = [
+  { href: "/?category=Cars", label: "Cars" },
+  { href: "/?category=Property", label: "Property" },
+  { href: "/?category=Electronics", label: "Electronics" },
+  { href: "/?category=Jobs", label: "Jobs" },
+  { href: "/?category=Fashion", label: "Fashion" },
+];
+
+const COUNTRIES = [
+  "🇬🇧 UK",
+  "🇺🇸 USA",
+  "🇨🇦 Canada",
+  "🇱🇰 Sri Lanka",
+  "🇿🇼 Zimbabwe",
+  "🇮🇳 India",
+];
+
+const LEGAL_LINKS = [
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact / Help" },
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms & Conditions" },
+];
+
 export default function Footer() {
   return (
-    <>
-      <footer className="mt-32 border-t border-gray-800 bg-[#020817]">
-  <div className="max-w-7xl mx-auto px-4 py-14">
+    <footer className="mt-32 border-t border-gray-800 bg-[#020817]">
+      <div className="mx-auto max-w-7xl px-4 py-14">
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <img
+              src="/images/logo.png"
+              alt="Pippinway"
+              className="mb-4 w-[220px]"
+            />
+            <p className="text-xs leading-7 text-gray-400 md:text-lg">
+              Buy, sell and explore products worldwide with Pippinway —
+              trusted, fast and easy.
+            </p>
+          </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          <div>
+            <h3 className="mb-4 text-lg font-bold text-white">Quick Links</h3>
+            <div className="flex flex-col gap-3 text-gray-400">
+              {QUICK_LINKS.map((link) => (
+                <Link
+                  key={link.href + link.label}
+                  href={link.href}
+                  className="transition hover:text-[#FBB03B]"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
 
-      {/* Logo */}
-      <div>
-        <img
-          src="/images/logo.png"
-          className="w-[220px] mb-4"
-        />
+          <div>
+            <h3 className="mb-4 text-lg font-bold text-white">Categories</h3>
+            <div className="flex flex-row gap-3 text-gray-400 md:flex-col">
+              {CATEGORIES.map((category) => (
+                <Link
+                  key={category.href}
+                  href={category.href}
+                  className="transition hover:text-[#FBB03B]"
+                >
+                  {category.label}
+                </Link>
+              ))}
+            </div>
+          </div>
 
-        <p className="text-gray-400 leading-7 text-xs md:text-lg">
-          Buy, sell and explore products
-          worldwide with Pippinway —
-          trusted, fast and easy.
-        </p>
-      </div>
+          <div>
+            <h3 className="mb-4 text-lg font-bold text-white">
+              Available Countries
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {COUNTRIES.map((country) => (
+                <span
+                  key={country}
+                  className="rounded-xl border border-gray-700 bg-[#111827] px-3 py-2 text-xs text-gray-300"
+                >
+                  {country}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
-      {/* Quick Links */}
-      <div>
-        <h3 className="text-white font-bold text-lg md:text-lg mb-4">
-          Quick Links
-        </h3>
-
-        <div className="flex flex-col gap-3 text-gray-400 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition">
-          <Link href="/">
-            Home
-          </Link>
-
-          <Link href="/add-listing">
-            Add Listing
-          </Link>
-
-          <Link href="/profile">
-            Profile
-          </Link>
-
-          <Link href="/login">
-            Login
-          </Link>
+        <div className="mt-10 flex flex-col items-center gap-4 border-t border-gray-800 pt-6 text-center text-gray-400">
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+            {LEGAL_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="transition hover:text-[#FBB03B]"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <p className="text-sm md:text-lg">
+            © 2026 Pippinway.com — All Rights Reserved
+          </p>
         </div>
       </div>
-
-      {/* Categories */}
-      <div>
-        <h3 className="text-white font-bold text-lg md:text-lg mb-4">
-          Categories
-        </h3>
-
-        <div className="flex flex-row md:flex-col gap-3 text-gray-400">
-          <span>Cars</span>
-          <span>Property</span>
-          <span>Electronics</span>
-          <span>Jobs</span>
-          <span>Fashion</span>
-        </div>
-      </div>
-
-      {/* Countries */}
-      <div>
-        <h3 className="text-white font-bold text-lg md:text-lg mb-4">
-          Available Countries
-        </h3>
-
-        <div className="flex flex-wrap gap-2">
-          {[
-            "🇬🇧 UK",
-            "🇺🇸 USA",
-            "🇨🇦 Canada",
-            "🇱🇰 Sri Lanka",
-            "🇿🇼 Zimbabwe",
-            "🇮🇳 India",
-          ].map((country) => (
-            <span
-              key={country}
-              className="bg-[#111827] border border-gray-700 text-gray-300 px-3 py-2 rounded-xl text-xs"
-            >
-              {country}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-400 text-lg">
-      © 2026 Pippinway.com — All Rights Reserved
-    </div>
-  </div>
-</footer>
-    </>
+    </footer>
   );
 }

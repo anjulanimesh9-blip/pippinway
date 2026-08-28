@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import MobileBottomNav from "../components/MobileBottomNav";
+import Footer from "../components/homepage/Footer/Footer";
 
 const categories = [
   { name: "Cars", icon: "🚗", href: "/?category=Cars" },
@@ -54,6 +55,7 @@ export default function CategoriesPage() {
         ))}
       </div>
 
+      <Footer />
       <MobileBottomNav />
     </main>
   );

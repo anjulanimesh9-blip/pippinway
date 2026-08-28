@@ -1,34 +1,43 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const lastModified = new Date();
+
   return [
     {
-      url: "https://www.pippinway.com",
-      lastModified: new Date(),
+      url: SITE_URL,
+      lastModified,
       changeFrequency: "daily",
       priority: 1,
     },
     {
-      url: "https://www.pippinway.com/add-listing",
-      lastModified: new Date(),
-      changeFrequency: "weekly",
+      url: `${SITE_URL}/about`,
+      lastModified,
+      changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: "https://www.pippinway.com/login",
-      lastModified: new Date(),
+      url: `${SITE_URL}/contact`,
+      lastModified,
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.8,
     },
     {
-      url: "https://www.pippinway.com/register",
-      lastModified: new Date(),
+      url: `${SITE_URL}/privacy`,
+      lastModified,
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.7,
     },
     {
-      url: "https://www.pippinway.com/profile",
-      lastModified: new Date(),
+      url: `${SITE_URL}/terms`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/categories`,
+      lastModified,
       changeFrequency: "weekly",
       priority: 0.6,
     },

@@ -7,6 +7,7 @@ import CategorySidebar from "./CategorySidebar";
 import CategoryFilter from "./CategoryFilter";
 import RightSidebar from "./RightSidebar";
 import TrustBadges from "./TrustBadges";
+import HomeSeoSection from "./HomeSeoSection";
 import { bannersForPlacement } from "@/app/hooks/useBanners";
 import usePagedListings from "@/app/hooks/usePagedListings";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
@@ -92,6 +93,7 @@ export default function HomeContent({
       </div>
 
       <TrustBadges />
+      <HomeSeoSection />
     </>
   );
 }

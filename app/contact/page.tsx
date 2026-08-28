@@ -1,0 +1,173 @@
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import Link from "next/link";
+import LegalPageShell from "@/app/components/legal/LegalPageShell";
+import { FACEBOOK_PAGE, SITE_URL } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "Contact Pippinway Support",
+  description:
+    "How to reach Pippinway about accounts, listings, suspicious ads, payments, Featured Ads, Rewards and privacy.",
+  alternates: {
+    canonical: `${SITE_URL}/contact`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "Contact Pippinway Support",
+    description:
+      "Support paths for Pippinway marketplace accounts, listings, Featured Ads, Rewards and privacy requests.",
+    url: `${SITE_URL}/contact`,
+    siteName: "Pippinway",
+    type: "website",
+  },
+};
+
+const TOPICS: Array<{ title: string; body: ReactNode }> = [
+  {
+    title: "Account problems",
+    body: (
+      <>
+        Sign in and open{" "}
+        <Link href="/profile/settings" className="text-[#FBB03B] hover:underline">
+          Profile settings
+        </Link>{" "}
+        to update your display name, phone, country, photo or password. If you
+        cannot sign in, use Help from the profile menu after you recover access,
+        or the Facebook page linked below.
+      </>
+    ),
+  },
+  {
+    title: "Listings",
+    body: (
+      <>
+        To post, edit or remove your own ads, use{" "}
+        <Link href="/add-listing" className="text-[#FBB03B] hover:underline">
+          Add Listing
+        </Link>{" "}
+        and{" "}
+        <Link href="/profile/listings" className="text-[#FBB03B] hover:underline">
+          My Listings
+        </Link>
+        . On an ad you own, Edit and Delete appear on the listing page.
+      </>
+    ),
+  },
+  {
+    title: "Reporting a suspicious listing",
+    body: (
+      <>
+        Listing pages include a safety notice asking you not to send money
+        before inspecting an item and to report ads that look fraudulent. There
+        is no separate public report form in the app today. Describe the listing
+        (title and page link) through Help in your profile or Pippinway’s
+        Facebook page so the team can review it.
+      </>
+    ),
+  },
+  {
+    title: "Payments, Featured Ads and packages",
+    body: (
+      <>
+        Featured Credits come from{" "}
+        <Link href="/featured-packages" className="text-[#FBB03B] hover:underline">
+          Featured Packages
+        </Link>{" "}
+        after you submit payment proof for admin review, or from Rewards when
+        you win credits. Apply credits to your own live ads from{" "}
+        <Link href="/featured-ads" className="text-[#FBB03B] hover:underline">
+          Featured Ads
+        </Link>
+        . Package questions should include the package name and the listing you
+        wanted to feature.
+      </>
+    ),
+  },
+  {
+    title: "Rewards",
+    body: (
+      <>
+        Open{" "}
+        <Link href="/rewards" className="text-[#FBB03B] hover:underline">
+          Rewards
+        </Link>{" "}
+        while signed in to see spin progress, history and cash-prize payout
+        details. Rewards unlock from eligible published listings only. They are
+        never granted for clicking or viewing Google advertisements.
+      </>
+    ),
+  },
+  {
+    title: "Privacy and account deletion",
+    body: (
+      <>
+        Read how information is used on the{" "}
+        <Link href="/privacy" className="text-[#FBB03B] hover:underline">
+          Privacy Policy
+        </Link>
+        . To request deletion, use{" "}
+        <Link href="/delete-account" className="text-[#FBB03B] hover:underline">
+          Delete Account
+        </Link>{" "}
+        or the Danger Zone in profile settings if you are signed in.
+      </>
+    ),
+  },
+  {
+    title: "General support",
+    body: (
+      <>
+        For anything else, start with this page’s links, then Help in the
+        profile sidebar. Help currently opens Pippinway’s Facebook presence,
+        which is the public channel already wired in the product.
+      </>
+    ),
+  },
+];
+
+export default function ContactPage() {
+  return (
+    <LegalPageShell title="Pippinway Support">
+      <p>
+        Use this page to work out where to go for account problems, listings,
+        suspicious ads, payments, Featured Ads, Rewards, privacy concerns and
+        general support. Pippinway does not publish a phone number or street
+        address in the product. Support is handled through the in-app paths
+        below and the Facebook page already linked from Help.
+      </p>
+
+      <div className="space-y-4">
+        {TOPICS.map((topic) => (
+          <section
+            key={topic.title}
+            className="rounded-2xl border border-white/10 bg-[#111827] p-5"
+          >
+            <h2 className="text-lg font-semibold text-white">{topic.title}</h2>
+            <p className="mt-2 text-gray-300">{topic.body}</p>
+          </section>
+        ))}
+      </div>
+
+      <section className="rounded-2xl border border-[#FBB03B]/30 bg-[#111827] p-5">
+        <h2 className="text-lg font-semibold text-white">Facebook Help</h2>
+        <p className="mt-2">
+          Profile → Help opens{" "}
+          <a
+            href={FACEBOOK_PAGE}
+            className="text-[#FBB03B] hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Pippinway on Facebook
+          </a>
+          . That is the contact channel currently coded in the site. If you
+          need a dedicated support email or phone listed here, it has to be
+          supplied by the site owner — this page will not invent one.
+        </p>
+      </section>
+    </LegalPageShell>
+  );
+}

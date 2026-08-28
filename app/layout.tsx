@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: "https://www.pippinway.com",
+    canonical: "./",
   },
 
   openGraph: {

@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar";
 import SearchBar from "./components/homepage/Search/SearchBar";
 
 import HomeContent from "./components/homepage/HomeContent";
+import Footer from "./components/homepage/Footer/Footer";
 
 import MobileBottomNav from "./components/MobileBottomNav";
 
@@ -202,7 +203,7 @@ function HomePage() {
 
       </section>
 
-
+      <Footer />
 
       <MobileBottomNav />
 
