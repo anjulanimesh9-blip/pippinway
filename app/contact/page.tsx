@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import LegalPageShell from "@/app/components/legal/LegalPageShell";
-import { FACEBOOK_PAGE, SITE_URL } from "@/lib/site";
+import { FACEBOOK_PAGE, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact Pippinway Support",
@@ -120,9 +120,15 @@ const TOPICS: Array<{ title: string; body: ReactNode }> = [
     title: "General support",
     body: (
       <>
-        For anything else, start with this page’s links, then Help in the
-        profile sidebar. Help currently opens Pippinway’s Facebook presence,
-        which is the public channel already wired in the product.
+        Email{" "}
+        <a
+          href={`mailto:${SUPPORT_EMAIL}`}
+          className="text-[#FBB03B] hover:underline"
+        >
+          {SUPPORT_EMAIL}
+        </a>{" "}
+        for general support. You can also use Help in the profile sidebar,
+        which opens Pippinway’s Facebook page.
       </>
     ),
   },
@@ -134,9 +140,16 @@ export default function ContactPage() {
       <p>
         Use this page to work out where to go for account problems, listings,
         suspicious ads, payments, Featured Ads, Rewards, privacy concerns and
-        general support. Pippinway does not publish a phone number or street
-        address in the product. Support is handled through the in-app paths
-        below and the Facebook page already linked from Help.
+        general support. Email{" "}
+        <a
+          href={`mailto:${SUPPORT_EMAIL}`}
+          className="text-[#FBB03B] hover:underline"
+        >
+          {SUPPORT_EMAIL}
+        </a>{" "}
+        for Pippinway support. Pippinway does not publish a phone number or
+        street address. In-app paths below and the Facebook Help page remain
+        available.
       </p>
 
       <div className="space-y-4">
@@ -152,6 +165,20 @@ export default function ContactPage() {
       </div>
 
       <section className="rounded-2xl border border-[#FBB03B]/30 bg-[#111827] p-5">
+        <h2 className="text-lg font-semibold text-white">Email support</h2>
+        <p className="mt-2">
+          Official Pippinway support, privacy and contact email:{" "}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-[#FBB03B] hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>
+          .
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-[#111827] p-5">
         <h2 className="text-lg font-semibold text-white">Facebook Help</h2>
         <p className="mt-2">
           Profile → Help opens{" "}
@@ -163,9 +190,14 @@ export default function ContactPage() {
           >
             Pippinway on Facebook
           </a>
-          . That is the contact channel currently coded in the site. If you
-          need a dedicated support email or phone listed here, it has to be
-          supplied by the site owner — this page will not invent one.
+          . You can also email{" "}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-[#FBB03B] hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>
+          .
         </p>
       </section>
     </LegalPageShell>

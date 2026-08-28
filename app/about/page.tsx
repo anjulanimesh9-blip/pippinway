@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPageShell from "@/app/components/legal/LegalPageShell";
-import { FACEBOOK_PAGE, SITE_URL } from "@/lib/site";
+import { FACEBOOK_PAGE, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About Pippinway",
@@ -210,7 +210,14 @@ export default function AboutPage() {
         </h2>
         <p>
           For account issues, listing problems, Featured Ads, Rewards, privacy
-          questions or general help, use the{" "}
+          questions or general help, email{" "}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-[#FBB03B] hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>{" "}
+          or use the{" "}
           <Link href="/contact" className="text-[#FBB03B] hover:underline">
             Contact
           </Link>{" "}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPageShell from "@/app/components/legal/LegalPageShell";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -242,12 +242,19 @@ export default function PrivacyPage() {
           13. Privacy questions
         </h2>
         <p>
-          Use{" "}
+          Email{" "}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-[#FBB03B] hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>{" "}
+          or use{" "}
           <Link href="/contact" className="text-[#FBB03B] hover:underline">
             Contact / Support
-          </Link>{" "}
-          and the in-app Help path. Pippinway will not list a phone number or
-          postal address here unless the owner publishes one in the product.
+          </Link>
+          . Pippinway will not list a phone number or postal address here
+          unless the owner publishes one in the product.
         </p>
       </section>
     </LegalPageShell>

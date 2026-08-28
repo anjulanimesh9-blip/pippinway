@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPageShell from "@/app/components/legal/LegalPageShell";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
@@ -264,7 +264,14 @@ export default function TermsPage() {
           17. Contact
         </h2>
         <p>
-          Questions about these terms:{" "}
+          Questions about these terms: email{" "}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-[#FBB03B] hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>{" "}
+          or use{" "}
           <Link href="/contact" className="text-[#FBB03B] hover:underline">
             Contact / Support
           </Link>
