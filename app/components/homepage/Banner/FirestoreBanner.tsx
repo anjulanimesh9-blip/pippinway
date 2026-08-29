@@ -10,6 +10,7 @@ type Props = {
   banner: Banner | null;
   framed?: boolean;
   eager?: boolean;
+  sizes?: string;
   onImageError?: () => void;
 };
 
@@ -17,6 +18,7 @@ export default function FirestoreBanner({
   banner,
   framed = true,
   eager = false,
+  sizes = BANNER_INFEED_SIZES,
   onImageError,
 }: Props) {
   if (!banner || !isUsableBannerSrc(banner.imageUrl)) return null;
@@ -34,7 +36,7 @@ export default function FirestoreBanner({
         src={banner.imageUrl.trim()}
         alt="Advertisement"
         fitMode={banner.fitMode}
-        sizes={BANNER_INFEED_SIZES}
+        sizes={sizes}
         eager={eager}
         onError={onImageError}
       />

@@ -2,20 +2,20 @@ import type { BannerPlacement } from "@/lib/types/featured";
 
 /**
  * Design sizes we asked advertisers to make (and the crop/export target).
- * Live slots use the same aspect (`aspect-[16/5]` / `aspect-[9/16]`) so
+ * Live slots use the same Auto Fit row (`BANNER_ROW_HEIGHT_CLASS`) so
  * the crop matches what appears on the site.
  */
 export const BANNER_SLOT_PX: Record<BannerPlacement, { width: number; height: number }> = {
   infeed: { width: 1600, height: 500 },
   profile: { width: 1600, height: 500 },
-  sidebar: { width: 720, height: 1280 },
+  sidebar: { width: 1600, height: 500 },
 };
 
 /** Locked crop aspect per banner slot (width / height). */
 export const BANNER_CROP_ASPECT: Record<BannerPlacement, number> = {
   infeed: 16 / 5,
   profile: 16 / 5,
-  sidebar: 9 / 16,
+  sidebar: 16 / 5,
 };
 
 /** JPEG export matching the design size. */
@@ -25,13 +25,13 @@ export const BANNER_CROP_OUTPUT: Record<
 > = {
   infeed: { width: 1600, height: 500 },
   profile: { width: 1600, height: 500 },
-  sidebar: { width: 720, height: 1280 },
+  sidebar: { width: 1600, height: 500 },
 };
 
 export const BANNER_CROP_HINT: Record<BannerPlacement, string> = {
   infeed: "Crop to 16:5 — list banner size you were given (export 1600×500).",
   profile: "Crop to 16:5 — profile banner size you were given (export 1600×500).",
-  sidebar: "Crop to 9:16 — sidebar banner size you were given (export 720×1280).",
+  sidebar: "Crop to 16:5 — homepage right rail uses the same Auto Fit row as list banners.",
 };
 
 /** Same frame language as live `BannerRotator`. */

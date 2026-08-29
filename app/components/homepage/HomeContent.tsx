@@ -8,7 +8,10 @@ import CategoryFilter from "./CategoryFilter";
 import RightSidebar from "./RightSidebar";
 import TrustBadges from "./TrustBadges";
 import HomeSeoSection from "./HomeSeoSection";
-import { bannersForPlacement } from "@/app/hooks/useBanners";
+import {
+  bannersForHomepageRail,
+  bannersForPlacement,
+} from "@/app/hooks/useBanners";
 import usePagedListings from "@/app/hooks/usePagedListings";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
@@ -36,6 +39,7 @@ export default function HomeContent({
   filterKey = "",
 }: Props) {
   const infeedBanners = bannersForPlacement(banners, "infeed");
+  const railBanners = bannersForHomepageRail(banners);
   const { pageItems, total, from, to, hasPrev, hasNext, goPrev, goNext } =
     usePagedListings(latestListings, filterKey);
 
@@ -87,7 +91,7 @@ export default function HomeContent({
 
         <aside className="hidden lg:block self-start">
           <div className="sticky top-24">
-            <RightSidebar />
+            <RightSidebar banners={railBanners} />
           </div>
         </aside>
       </div>

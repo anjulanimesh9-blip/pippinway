@@ -17,6 +17,9 @@ export const BANNER_ROW_HEIGHT_CLASS =
 /** In-feed / list banners: same compact row as a listing, not a 16:5 hero. */
 export const INFEED_BANNER_CLASS =
   `relative w-full overflow-hidden ${BANNER_ROW_HEIGHT_CLASS}`;
+/** Homepage right rail: same Auto Fit row height as in-feed banners. */
+export const SIDEBAR_BANNER_CLASS =
+  `relative w-full overflow-hidden ${BANNER_ROW_HEIGHT_CLASS}`;
 /** Profile banner: same listing-row height so a flyer cannot inflate the bar. */
 export const PROFILE_BANNER_CLASS =
   `relative w-full shrink-0 overflow-hidden ${BANNER_ROW_HEIGHT_CLASS}`;
@@ -27,6 +30,7 @@ type Props = {
   startOffset?: number;
   className?: string;
   eager?: boolean;
+  sizes?: string;
 };
 
 function toFirestoreSlides(banners: Banner[]): Banner[] {
@@ -52,6 +56,7 @@ export default function BannerRotator({
   startOffset = 0,
   className = "",
   eager = true,
+  sizes,
 }: Props) {
   const firestoreSlides = useMemo(() => toFirestoreSlides(banners), [banners]);
   const fallbackSlides = useMemo(
@@ -134,6 +139,7 @@ export default function BannerRotator({
             banner={slide}
             framed={false}
             eager={eager && isActive}
+            sizes={sizes}
             onImageError={() =>
               setFailedIds((current) => {
                 if (current.has(slide.id)) return current;

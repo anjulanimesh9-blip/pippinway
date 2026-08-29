@@ -24,11 +24,11 @@ import BannerFitImage from "@/app/components/homepage/Banner/BannerFitImage";
 import {
   INFEED_BANNER_CLASS,
   PROFILE_BANNER_CLASS,
+  SIDEBAR_BANNER_CLASS,
 } from "@/app/components/homepage/Banner/BannerRotator";
 import {
   BANNER_CROP_ASPECT,
   BANNER_CROP_FRAME_CLASS,
-  BANNER_CROP_HINT,
 } from "@/lib/bannerCrop";
 import {
   isValidHttpImageUrl,
@@ -38,21 +38,16 @@ import {
 
 const BANNER_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
   { value: "infeed", label: "List banner (in ads)" },
+  { value: "sidebar", label: "Homepage sidebar" },
   { value: "profile", label: "Profile banner" },
 ];
 
-const PLACEMENT_HINT: Record<Exclude<BannerPlacement, "sidebar">, string> = {
+const PLACEMENT_HINT: Record<BannerPlacement, string> = {
   infeed: "Horizontal 16:5 banner inside the Latest Ads list.",
+  sidebar:
+    "Homepage right column. Same Auto Fit row as list banners (~1.5× listing height).",
   profile: "16:5 banner at the top of the profile page.",
 };
-
-function typeOptionsFor(banner: Banner) {
-  if (getBannerPlacement(banner) !== "sidebar") return BANNER_TYPE_OPTIONS;
-  return [
-    { value: "sidebar" as BannerPlacement, label: "Sidebar banner (no longer used)" },
-    ...BANNER_TYPE_OPTIONS,
-  ];
-}
 
 const FIT_MODE_OPTIONS: { value: BannerFitMode; label: string; hint: string }[] = [
   {
@@ -333,9 +328,7 @@ export default function AdminBannersPage() {
                 ))}
               </select>
               <p className="text-xs text-gray-500">
-                {form.placement === "sidebar"
-                  ? BANNER_CROP_HINT.sidebar
-                  : PLACEMENT_HINT[form.placement]}
+                {PLACEMENT_HINT[form.placement]}
               </p>
             </div>
             <div className="space-y-2">
@@ -410,17 +403,12 @@ export default function AdminBannersPage() {
                 <div className="space-y-2">
                   <div
                     className={`relative mt-2 overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${
-                      form.placement === "sidebar"
-                        ? "mx-auto h-64"
-                        : form.placement === "profile"
-                          ? PROFILE_BANNER_CLASS
+                      form.placement === "profile"
+                        ? PROFILE_BANNER_CLASS
+                        : form.placement === "sidebar"
+                          ? SIDEBAR_BANNER_CLASS
                           : INFEED_BANNER_CLASS
                     }`}
-                    style={
-                      form.placement === "sidebar"
-                        ? { aspectRatio: String(BANNER_CROP_ASPECT.sidebar) }
-                        : undefined
-                    }
                   >
                     <BannerFitImage
                       src={filePreview || form.imageUrl.trim()}
@@ -530,7 +518,7 @@ export default function AdminBannersPage() {
                     aspectRatio: String(
                       BANNER_CROP_ASPECT[getBannerPlacement(banner)]
                     ),
-                    height: getBannerPlacement(banner) === "sidebar" ? 128 : 64,
+                    height: 64,
                   }}
                 >
                   <BannerFitImage
@@ -565,7 +553,7 @@ export default function AdminBannersPage() {
                           }
                           className="rounded-lg bg-black/30 px-2 py-1 text-white"
                         >
-                          {typeOptionsFor(banner).map((opt) => (
+                          {BANNER_TYPE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>
