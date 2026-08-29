@@ -51,5 +51,8 @@ export async function GET(request: Request) {
   }
 
   const report = await fetchGa4Report();
+  if (!report.connected) {
+    return NextResponse.json(report, { status: 503 });
+  }
   return NextResponse.json(report);
 }

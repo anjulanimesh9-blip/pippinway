@@ -35,34 +35,54 @@ type ServiceAccount = {
   private_key: string;
 };
 
+type Ga4FailError = Error & { code?: string };
+
+function stripWrappingQuotes(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2)
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+function normalizePrivateKey(raw: string): string {
+  return stripWrappingQuotes(raw)
+    .replace(/\\n/g, "\n")
+    .replace(/\r/g, "")
+    .trim();
+}
+
 function readServiceAccount(): ServiceAccount | null {
   const json = process.env.GA4_SERVICE_ACCOUNT_JSON?.trim();
   if (json) {
     try {
-      const parsed = JSON.parse(json) as Partial<ServiceAccount>;
+      const parsed = JSON.parse(stripWrappingQuotes(json)) as Partial<ServiceAccount>;
       if (parsed.client_email && parsed.private_key) {
         return {
-          client_email: parsed.client_email,
-          private_key: parsed.private_key,
+          client_email: parsed.client_email.trim(),
+          private_key: normalizePrivateKey(parsed.private_key),
         };
       }
     } catch {
-      return null;
+      // Fall through to GA4_CLIENT_EMAIL + GA4_PRIVATE_KEY.
     }
   }
 
-  const email = process.env.GA4_CLIENT_EMAIL?.trim();
-  const key = process.env.GA4_PRIVATE_KEY?.trim();
+  const email = stripWrappingQuotes(process.env.GA4_CLIENT_EMAIL ?? "");
+  const key = process.env.GA4_PRIVATE_KEY;
   if (!email || !key) return null;
 
   return {
     client_email: email,
-    private_key: key.replace(/\\n/g, "\n"),
+    private_key: normalizePrivateKey(key),
   };
 }
 
 export function getGa4PropertyId(): string | null {
-  const raw = process.env.GA4_PROPERTY_ID?.trim() ?? "";
+  const raw = stripWrappingQuotes(process.env.GA4_PROPERTY_ID ?? "");
   if (!raw) return null;
   const id = raw.replace(/^properties\//, "");
   if (!/^\d+$/.test(id)) return null;
@@ -107,6 +127,21 @@ function signServiceAccountJwt(account: ServiceAccount): string {
   return `${unsigned}.${signature}`;
 }
 
+function throwGa4Error(code: string, message: string): never {
+  const err: Ga4FailError = new Error(message);
+  err.code = code;
+  throw err;
+}
+
+function logGa4Failure(err: unknown): void {
+  const code =
+    err && typeof err === "object" && "code" in err && err.code != null
+      ? String(err.code)
+      : undefined;
+  const message = err instanceof Error ? err.message : "unknown";
+  console.error("GA4 fetch failed", { code, message });
+}
+
 async function getAccessToken(account: ServiceAccount): Promise<string> {
   const assertion = signServiceAccountJwt(account);
   const body = new URLSearchParams({
@@ -119,11 +154,11 @@ async function getAccessToken(account: ServiceAccount): Promise<string> {
     body,
   });
   if (!res.ok) {
-    throw new Error("GA4 token exchange failed");
+    throwGa4Error(String(res.status), `GA4 token exchange failed (${res.status})`);
   }
   const data = (await res.json()) as { access_token?: string };
   if (!data.access_token) {
-    throw new Error("GA4 token missing");
+    throwGa4Error("TOKEN_MISSING", "GA4 token missing");
   }
   return data.access_token;
 }
@@ -155,7 +190,24 @@ async function runReport(
     }
   );
   if (!res.ok) {
-    throw new Error(`GA4 report failed (${res.status})`);
+    let code = String(res.status);
+    let message = `GA4 report failed (${res.status})`;
+    try {
+      const errBody = (await res.json()) as {
+        error?: { status?: string; message?: string };
+      };
+      if (errBody.error?.status) code = errBody.error.status;
+      if (
+        typeof errBody.error?.message === "string" &&
+        errBody.error.message.length > 0 &&
+        errBody.error.message.length < 300
+      ) {
+        message = errBody.error.message;
+      }
+    } catch {
+      // Keep status-only message if the error body is not JSON.
+    }
+    throwGa4Error(code, message);
   }
   return res.json();
 }
@@ -224,7 +276,8 @@ export async function fetchGa4Report(): Promise<Ga4Report> {
     }
 
     return { connected: true, windows, events30d };
-  } catch {
+  } catch (err) {
+    logGa4Failure(err);
     return {
       connected: false,
       reason: "Analytics connection required",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   getCountFromServer,
@@ -170,7 +171,17 @@ export default function AdminAnalyticsPage() {
       }
 
       try {
-        const token = await auth.currentUser?.getIdToken();
+        const user = await new Promise<typeof auth.currentUser>((resolve) => {
+          if (auth.currentUser) {
+            resolve(auth.currentUser);
+            return;
+          }
+          const unsub = onAuthStateChanged(auth, (next) => {
+            unsub();
+            resolve(next);
+          });
+        });
+        const token = user ? await user.getIdToken() : null;
         if (token) {
           const res = await fetch("/api/admin/analytics/ga4", {
             headers: { Authorization: `Bearer ${token}` },
@@ -178,25 +189,26 @@ export default function AdminAnalyticsPage() {
           if (res.ok) {
             const report = (await res.json()) as Ga4Report;
             if (!cancelled) setGa4(report);
-          } else if (!cancelled) {
-            setGa4({
+          } else if (res.status === 503) {
+            let report: Ga4Report = {
               connected: false,
               reason: "Analytics connection required",
-            });
+            };
+            try {
+              const body = (await res.json()) as Ga4Report;
+              if (body?.connected === false) report = body;
+            } catch {
+              // Keep the 503 default reason.
+            }
+            if (!cancelled) setGa4(report);
+          } else if (!cancelled) {
+            setGa4(null);
           }
         } else if (!cancelled) {
-          setGa4({
-            connected: false,
-            reason: "Analytics connection required",
-          });
+          setGa4(null);
         }
       } catch {
-        if (!cancelled) {
-          setGa4({
-            connected: false,
-            reason: "Analytics connection required",
-          });
-        }
+        if (!cancelled) setGa4(null);
       }
 
       if (!cancelled) setLoading(false);
@@ -209,6 +221,7 @@ export default function AdminAnalyticsPage() {
   }, []);
 
   const gaConnected = ga4?.connected === true && !!ga4.windows;
+  const showConnectionRequired = ga4?.connected === false;
   const showFunnel =
     gaConnected &&
     firestore.listings30d !== null &&
@@ -374,7 +387,7 @@ export default function AdminAnalyticsPage() {
             </p>
           )}
         </>
-      ) : (
+      ) : showConnectionRequired ? (
         <div className="rounded-2xl border border-dashed border-white/15 bg-[#111827] px-4 py-8 text-center">
           <p className="text-sm font-semibold text-white">
             Analytics connection required
@@ -388,7 +401,7 @@ export default function AdminAnalyticsPage() {
             does not invent traffic.
           </p>
         </div>
-      )}
+      ) : null}
 
       {showFunnel ? (
         <>
