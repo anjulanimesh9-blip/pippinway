@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Footer from "../components/homepage/Footer/Footer";
 
@@ -42,6 +43,7 @@ export default function CategoriesPage() {
           <Link
             key={category.name}
             href={category.href}
+            onClick={() => track("select_category", { category: category.name })}
             className="bg-[#111827] border border-gray-700 rounded-2xl p-6 flex flex-col items-center justify-center hover:border-violet-500 transition"
           >
             <span className="text-5xl mb-3">

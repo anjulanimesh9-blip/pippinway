@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import GaScripts from "./components/analytics/GaScripts";
 import { GuestAuthProvider } from "./components/GuestAuthPrompt";
 import "./globals.css";
 
@@ -91,6 +92,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <GuestAuthProvider>{children}</GuestAuthProvider>
+        <GaScripts />
 
         {/* Meta Pixel */}
         <Script id="meta-pixel" strategy="afterInteractive">

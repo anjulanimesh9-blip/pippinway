@@ -1,5 +1,7 @@
 "use client";
 
+import { track } from "@/lib/analytics";
+
 type CategoryFilterProps = {
   selectedCategory: string;
   setSelectedCategory: (value: string) => void;
@@ -33,7 +35,10 @@ export default function CategoryFilter({
           return (
             <button
               key={category.name}
-              onClick={() => setSelectedCategory(category.name)}
+              onClick={() => {
+                setSelectedCategory(category.name);
+                track("select_category", { category: category.name });
+              }}
               className={`flex flex-col items-center justify-center min-w-[72px] h-[72px] rounded-2xl transition-all border ${
                 active
                   ? "bg-yellow-400 border-yellow-400 text-black shadow-lg"

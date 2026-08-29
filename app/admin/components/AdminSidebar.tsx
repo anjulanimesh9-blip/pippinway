@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   Bell,
   CheckCircle2,
   CreditCard,
@@ -26,6 +27,7 @@ const ACTIVE_CLASS =
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/listings", label: "Listings", icon: Package },
   { href: "/admin/ad-approvals", label: "Ad Approvals", icon: CheckCircle2 },

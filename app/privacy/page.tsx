@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" updated="28 August 2026">
+    <LegalPageShell title="Privacy Policy" updated="30 August 2026">
       <p>
         This policy describes how Pippinway handles information when you use
         www.pippinway.com. It reflects the features that exist in the current
@@ -126,6 +126,14 @@ export default function PrivacyPage() {
           and other sites, where their policies allow. You can learn more from
           Google’s advertising documentation and, where offered, ads settings
           or cookie controls in your browser.
+        </p>
+        <p className="mt-4">
+          If a Google Analytics 4 measurement ID is configured, the site also
+          loads the Google tag (gtag.js). That tool may set cookies or similar
+          identifiers to measure page views and marketplace events such as
+          listing views, searches by category or country, and seller-contact
+          method. Pippinway does not send emails, phone numbers, names, chat
+          messages or payment details to GA4.
         </p>
         <p className="mt-4">
           The site also loads the Meta (Facebook) Pixel. That tool may set

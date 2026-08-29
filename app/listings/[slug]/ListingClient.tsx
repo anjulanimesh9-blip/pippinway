@@ -13,6 +13,7 @@ import MobileBottomNav from "../../components/MobileBottomNav";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/homepage/Footer/Footer";
 import { useGuestAuthPrompt } from "../../components/GuestAuthPrompt";
+import { track } from "@/lib/analytics";
 import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
@@ -131,6 +132,7 @@ console.log("Owner:", item?.ownerEmail);
     { merge: true }
   );
 
+ track("contact_seller", { method: "chat" });
  router.push(`/chat?chatId=${chatId}`);
 };
 
@@ -222,6 +224,16 @@ console.log("Owner:", item?.ownerEmail);
 
     fetchListing();
   }, [slug]);
+
+  useEffect(() => {
+    if (!item?.id) return;
+    track("view_listing", {
+      listing_id: item.id,
+      category: item.category || "",
+      country: item.country || "",
+      featured: isActiveFeaturedListing(item),
+    });
+  }, [item?.id]);
 
   if (!item) {
     return (

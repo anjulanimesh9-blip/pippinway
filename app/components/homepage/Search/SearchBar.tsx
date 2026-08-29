@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, MapPin } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const CATEGORIES = [
   "All",
@@ -47,7 +48,10 @@ export default function SearchBar({
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr_1fr_auto] gap-2 md:gap-3">
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            track("select_category", { category: e.target.value });
+          }}
           className="rounded-xl border border-white/10 bg-[#111827] px-3 py-3 text-sm text-white outline-none"
         >
           {CATEGORIES.map((cat) => (
@@ -94,6 +98,12 @@ export default function SearchBar({
 
         <button
           type="button"
+          onClick={() =>
+            track("search", {
+              category: selectedCategory,
+              country: selectedCountry,
+            })
+          }
           className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-500 transition"
         >
           <Search className="w-4 h-4" />

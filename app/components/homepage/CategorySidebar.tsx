@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import {
   Car,
   Bike,
@@ -63,7 +64,10 @@ export default function CategorySidebar({
           return (
             <button
               key={category.name}
-              onClick={() => setSelectedCategory(category.name)}
+              onClick={() => {
+                setSelectedCategory(category.name);
+                track("select_category", { category: category.name });
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 selectedCategory === category.name
                   ? "bg-yellow-400 text-black font-semibold shadow-lg"

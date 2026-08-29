@@ -8,6 +8,7 @@ import {
 import { auth } from "../firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 
 function LoginPage() {
@@ -39,6 +40,7 @@ function LoginPage() {
   );
 
 setLoginError(false);
+track("login");
 
 router.push(returnUrl); 
     } catch (error: any) {

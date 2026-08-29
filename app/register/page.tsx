@@ -9,6 +9,7 @@ import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 
 function RegisterPage() {
@@ -100,6 +101,7 @@ await setDoc(
   }
 );
 
+  track("sign_up");
   router.push(returnUrl);
     } catch (error: any) {
       setSuccessMessage(

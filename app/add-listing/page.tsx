@@ -31,6 +31,7 @@ import {
 } from "@/lib/listingImages";
 import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
+import { track } from "@/lib/analytics";
 import { parseListingPrice } from "@/lib/formatPrice";
 
 export default function AddListing() {
@@ -293,6 +294,10 @@ await addDoc(
   }
 );
 
+  track("post_listing", {
+    category,
+    country,
+  });
   alert("Your ad is now live on Pippinway.");
   router.push(
     "/profile"
