@@ -132,120 +132,176 @@ function formatPct(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+const REFRESH_MS = 60_000;
+
+async function loadFirestoreMetrics(): Promise<FirestoreMetrics> {
+  const today = startOfLocalDay(0);
+  const days7 = startOfLocalDay(6);
+  const days30 = startOfLocalDay(29);
+
+  const [
+    users,
+    listings,
+    withOwner,
+    approved,
+    featured,
+    rejected,
+    expired,
+    sold,
+    listingsToday,
+    listings7d,
+    listings30d,
+    usersToday,
+    users7d,
+    users30d,
+  ] = await Promise.all([
+    countOf("users"),
+    countOf("listings"),
+    countOf("listings", where("ownerId", ">", "")),
+    countOf("listings", where("approved", "==", true)),
+    countOf("listings", where("featured", "==", true)),
+    countOf("listings", where("rejected", "==", true)),
+    countOf("listings", where("expired", "==", true)),
+    countOf("listings", where("sold", "==", true)),
+    countOf("listings", where("createdAt", ">=", Timestamp.fromDate(today))),
+    countOf("listings", where("createdAt", ">=", Timestamp.fromDate(days7))),
+    countOf(
+      "listings",
+      where("createdAt", ">=", Timestamp.fromDate(days30))
+    ),
+    countUsersSince(today),
+    countUsersSince(days7),
+    countUsersSince(days30),
+  ]);
+
+  return {
+    users,
+    listings,
+    withOwner,
+    approved,
+    featured,
+    rejected,
+    expired,
+    sold,
+    listingsToday,
+    listings7d,
+    listings30d,
+    usersToday,
+    users7d,
+    users30d,
+  };
+}
+
+function firestoreHasUsableData(metrics: FirestoreMetrics): boolean {
+  return Object.values(metrics).some((value) => value !== null);
+}
+
+type Ga4LoadResult =
+  | { ok: true; report: Ga4Report | null }
+  | { ok: false };
+
+async function loadGa4Report(): Promise<Ga4LoadResult> {
+  try {
+    const user = await new Promise<typeof auth.currentUser>((resolve) => {
+      if (auth.currentUser) {
+        resolve(auth.currentUser);
+        return;
+      }
+      const unsub = onAuthStateChanged(auth, (next) => {
+        unsub();
+        resolve(next);
+      });
+    });
+    const token = user ? await user.getIdToken() : null;
+    if (!token) {
+      return { ok: true, report: null };
+    }
+
+    const res = await fetch("/api/admin/analytics/ga4", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const report = (await res.json()) as Ga4Report;
+      return { ok: true, report };
+    }
+    if (res.status === 503) {
+      let report: Ga4Report = {
+        connected: false,
+        reason: "Analytics connection required",
+      };
+      try {
+        const body = (await res.json()) as Ga4Report;
+        if (body?.connected === false) report = body;
+      } catch {
+        // Keep the 503 default reason.
+      }
+      return { ok: true, report };
+    }
+    return { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export default function AdminAnalyticsPage() {
   const [firestore, setFirestore] = useState<FirestoreMetrics>(EMPTY_FIRESTORE);
   const [ga4, setGa4] = useState<Ga4Report | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    let inFlight = false;
 
-    async function load() {
-      const today = startOfLocalDay(0);
-      const days7 = startOfLocalDay(6);
-      const days30 = startOfLocalDay(29);
+    async function load(background: boolean) {
+      if (inFlight) return;
+      inFlight = true;
+      if (background && !cancelled) setIsRefreshing(true);
 
-      const [
-        users,
-        listings,
-        withOwner,
-        approved,
-        featured,
-        rejected,
-        expired,
-        sold,
-        listingsToday,
-        listings7d,
-        listings30d,
-        usersToday,
-        users7d,
-        users30d,
-      ] = await Promise.all([
-        countOf("users"),
-        countOf("listings"),
-        countOf("listings", where("ownerId", ">", "")),
-        countOf("listings", where("approved", "==", true)),
-        countOf("listings", where("featured", "==", true)),
-        countOf("listings", where("rejected", "==", true)),
-        countOf("listings", where("expired", "==", true)),
-        countOf("listings", where("sold", "==", true)),
-        countOf("listings", where("createdAt", ">=", Timestamp.fromDate(today))),
-        countOf("listings", where("createdAt", ">=", Timestamp.fromDate(days7))),
-        countOf(
-          "listings",
-          where("createdAt", ">=", Timestamp.fromDate(days30))
-        ),
-        countUsersSince(today),
-        countUsersSince(days7),
-        countUsersSince(days30),
-      ]);
-
-      if (!cancelled) {
-        setFirestore({
-          users,
-          listings,
-          withOwner,
-          approved,
-          featured,
-          rejected,
-          expired,
-          sold,
-          listingsToday,
-          listings7d,
-          listings30d,
-          usersToday,
-          users7d,
-          users30d,
-        });
-      }
-
+      let nextFirestore: FirestoreMetrics | null = null;
+      let firestoreOk = false;
       try {
-        const user = await new Promise<typeof auth.currentUser>((resolve) => {
-          if (auth.currentUser) {
-            resolve(auth.currentUser);
-            return;
-          }
-          const unsub = onAuthStateChanged(auth, (next) => {
-            unsub();
-            resolve(next);
-          });
-        });
-        const token = user ? await user.getIdToken() : null;
-        if (token) {
-          const res = await fetch("/api/admin/analytics/ga4", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const report = (await res.json()) as Ga4Report;
-            if (!cancelled) setGa4(report);
-          } else if (res.status === 503) {
-            let report: Ga4Report = {
-              connected: false,
-              reason: "Analytics connection required",
-            };
-            try {
-              const body = (await res.json()) as Ga4Report;
-              if (body?.connected === false) report = body;
-            } catch {
-              // Keep the 503 default reason.
-            }
-            if (!cancelled) setGa4(report);
-          } else if (!cancelled) {
-            setGa4(null);
-          }
-        } else if (!cancelled) {
-          setGa4(null);
-        }
+        nextFirestore = await loadFirestoreMetrics();
+        firestoreOk = firestoreHasUsableData(nextFirestore);
       } catch {
-        if (!cancelled) setGa4(null);
+        firestoreOk = false;
       }
 
-      if (!cancelled) setLoading(false);
+      const ga4Result = await loadGa4Report();
+
+      if (cancelled) {
+        inFlight = false;
+        return;
+      }
+
+      if (background) {
+        if (firestoreOk && nextFirestore) setFirestore(nextFirestore);
+        if (ga4Result.ok) setGa4(ga4Result.report);
+        if (firestoreOk && ga4Result.ok) setLastUpdated(new Date());
+        setIsRefreshing(false);
+      } else {
+        if (nextFirestore) setFirestore(nextFirestore);
+        if (ga4Result.ok) setGa4(ga4Result.report);
+        else setGa4(null);
+        if (firestoreOk && ga4Result.ok) setLastUpdated(new Date());
+        setLoading(false);
+      }
+
+      inFlight = false;
     }
 
-    load();
+    void load(false).then(() => {
+      if (cancelled) return;
+      intervalId = setInterval(() => {
+        void load(true);
+      }, REFRESH_MS);
+    });
+
     return () => {
       cancelled = true;
+      if (intervalId !== undefined) clearInterval(intervalId);
     };
   }, []);
 
@@ -279,6 +335,15 @@ export default function AdminAnalyticsPage() {
           <BarChart3 className="h-7 w-7 shrink-0 text-sky-400" />
           Analytics
         </h1>
+        <p
+          className="mt-1.5 text-xs text-gray-500"
+          aria-busy={isRefreshing}
+        >
+          Auto refresh: 60s
+          <span className="mx-1.5 text-gray-600">·</span>
+          Last updated:{" "}
+          {lastUpdated ? lastUpdated.toLocaleTimeString() : "—"}
+        </p>
         <p className="mt-2 max-w-2xl text-sm text-gray-400">
           Firestore cards count marketplace records. GA4 cards show visitors
           only after the Data API is connected. No placeholder traffic numbers.
