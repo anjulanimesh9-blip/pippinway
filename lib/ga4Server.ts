@@ -37,7 +37,7 @@ type ServiceAccount = {
 
 type Ga4FailError = Error & { code?: string };
 
-const INVALID_PEM_REASON = "GA4_PRIVATE_KEY is not a valid PEM private key";
+const INVALID_PEM_REASON = "GA4 service account private key is not a valid PEM";
 
 function stripWrappingQuotes(value: string): string {
   let result = value.trim();
@@ -116,7 +116,32 @@ function isPemPrivateKey(key: string): boolean {
   });
 }
 
+function readBase64ServiceAccount(encoded: string): ServiceAccount | null {
+  try {
+    const raw = Buffer.from(encoded, "base64").toString("utf8");
+    const credentials = JSON.parse(raw) as {
+      client_email?: unknown;
+      private_key?: unknown;
+    };
+    const client_email =
+      typeof credentials.client_email === "string" ? credentials.client_email.trim() : "";
+    const private_key =
+      typeof credentials.private_key === "string" ? credentials.private_key : "";
+    if (!client_email || !private_key) return null;
+    // JSON.parse already turns escaped \n into real newlines — do not re-break the key.
+    if (!isPemPrivateKey(private_key)) return null;
+    return { client_email, private_key };
+  } catch {
+    return null;
+  }
+}
+
 function readServiceAccount(): ServiceAccount | null {
+  const encoded = process.env.GA4_SERVICE_ACCOUNT_BASE64;
+  if (encoded) {
+    return readBase64ServiceAccount(encoded);
+  }
+
   const json = process.env.GA4_SERVICE_ACCOUNT_JSON;
   if (json) {
     const parsed = parseServiceAccountJson(json);
