@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, MapPin } from "lucide-react";
-import { track } from "@/lib/analytics";
+import { track, trackSearch } from "@/lib/analytics";
 
 const CATEGORIES = [
   "All",
@@ -99,9 +99,11 @@ export default function SearchBar({
         <button
           type="button"
           onClick={() =>
-            track("search", {
+            trackSearch({
+              search_term: searchTerm,
               category: selectedCategory,
               country: selectedCountry,
+              location,
             })
           }
           className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-500 transition"

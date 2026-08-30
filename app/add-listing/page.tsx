@@ -31,7 +31,7 @@ import {
 } from "@/lib/listingImages";
 import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
-import { track } from "@/lib/analytics";
+import { trackPostAd } from "@/lib/analytics";
 import { parseListingPrice } from "@/lib/formatPrice";
 
 export default function AddListing() {
@@ -254,7 +254,7 @@ const expiresAt = new Date(
   postedAt.getTime() + 30 * 24 * 60 * 60 * 1000
 );
 
-await addDoc(
+const created = await addDoc(
   collection(db, "listings"),
   {
     title,
@@ -294,7 +294,8 @@ await addDoc(
   }
 );
 
-  track("post_listing", {
+  trackPostAd({
+    listing_id: created.id,
     category,
     country,
   });

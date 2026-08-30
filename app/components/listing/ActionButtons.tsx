@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
 import { BsChatDotsFill } from "react-icons/bs";
-import { track } from "@/lib/analytics";
+import { trackSellerContact, type ContactMethod } from "@/lib/analytics";
 
 type ActionButtonsProps = {
   whatsappLink?: string;
   phone?: string;
   onChat: () => void;
+  listingId?: string;
+  category?: string;
+  country?: string;
 };
 
 function maskPhone(phone: string) {
@@ -21,10 +24,23 @@ export default function ActionButtons({
   whatsappLink,
   phone,
   onChat,
+  listingId,
+  category,
+  country,
 }: ActionButtonsProps) {
   const [showPhone, setShowPhone] = useState(false);
   const hasWhatsapp =
     whatsappLink && whatsappLink !== "#" && whatsappLink.trim() !== "";
+
+  const trackContact = (contact_method: ContactMethod) => {
+    if (!listingId) return;
+    trackSellerContact({
+      listing_id: listingId,
+      contact_method,
+      category,
+      country,
+    });
+  };
 
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-[#111827]">
@@ -32,7 +48,7 @@ export default function ActionButtons({
         showPhone ? (
           <a
             href={`tel:${phone}`}
-            onClick={() => track("contact_seller", { method: "call" })}
+            onClick={() => trackContact("call")}
             className="flex items-center gap-3 border-b border-white/10 px-4 py-3.5 text-sm font-semibold text-white hover:bg-white/5"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-500/15 text-sky-300">
@@ -82,7 +98,7 @@ export default function ActionButtons({
           href={whatsappLink}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => track("contact_seller", { method: "whatsapp" })}
+          onClick={() => trackContact("whatsapp")}
           className="flex items-center gap-3 px-4 py-3.5 text-sm font-semibold text-white hover:bg-white/5"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">

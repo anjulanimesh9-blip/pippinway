@@ -9,7 +9,13 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/app/firebase";
+import { trackFavorite, trackRemoveFavorite } from "@/lib/analytics";
 import { isPermissionDenied } from "@/lib/firestoreErrors";
+
+export type FavoriteTrackContext = {
+  category?: string;
+  country?: string;
+};
 
 export default function useFavorites(user: any) {
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -37,7 +43,8 @@ export default function useFavorites(user: any) {
 
   const toggleFavorite = async (
     e: any,
-    listingId: string
+    listingId: string,
+    context?: FavoriteTrackContext
   ) => {
     e.preventDefault();
 
@@ -60,6 +67,11 @@ export default function useFavorites(user: any) {
       setFavorites((prev) =>
         prev.filter((id) => id !== listingId)
       );
+      trackRemoveFavorite({
+        listing_id: listingId,
+        category: context?.category,
+        country: context?.country,
+      });
     } else {
       await setDoc(favRef, {
         createdAt: new Date(),
@@ -69,6 +81,11 @@ export default function useFavorites(user: any) {
         ...prev,
         listingId,
       ]);
+      trackFavorite({
+        listing_id: listingId,
+        category: context?.category,
+        country: context?.country,
+      });
     }
   };
 

@@ -22,6 +22,7 @@ import {
   paymentMethodForCountry,
 } from "@/lib/featuredCountries";
 import { formatPrice } from "@/lib/formatPrice";
+import { trackFeaturedPurchase } from "@/lib/analytics";
 import type { PaymentSettings } from "@/lib/types/featured";
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -138,6 +139,15 @@ function CheckoutContent() {
         packageName,
         packageDurationDays,
         createdAt: serverTimestamp(),
+      });
+
+      trackFeaturedPurchase({
+        package_id: packageId,
+        credits: packageCredits,
+        duration_days: packageDurationDays,
+        payment_country: country,
+        value: packagePrice,
+        currency: packageCurrency,
       });
 
       if (user.email) {

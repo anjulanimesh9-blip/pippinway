@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Heart, Share2 } from "lucide-react";
 import ImageGallery from "@/app/components/listing/ImageGallery";
@@ -13,7 +13,7 @@ import MobileBottomNav from "../../components/MobileBottomNav";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/homepage/Footer/Footer";
 import { useGuestAuthPrompt } from "../../components/GuestAuthPrompt";
-import { track } from "@/lib/analytics";
+import { trackListingView, trackSellerContact } from "@/lib/analytics";
 import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
@@ -53,6 +53,7 @@ export default function ListingClient() {
   const router = useRouter();
   const params = useParams();
   const { requireAuth } = useGuestAuthPrompt();
+  const lastViewedListingId = useRef<string | null>(null);
 
   const slug =
     params?.slug as string;
@@ -132,7 +133,12 @@ console.log("Owner:", item?.ownerEmail);
     { merge: true }
   );
 
- track("contact_seller", { method: "chat" });
+ trackSellerContact({
+   listing_id: slug,
+   contact_method: "chat",
+   category: item?.category,
+   country: item?.country,
+ });
  router.push(`/chat?chatId=${chatId}`);
 };
 
@@ -227,13 +233,16 @@ console.log("Owner:", item?.ownerEmail);
 
   useEffect(() => {
     if (!item?.id) return;
-    track("view_listing", {
+    if (lastViewedListingId.current === item.id) return;
+    lastViewedListingId.current = item.id;
+    trackListingView({
       listing_id: item.id,
-      category: item.category || "",
-      country: item.country || "",
+      category: item.category,
+      country: item.country,
+      location: item.location,
       featured: isActiveFeaturedListing(item),
     });
-  }, [item?.id]);
+  }, [item]);
 
   if (!item) {
     return (
@@ -357,6 +366,9 @@ const whatsappLink =
               whatsappLink={whatsappLink}
               phone={item.phone}
               onChat={startChat}
+              listingId={item.id}
+              category={item.category}
+              country={item.country}
             />
 
             <div className="rounded-lg border border-sky-500/25 bg-sky-500/5 p-4">

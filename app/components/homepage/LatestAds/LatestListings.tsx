@@ -10,7 +10,11 @@ import type { Banner, ListingRecord } from "@/lib/types/featured";
 type LatestListingsProps = {
   latestListings: ListingRecord[];
   favorites: string[];
-  toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
+  toggleFavorite: (
+    e: React.MouseEvent,
+    listingId: string,
+    context?: { category?: string; country?: string }
+  ) => void;
   banners: Banner[];
   loading?: boolean;
   totalLive?: number;

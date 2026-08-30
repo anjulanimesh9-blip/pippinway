@@ -14,7 +14,11 @@ import type { ListingRecord } from "@/lib/types/featured";
 type ListingCardProps = {
   item: ListingRecord;
   favorites: string[];
-  toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
+  toggleFavorite: (
+    e: React.MouseEvent,
+    listingId: string,
+    context?: { category?: string; country?: string }
+  ) => void;
   grid?: boolean;
 };
 
@@ -72,7 +76,10 @@ export default function ListingCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleFavorite(e, item.id);
+                toggleFavorite(e, item.id, {
+                  category: item.category,
+                  country: item.country,
+                });
               }}
               className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-white/5"
               aria-label="Save listing"
@@ -141,7 +148,10 @@ export default function ListingCard({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            toggleFavorite(e, item.id);
+            toggleFavorite(e, item.id, {
+              category: item.category,
+              country: item.country,
+            });
           }}
           className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md transition hover:scale-105"
           aria-label="Save listing"

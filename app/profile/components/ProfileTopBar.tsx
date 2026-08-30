@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, MapPin, Menu, Plus, Search } from "lucide-react";
+import { trackSearch } from "@/lib/analytics";
 import useNotifications from "../../hooks/useNotifications";
 
 const LOCATIONS = [
@@ -57,6 +58,10 @@ export default function ProfileTopBar({
     const params = new URLSearchParams();
     if (search.trim()) params.set("search", search.trim());
     if (location !== "All Locations") params.set("country", location);
+    trackSearch({
+      search_term: search,
+      country: location,
+    });
     router.push(params.toString() ? `/?${params.toString()}` : "/");
   };
 

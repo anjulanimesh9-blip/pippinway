@@ -2,15 +2,13 @@ import { createSign } from "crypto";
 
 const ANALYTICS_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
-const CUSTOM_EVENTS = [
-  "view_listing",
-  "contact_seller",
-  "click_featured_listing",
-  "post_listing",
-  "sign_up",
-  "login",
+const MARKETPLACE_EVENTS = [
+  "listing_view",
+  "seller_contact",
   "search",
-  "select_category",
+  "favorite",
+  "post_ad",
+  "featured_purchase",
 ] as const;
 
 export type Ga4WindowMetrics = {
@@ -28,6 +26,7 @@ export type Ga4Report = {
     days30: Ga4WindowMetrics;
   };
   events30d?: Record<string, number>;
+  contactMethods30d?: Record<string, number>;
 };
 
 type ServiceAccount = {
@@ -526,7 +525,7 @@ export async function fetchGa4Report(): Promise<Ga4Report> {
       dimensionFilter: {
         filter: {
           fieldName: "eventName",
-          inListFilter: { values: [...CUSTOM_EVENTS] },
+          inListFilter: { values: [...MARKETPLACE_EVENTS] },
         },
       },
     })) as {
@@ -537,13 +536,57 @@ export async function fetchGa4Report(): Promise<Ga4Report> {
     };
 
     const events30d: Record<string, number> = {};
+    for (const name of MARKETPLACE_EVENTS) {
+      events30d[name] = 0;
+    }
     for (const row of eventsRaw.rows ?? []) {
       const name = row.dimensionValues?.[0]?.value;
       const count = metricValue(row, 0);
       if (name && count !== null) events30d[name] = count;
     }
 
-    return { connected: true, windows, events30d };
+    let contactMethods30d: Record<string, number> | undefined;
+    try {
+      const methodsRaw = (await runReport(status.propertyId, token, {
+        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+        dimensions: [{ name: "customEvent:contact_method" }],
+        metrics: [{ name: "eventCount" }],
+        dimensionFilter: {
+          filter: {
+            fieldName: "eventName",
+            stringFilter: { matchType: "EXACT", value: "seller_contact" },
+          },
+        },
+      })) as {
+        rows?: Array<{
+          dimensionValues?: Array<{ value?: string }>;
+          metricValues?: Array<{ value?: string }>;
+        }>;
+      };
+
+      const methods: Record<string, number> = {
+        whatsapp: 0,
+        call: 0,
+        chat: 0,
+      };
+      for (const row of methodsRaw.rows ?? []) {
+        const method = row.dimensionValues?.[0]?.value?.trim().toLowerCase();
+        const count = metricValue(row, 0);
+        if (
+          method &&
+          count !== null &&
+          (method === "whatsapp" || method === "call" || method === "chat")
+        ) {
+          methods[method] = count;
+        }
+      }
+      contactMethods30d = methods;
+    } catch {
+      // contact_method is only available after it is registered as a GA4
+      // custom dimension. Skip the breakdown rather than failing the report.
+    }
+
+    return { connected: true, windows, events30d, contactMethods30d };
   } catch (err) {
     logGa4Failure(err, status.source);
     return {

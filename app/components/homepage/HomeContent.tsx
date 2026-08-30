@@ -20,7 +20,11 @@ type Props = {
   setSelectedCategory: (value: string) => void;
   latestListings: ListingRecord[];
   favorites: string[];
-  toggleFavorite: (e: React.MouseEvent, listingId: string) => void;
+  toggleFavorite: (
+    e: React.MouseEvent,
+    listingId: string,
+    context?: { category?: string; country?: string }
+  ) => void;
   banners: Banner[];
   loading?: boolean;
   totalCount?: number;

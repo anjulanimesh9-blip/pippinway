@@ -15,6 +15,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { trackFavorite, trackRemoveFavorite } from "@/lib/analytics";
 import { auth, db } from "../../firebase";
 
 function listingFromSnap(d: { id: string; data: () => Record<string, unknown> }) {
@@ -294,10 +295,16 @@ export default function useProfile() {
   const removeFavorite = async (listingId: string) => {
     if (!user) return;
 
+    const existing = favoriteAds.find((ad: any) => ad.id === listingId);
     await deleteDoc(doc(db, "users", user.uid, "favorites", listingId));
 
     setFavoriteIds((prev) => prev.filter((id) => id !== listingId));
     setFavoriteAds((prev) => prev.filter((ad: any) => ad.id !== listingId));
+    trackRemoveFavorite({
+      listing_id: listingId,
+      category: existing?.category,
+      country: existing?.country,
+    });
   };
 
   const addFavorite = async (ad: any) => {
@@ -313,6 +320,11 @@ export default function useProfile() {
     setFavoriteAds((prev) =>
       prev.some((item: any) => item.id === ad.id) ? prev : [...prev, ad]
     );
+    trackFavorite({
+      listing_id: ad.id,
+      category: ad.category,
+      country: ad.country,
+    });
   };
 
   const deleteListing = async (listingId: string) => {

@@ -28,7 +28,23 @@ type Ga4Report = {
     days30: Ga4WindowMetrics;
   };
   events30d?: Record<string, number>;
+  contactMethods30d?: Record<string, number>;
 };
+
+const MARKETPLACE_EVENT_CARDS = [
+  { key: "listing_view", label: "Listing Views" },
+  { key: "seller_contact", label: "Seller Contacts" },
+  { key: "search", label: "Searches" },
+  { key: "favorite", label: "Favorites" },
+  { key: "post_ad", label: "Ads Posted" },
+  { key: "featured_purchase", label: "Featured Purchases" },
+] as const;
+
+const CONTACT_METHOD_CARDS = [
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "call", label: "Call" },
+  { key: "chat", label: "Chat" },
+] as const;
 
 type CountValue = number | null;
 
@@ -101,6 +117,19 @@ async function countUsersSince(since: Date): Promise<CountValue> {
 function formatCount(value: CountValue): string {
   if (value === null) return "—";
   return value.toLocaleString();
+}
+
+function conversionPct(current: CountValue, previous: CountValue): number {
+  if (current === null || previous === null || previous <= 0) return 0;
+  const pct = (current / previous) * 100;
+  return Number.isFinite(pct) ? pct : 0;
+}
+
+function formatPct(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "0%";
+  if (value < 0.1) return "<0.1%";
+  if (value >= 10) return `${Math.round(value)}%`;
+  return `${value.toFixed(1)}%`;
 }
 
 export default function AdminAnalyticsPage() {
@@ -225,8 +254,12 @@ export default function AdminAnalyticsPage() {
   const showFunnel =
     gaConnected &&
     firestore.listings30d !== null &&
-    ga4.windows?.days30.activeUsers !== null &&
-    ga4.events30d !== undefined;
+    ga4.windows?.days30.activeUsers !== null;
+
+  const listingViews = ga4?.events30d?.listing_view ?? 0;
+  const sellerContacts = ga4?.events30d?.seller_contact ?? 0;
+  const featuredPurchases = ga4?.events30d?.featured_purchase ?? 0;
+  const activeUsers30d = ga4?.windows?.days30.activeUsers ?? null;
 
   if (loading) {
     return (
@@ -365,27 +398,36 @@ export default function AdminAnalyticsPage() {
               metrics={ga4.windows!.days30}
             />
           </div>
-          {ga4.events30d && Object.keys(ga4.events30d).length > 0 ? (
+          <h3 className="mt-6 mb-3 text-sm font-semibold text-gray-300">
+            Marketplace Events – 30 days
+          </h3>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {MARKETPLACE_EVENT_CARDS.map((card) => (
+              <MetricCard
+                key={card.key}
+                source="GA4"
+                label={card.label}
+                value={ga4.events30d?.[card.key] ?? 0}
+              />
+            ))}
+          </div>
+          {ga4.contactMethods30d ? (
             <>
               <h3 className="mt-6 mb-3 text-sm font-semibold text-gray-300">
-                GA4 events · 30 days
+                Seller contacts by method · 30 days
               </h3>
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {Object.entries(ga4.events30d).map(([name, count]) => (
+              <div className="grid grid-cols-3 gap-3">
+                {CONTACT_METHOD_CARDS.map((card) => (
                   <MetricCard
-                    key={name}
+                    key={card.key}
                     source="GA4"
-                    label={name.replaceAll("_", " ")}
-                    value={count}
+                    label={card.label}
+                    value={ga4.contactMethods30d?.[card.key] ?? 0}
                   />
                 ))}
               </div>
             </>
-          ) : (
-            <p className="mt-3 text-sm text-gray-500">
-              No matching GA4 events in the last 30 days yet.
-            </p>
-          )}
+          ) : null}
         </>
       ) : showConnectionRequired ? (
         <div className="rounded-2xl border border-dashed border-white/15 bg-[#111827] px-4 py-8 text-center">
@@ -408,26 +450,42 @@ export default function AdminAnalyticsPage() {
           <h3 className="mt-10 mb-3 text-sm font-semibold text-gray-300">
             Funnel · 30 days
           </h3>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <MetricCard
+          <p className="mb-3 text-xs text-gray-500">
+            Conversion is the share of the previous step. Firestore and GA4
+            counts stay labeled separately and are never invented.
+          </p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <FunnelCard
               source="GA4"
               label="Active users"
-              value={ga4.windows!.days30.activeUsers}
+              value={activeUsers30d}
             />
-            <MetricCard
+            <FunnelCard
               source="GA4"
               label="Listing views"
-              value={ga4.events30d?.view_listing ?? 0}
+              value={listingViews}
+              conversion={conversionPct(listingViews, activeUsers30d)}
             />
-            <MetricCard
+            <FunnelCard
               source="GA4"
               label="Seller contacts"
-              value={ga4.events30d?.contact_seller ?? 0}
+              value={sellerContacts}
+              conversion={conversionPct(sellerContacts, listingViews)}
             />
-            <MetricCard
+            <FunnelCard
               source="Firestore"
               label="New listings"
               value={firestore.listings30d}
+              conversion={conversionPct(firestore.listings30d, sellerContacts)}
+            />
+            <FunnelCard
+              source="GA4"
+              label="Featured purchases"
+              value={featuredPurchases}
+              conversion={conversionPct(
+                featuredPurchases,
+                firestore.listings30d
+              )}
             />
           </div>
         </>
@@ -456,6 +514,47 @@ function SectionTitle({
         </h2>
         <p className="text-xs text-gray-500">{hint}</p>
       </div>
+    </div>
+  );
+}
+
+function FunnelCard({
+  source,
+  label,
+  value,
+  conversion,
+}: {
+  source: "GA4" | "Firestore";
+  label: string;
+  value: CountValue;
+  conversion?: number;
+}) {
+  return (
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-white/8 bg-[#111827] p-4">
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-w-0 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {label}
+        </p>
+        <span
+          className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+            source === "GA4"
+              ? "bg-sky-500/15 text-sky-300"
+              : "bg-[#FBB03B]/15 text-[#FBB03B]"
+          }`}
+        >
+          {source}
+        </span>
+      </div>
+      <p className="mt-3 truncate text-2xl font-extrabold tabular-nums text-white sm:text-3xl">
+        {formatCount(value)}
+      </p>
+      {conversion !== undefined ? (
+        <p className="mt-1 text-xs text-gray-500">
+          {formatPct(conversion)} of previous step
+        </p>
+      ) : (
+        <p className="mt-1 text-xs text-gray-600">Funnel start</p>
+      )}
     </div>
   );
 }
