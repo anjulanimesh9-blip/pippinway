@@ -39,13 +39,32 @@ type CredentialSource = "base64" | "legacy" | "none";
 
 type FailStage =
   | "base64_decode"
+  | "json_parse"
   | "credential_validation"
   | "google_auth"
   | "ga4_data_api";
 
+type Base64Diagnostics = {
+  rawLength: number;
+  strippedQuotes: boolean;
+  hadInternalWhitespace: boolean;
+  looksLikeJsonObject: boolean;
+  decodedStartsWithBrace?: boolean;
+  decodedEndsWithBrace?: boolean;
+};
+
 type ReadAccountResult =
-  | { account: ServiceAccount; source: CredentialSource }
-  | { account: null; source: CredentialSource; failStage?: FailStage };
+  | {
+      account: ServiceAccount;
+      source: CredentialSource;
+      diagnostics?: Base64Diagnostics;
+    }
+  | {
+      account: null;
+      source: CredentialSource;
+      failStage?: FailStage;
+      diagnostics?: Base64Diagnostics;
+    };
 
 type Ga4FailError = Error & { code?: string; stage?: FailStage };
 
@@ -115,53 +134,170 @@ function isPemPrivateKey(key: string): boolean {
   });
 }
 
-function logCredentialDiagnostic(source: CredentialSource): void {
+function safeDiagnosticFields(
+  diagnostics?: Base64Diagnostics
+): Record<string, boolean | number> {
+  if (!diagnostics) return {};
+  const fields: Record<string, boolean | number> = {
+    rawLength: diagnostics.rawLength,
+    strippedQuotes: diagnostics.strippedQuotes,
+    hadInternalWhitespace: diagnostics.hadInternalWhitespace,
+    looksLikeJsonObject: diagnostics.looksLikeJsonObject,
+  };
+  if (typeof diagnostics.decodedStartsWithBrace === "boolean") {
+    fields.decodedStartsWithBrace = diagnostics.decodedStartsWithBrace;
+  }
+  if (typeof diagnostics.decodedEndsWithBrace === "boolean") {
+    fields.decodedEndsWithBrace = diagnostics.decodedEndsWithBrace;
+  }
+  return fields;
+}
+
+function logCredentialDiagnostic(
+  source: CredentialSource,
+  diagnostics?: Base64Diagnostics
+): void {
   console.info("GA4 credentials", {
     hasBase64: Boolean(process.env.GA4_SERVICE_ACCOUNT_BASE64),
     hasLegacyEmail: Boolean(process.env.GA4_CLIENT_EMAIL),
     hasLegacyPrivateKey: Boolean(process.env.GA4_PRIVATE_KEY),
     credentialSource: source,
+    ...safeDiagnosticFields(diagnostics),
   });
 }
 
-function logGa4Stage(stage: FailStage, detail?: string): void {
-  console.error("GA4 fetch failed", detail ? { stage, detail } : { stage });
+function logGa4Stage(stage: FailStage, diagnostics?: Base64Diagnostics): void {
+  console.error("GA4 fetch failed", {
+    stage,
+    ...safeDiagnosticFields(diagnostics),
+  });
 }
 
+function stripSingleWrappingQuotes(value: string): {
+  value: string;
+  strippedQuotes: boolean;
+} {
+  if (value.length < 2) return { value, strippedQuotes: false };
+  const first = value[0];
+  const last = value[value.length - 1];
+  if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+    return { value: value.slice(1, -1).trim(), strippedQuotes: true };
+  }
+  return { value, strippedQuotes: false };
+}
+
+function stripDataBase64Prefix(value: string): string {
+  const match = /^data:[^;]*;base64,/i.exec(value);
+  return match ? value.slice(match[0].length) : value;
+}
+
+function decodeUtf8FromBase64(payload: string): string | null {
+  const compact = payload.replace(/[\t\n\r ]/g, "").replace(/-/g, "+").replace(/_/g, "/");
+  if (!compact) return null;
+
+  const withoutPad = compact.replace(/=+$/, "");
+  if (!/^[A-Za-z0-9+/]+$/.test(withoutPad)) return null;
+  if (withoutPad.length % 4 === 1) return null;
+
+  const rem = withoutPad.length % 4;
+  const padded = rem === 0 ? withoutPad : withoutPad + "=".repeat(4 - rem);
+  const buf = Buffer.from(padded, "base64");
+  if (buf.length === 0) return null;
+  return buf.toString("utf8");
+}
+
+type Base64ReadResult =
+  | { ok: true; account: ServiceAccount; diagnostics: Base64Diagnostics }
+  | { ok: false; stage: FailStage; diagnostics: Base64Diagnostics };
+
 function readBase64ServiceAccount(
-  encoded: string
-): { ok: true; account: ServiceAccount } | { ok: false; stage: FailStage } {
+  encoded: string,
+  rawLength: number
+): Base64ReadResult {
+  const quoted = stripSingleWrappingQuotes(encoded);
+  const prepared = quoted.value;
+  const looksLikeJsonObject = prepared.startsWith("{");
+  const isRawJsonObject = looksLikeJsonObject && prepared.endsWith("}");
+
+  let jsonText: string;
+  let hadInternalWhitespace = false;
+  let decodedStartsWithBrace: boolean | undefined;
+  let decodedEndsWithBrace: boolean | undefined;
+
+  if (isRawJsonObject) {
+    jsonText = prepared;
+    decodedStartsWithBrace = true;
+    decodedEndsWithBrace = true;
+  } else {
+    const payload = stripDataBase64Prefix(prepared);
+    hadInternalWhitespace = /[\t\n\r ]/.test(payload);
+    const decoded = decodeUtf8FromBase64(payload);
+    if (decoded === null) {
+      return {
+        ok: false,
+        stage: "base64_decode",
+        diagnostics: {
+          rawLength,
+          strippedQuotes: quoted.strippedQuotes,
+          hadInternalWhitespace,
+          looksLikeJsonObject,
+        },
+      };
+    }
+    jsonText = decoded;
+    decodedStartsWithBrace = decoded.startsWith("{");
+    decodedEndsWithBrace = decoded.endsWith("}");
+  }
+
+  const diagnostics: Base64Diagnostics = {
+    rawLength,
+    strippedQuotes: quoted.strippedQuotes,
+    hadInternalWhitespace,
+    looksLikeJsonObject,
+    decodedStartsWithBrace,
+    decodedEndsWithBrace,
+  };
+
   let credentials: unknown;
   try {
-    const raw = Buffer.from(encoded, "base64").toString("utf8");
-    credentials = JSON.parse(raw);
+    credentials = JSON.parse(jsonText);
   } catch {
-    return { ok: false, stage: "base64_decode" };
+    return { ok: false, stage: "json_parse", diagnostics };
   }
 
   if (!credentials || typeof credentials !== "object") {
-    return { ok: false, stage: "credential_validation" };
+    return { ok: false, stage: "credential_validation", diagnostics };
   }
 
   const obj = credentials as Record<string, unknown>;
   const client_email = typeof obj.client_email === "string" ? obj.client_email : "";
   const private_key = typeof obj.private_key === "string" ? obj.private_key : "";
   if (!client_email || !private_key || !isPemPrivateKey(private_key)) {
-    return { ok: false, stage: "credential_validation" };
+    return { ok: false, stage: "credential_validation", diagnostics };
   }
 
   // JSON.parse already turns escaped \n into real newlines — use fields directly.
-  return { ok: true, account: { client_email, private_key } };
+  return { ok: true, account: { client_email, private_key }, diagnostics };
 }
 
 function readServiceAccount(): ReadAccountResult {
-  const encoded = (process.env.GA4_SERVICE_ACCOUNT_BASE64 ?? "").trim();
+  const rawEnv = process.env.GA4_SERVICE_ACCOUNT_BASE64 ?? "";
+  const encoded = rawEnv.trim();
   if (encoded) {
-    const parsed = readBase64ServiceAccount(encoded);
+    const parsed = readBase64ServiceAccount(encoded, rawEnv.length);
     if (!parsed.ok) {
-      return { account: null, source: "base64", failStage: parsed.stage };
+      return {
+        account: null,
+        source: "base64",
+        failStage: parsed.stage,
+        diagnostics: parsed.diagnostics,
+      };
     }
-    return { account: parsed.account, source: "base64" };
+    return {
+      account: parsed.account,
+      source: "base64",
+      diagnostics: parsed.diagnostics,
+    };
   }
 
   const email = stripWrappingQuotes(process.env.GA4_CLIENT_EMAIL ?? "");
@@ -195,7 +331,7 @@ export function getGa4ConnectionStatus(): { connected: false; reason: string } |
 } {
   const propertyId = getGa4PropertyId();
   const result = readServiceAccount();
-  logCredentialDiagnostic(result.source);
+  logCredentialDiagnostic(result.source, result.diagnostics);
 
   if (!propertyId) {
     return { connected: false, reason: MISSING_PROPERTY_REASON };
@@ -203,7 +339,7 @@ export function getGa4ConnectionStatus(): { connected: false; reason: string } |
 
   if (!result.account) {
     if (result.source === "base64") {
-      logGa4Stage(result.failStage ?? "credential_validation");
+      logGa4Stage(result.failStage ?? "credential_validation", result.diagnostics);
       return { connected: false, reason: INVALID_BASE64_REASON };
     }
     return { connected: false, reason: GENERIC_REASON };
