@@ -35,9 +35,25 @@ type ServiceAccount = {
   private_key: string;
 };
 
-type Ga4FailError = Error & { code?: string };
+type CredentialSource = "base64" | "legacy" | "none";
 
-const INVALID_PEM_REASON = "GA4 service account private key is not a valid PEM";
+type FailStage =
+  | "base64_decode"
+  | "credential_validation"
+  | "google_auth"
+  | "ga4_data_api";
+
+type ReadAccountResult =
+  | { account: ServiceAccount; source: CredentialSource }
+  | { account: null; source: CredentialSource; failStage?: FailStage };
+
+type Ga4FailError = Error & { code?: string; stage?: FailStage };
+
+const GENERIC_REASON = "Analytics connection required";
+const INVALID_BASE64_REASON = "GA4 Base64 credentials are invalid";
+const MISSING_PROPERTY_REASON = "GA4_PROPERTY_ID is missing";
+const AUTH_REASON = "GA4 Google authentication failed";
+const DATA_API_REASON = "GA4 Data API request failed";
 
 function stripWrappingQuotes(value: string): string {
   let result = value.trim();
@@ -77,23 +93,6 @@ function extractPrivateKeyFromJsonBlob(value: string): string | null {
   }
 }
 
-function parseServiceAccountJson(raw: string): Partial<ServiceAccount> | null {
-  try {
-    let parsed: unknown = JSON.parse(stripWrappingQuotes(raw));
-    if (typeof parsed === "string") {
-      parsed = JSON.parse(stripWrappingQuotes(parsed));
-    }
-    if (!parsed || typeof parsed !== "object") return null;
-    const obj = parsed as Record<string, unknown>;
-    return {
-      client_email: typeof obj.client_email === "string" ? obj.client_email : undefined,
-      private_key: typeof obj.private_key === "string" ? obj.private_key : undefined,
-    };
-  } catch {
-    return null;
-  }
-}
-
 /** Normalize a Vercel/env PEM. Does not re-wrap or rewrite the base64 body. */
 function normalizePrivateKey(raw: string): string {
   let key = stripWrappingQuotes(raw);
@@ -116,63 +115,68 @@ function isPemPrivateKey(key: string): boolean {
   });
 }
 
-function readBase64ServiceAccount(encoded: string): ServiceAccount | null {
-  try {
-    const raw = Buffer.from(encoded, "base64").toString("utf8");
-    const credentials = JSON.parse(raw) as {
-      client_email?: unknown;
-      private_key?: unknown;
-    };
-    const client_email =
-      typeof credentials.client_email === "string" ? credentials.client_email.trim() : "";
-    const private_key =
-      typeof credentials.private_key === "string" ? credentials.private_key : "";
-    if (!client_email || !private_key) return null;
-    // JSON.parse already turns escaped \n into real newlines — do not re-break the key.
-    if (!isPemPrivateKey(private_key)) return null;
-    return { client_email, private_key };
-  } catch {
-    return null;
-  }
+function logCredentialDiagnostic(source: CredentialSource): void {
+  console.info("GA4 credentials", {
+    hasBase64: Boolean(process.env.GA4_SERVICE_ACCOUNT_BASE64),
+    hasLegacyEmail: Boolean(process.env.GA4_CLIENT_EMAIL),
+    hasLegacyPrivateKey: Boolean(process.env.GA4_PRIVATE_KEY),
+    credentialSource: source,
+  });
 }
 
-function readServiceAccount(): ServiceAccount | null {
-  const encoded = process.env.GA4_SERVICE_ACCOUNT_BASE64;
-  if (encoded) {
-    return readBase64ServiceAccount(encoded);
+function logGa4Stage(stage: FailStage, detail?: string): void {
+  console.error("GA4 fetch failed", detail ? { stage, detail } : { stage });
+}
+
+function readBase64ServiceAccount(
+  encoded: string
+): { ok: true; account: ServiceAccount } | { ok: false; stage: FailStage } {
+  let credentials: unknown;
+  try {
+    const raw = Buffer.from(encoded, "base64").toString("utf8");
+    credentials = JSON.parse(raw);
+  } catch {
+    return { ok: false, stage: "base64_decode" };
   }
 
-  const json = process.env.GA4_SERVICE_ACCOUNT_JSON;
-  if (json) {
-    const parsed = parseServiceAccountJson(json);
-    if (parsed?.client_email && parsed.private_key) {
-      return {
-        client_email: stripWrappingQuotes(parsed.client_email),
-        private_key: normalizePrivateKey(parsed.private_key),
-      };
+  if (!credentials || typeof credentials !== "object") {
+    return { ok: false, stage: "credential_validation" };
+  }
+
+  const obj = credentials as Record<string, unknown>;
+  const client_email = typeof obj.client_email === "string" ? obj.client_email : "";
+  const private_key = typeof obj.private_key === "string" ? obj.private_key : "";
+  if (!client_email || !private_key || !isPemPrivateKey(private_key)) {
+    return { ok: false, stage: "credential_validation" };
+  }
+
+  // JSON.parse already turns escaped \n into real newlines — use fields directly.
+  return { ok: true, account: { client_email, private_key } };
+}
+
+function readServiceAccount(): ReadAccountResult {
+  const encoded = (process.env.GA4_SERVICE_ACCOUNT_BASE64 ?? "").trim();
+  if (encoded) {
+    const parsed = readBase64ServiceAccount(encoded);
+    if (!parsed.ok) {
+      return { account: null, source: "base64", failStage: parsed.stage };
     }
+    return { account: parsed.account, source: "base64" };
   }
 
   const email = stripWrappingQuotes(process.env.GA4_CLIENT_EMAIL ?? "");
   const key = process.env.GA4_PRIVATE_KEY;
   if (email && key) {
     return {
-      client_email: email,
-      private_key: normalizePrivateKey(key),
+      account: {
+        client_email: email,
+        private_key: normalizePrivateKey(key),
+      },
+      source: "legacy",
     };
   }
 
-  if (key) {
-    const parsed = parseServiceAccountJson(key);
-    if (parsed?.client_email && parsed.private_key) {
-      return {
-        client_email: stripWrappingQuotes(parsed.client_email),
-        private_key: normalizePrivateKey(parsed.private_key),
-      };
-    }
-  }
-
-  return null;
+  return { account: null, source: "none" };
 }
 
 export function getGa4PropertyId(): string | null {
@@ -187,57 +191,95 @@ export function getGa4ConnectionStatus(): { connected: false; reason: string } |
   connected: true;
   propertyId: string;
   account: ServiceAccount;
+  source: CredentialSource;
 } {
   const propertyId = getGa4PropertyId();
-  const account = readServiceAccount();
-  if (!propertyId || !account) {
-    return {
-      connected: false,
-      reason: "Analytics connection required",
-    };
+  const result = readServiceAccount();
+  logCredentialDiagnostic(result.source);
+
+  if (!propertyId) {
+    return { connected: false, reason: MISSING_PROPERTY_REASON };
   }
-  if (!isPemPrivateKey(account.private_key)) {
-    console.error(INVALID_PEM_REASON);
-    return { connected: false, reason: INVALID_PEM_REASON };
+
+  if (!result.account) {
+    if (result.source === "base64") {
+      logGa4Stage(result.failStage ?? "credential_validation");
+      return { connected: false, reason: INVALID_BASE64_REASON };
+    }
+    return { connected: false, reason: GENERIC_REASON };
   }
-  return { connected: true, propertyId, account };
+
+  if (result.source === "legacy" && !isPemPrivateKey(result.account.private_key)) {
+    logGa4Stage("credential_validation");
+    return { connected: false, reason: GENERIC_REASON };
+  }
+
+  return {
+    connected: true,
+    propertyId,
+    account: result.account,
+    source: result.source,
+  };
 }
 
 function signServiceAccountJwt(account: ServiceAccount): string {
-  const now = Math.floor(Date.now() / 1000);
-  const header = Buffer.from(
-    JSON.stringify({ alg: "RS256", typ: "JWT" })
-  ).toString("base64url");
-  const payload = Buffer.from(
-    JSON.stringify({
-      iss: account.client_email,
-      scope: ANALYTICS_SCOPE,
-      aud: TOKEN_URL,
-      iat: now,
-      exp: now + 3600,
-    })
-  ).toString("base64url");
-  const unsigned = `${header}.${payload}`;
-  const signer = createSign("RSA-SHA256");
-  signer.update(unsigned);
-  signer.end();
-  const signature = signer.sign(account.private_key, "base64url");
-  return `${unsigned}.${signature}`;
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const header = Buffer.from(
+      JSON.stringify({ alg: "RS256", typ: "JWT" })
+    ).toString("base64url");
+    const payload = Buffer.from(
+      JSON.stringify({
+        iss: account.client_email,
+        scope: ANALYTICS_SCOPE,
+        aud: TOKEN_URL,
+        iat: now,
+        exp: now + 3600,
+      })
+    ).toString("base64url");
+    const unsigned = `${header}.${payload}`;
+    const signer = createSign("RSA-SHA256");
+    signer.update(unsigned);
+    signer.end();
+    const signature = signer.sign(account.private_key, "base64url");
+    return `${unsigned}.${signature}`;
+  } catch (err) {
+    const code =
+      err && typeof err === "object" && "code" in err && err.code != null
+        ? String(err.code)
+        : "SIGN_FAILED";
+    throwGa4Error("google_auth", code, AUTH_REASON);
+  }
 }
 
-function throwGa4Error(code: string, message: string): never {
+function throwGa4Error(stage: FailStage, code: string, message: string): never {
   const err: Ga4FailError = new Error(message);
   err.code = code;
+  err.stage = stage;
   throw err;
 }
 
-function logGa4Failure(err: unknown): void {
+function logGa4Failure(err: unknown, source: CredentialSource): void {
+  const stage: FailStage =
+    err && typeof err === "object" && "stage" in err && err.stage != null
+      ? (err.stage as FailStage)
+      : "google_auth";
   const code =
     err && typeof err === "object" && "code" in err && err.code != null
       ? String(err.code)
       : undefined;
-  const message = err instanceof Error ? err.message : "unknown";
-  console.error("GA4 fetch failed", { code, message });
+  console.error("GA4 fetch failed", {
+    stage,
+    code,
+    credentialSource: source,
+  });
+}
+
+function clientReasonForFailure(err: unknown): string {
+  const stage =
+    err && typeof err === "object" && "stage" in err ? err.stage : undefined;
+  if (stage === "ga4_data_api") return DATA_API_REASON;
+  return AUTH_REASON;
 }
 
 async function getAccessToken(account: ServiceAccount): Promise<string> {
@@ -252,11 +294,11 @@ async function getAccessToken(account: ServiceAccount): Promise<string> {
     body,
   });
   if (!res.ok) {
-    throwGa4Error(String(res.status), `GA4 token exchange failed (${res.status})`);
+    throwGa4Error("google_auth", String(res.status), AUTH_REASON);
   }
   const data = (await res.json()) as { access_token?: string };
   if (!data.access_token) {
-    throwGa4Error("TOKEN_MISSING", "GA4 token missing");
+    throwGa4Error("google_auth", "TOKEN_MISSING", AUTH_REASON);
   }
   return data.access_token;
 }
@@ -289,23 +331,15 @@ async function runReport(
   );
   if (!res.ok) {
     let code = String(res.status);
-    let message = `GA4 report failed (${res.status})`;
     try {
       const errBody = (await res.json()) as {
-        error?: { status?: string; message?: string };
+        error?: { status?: string };
       };
       if (errBody.error?.status) code = errBody.error.status;
-      if (
-        typeof errBody.error?.message === "string" &&
-        errBody.error.message.length > 0 &&
-        errBody.error.message.length < 300
-      ) {
-        message = errBody.error.message;
-      }
     } catch {
-      // Keep status-only message if the error body is not JSON.
+      // Keep status-only code if the error body is not JSON.
     }
-    throwGa4Error(code, message);
+    throwGa4Error("ga4_data_api", code, DATA_API_REASON);
   }
   return res.json();
 }
@@ -375,10 +409,10 @@ export async function fetchGa4Report(): Promise<Ga4Report> {
 
     return { connected: true, windows, events30d };
   } catch (err) {
-    logGa4Failure(err);
+    logGa4Failure(err, status.source);
     return {
       connected: false,
-      reason: "Analytics connection required",
+      reason: clientReasonForFailure(err),
     };
   }
 }
