@@ -37,48 +37,117 @@ type ServiceAccount = {
 
 type Ga4FailError = Error & { code?: string };
 
+const INVALID_PEM_REASON = "GA4_PRIVATE_KEY is not a valid PEM private key";
+
 function stripWrappingQuotes(value: string): string {
-  const trimmed = value.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2)
-  ) {
-    return trimmed.slice(1, -1).trim();
+  let result = value.trim();
+  for (let i = 0; i < 4 && result.length >= 2; i++) {
+    const first = result[0];
+    const last = result[result.length - 1];
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      result = result.slice(1, -1).trim();
+      continue;
+    }
+    break;
   }
-  return trimmed;
+  return result;
 }
 
+function unescapePemNewlines(value: string): string {
+  let key = value;
+  for (let i = 0; i < 4; i++) {
+    if (!key.includes("\\n") && !key.includes("\\r")) break;
+    if (key.includes("\\\\n") || key.includes("\\\\r")) {
+      key = key.replace(/\\\\r\\\\n/g, "\\r\\n").replace(/\\\\n/g, "\\n").replace(/\\\\r/g, "\\r");
+    } else {
+      key = key.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\r/g, "\n");
+    }
+  }
+  return key.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
+
+function extractPrivateKeyFromJsonBlob(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("{") || !trimmed.includes("private_key")) return null;
+  try {
+    const parsed = JSON.parse(trimmed) as { private_key?: unknown };
+    return typeof parsed.private_key === "string" ? parsed.private_key : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseServiceAccountJson(raw: string): Partial<ServiceAccount> | null {
+  try {
+    let parsed: unknown = JSON.parse(stripWrappingQuotes(raw));
+    if (typeof parsed === "string") {
+      parsed = JSON.parse(stripWrappingQuotes(parsed));
+    }
+    if (!parsed || typeof parsed !== "object") return null;
+    const obj = parsed as Record<string, unknown>;
+    return {
+      client_email: typeof obj.client_email === "string" ? obj.client_email : undefined,
+      private_key: typeof obj.private_key === "string" ? obj.private_key : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Normalize a Vercel/env PEM. Does not re-wrap or rewrite the base64 body. */
 function normalizePrivateKey(raw: string): string {
-  return stripWrappingQuotes(raw)
-    .replace(/\\n/g, "\n")
-    .replace(/\r/g, "")
-    .trim();
+  let key = stripWrappingQuotes(raw);
+  const fromJson = extractPrivateKeyFromJsonBlob(key);
+  if (fromJson) {
+    key = stripWrappingQuotes(fromJson);
+  }
+  return unescapePemNewlines(key).trim();
+}
+
+function isPemPrivateKey(key: string): boolean {
+  const markers = [
+    ["-----BEGIN PRIVATE KEY-----", "-----END PRIVATE KEY-----"],
+    ["-----BEGIN RSA PRIVATE KEY-----", "-----END RSA PRIVATE KEY-----"],
+  ] as const;
+  return markers.some(([begin, end]) => {
+    const start = key.indexOf(begin);
+    const stop = key.indexOf(end);
+    return start !== -1 && stop !== -1 && start < stop;
+  });
 }
 
 function readServiceAccount(): ServiceAccount | null {
-  const json = process.env.GA4_SERVICE_ACCOUNT_JSON?.trim();
+  const json = process.env.GA4_SERVICE_ACCOUNT_JSON;
   if (json) {
-    try {
-      const parsed = JSON.parse(stripWrappingQuotes(json)) as Partial<ServiceAccount>;
-      if (parsed.client_email && parsed.private_key) {
-        return {
-          client_email: parsed.client_email.trim(),
-          private_key: normalizePrivateKey(parsed.private_key),
-        };
-      }
-    } catch {
-      // Fall through to GA4_CLIENT_EMAIL + GA4_PRIVATE_KEY.
+    const parsed = parseServiceAccountJson(json);
+    if (parsed?.client_email && parsed.private_key) {
+      return {
+        client_email: stripWrappingQuotes(parsed.client_email),
+        private_key: normalizePrivateKey(parsed.private_key),
+      };
     }
   }
 
   const email = stripWrappingQuotes(process.env.GA4_CLIENT_EMAIL ?? "");
   const key = process.env.GA4_PRIVATE_KEY;
-  if (!email || !key) return null;
+  if (email && key) {
+    return {
+      client_email: email,
+      private_key: normalizePrivateKey(key),
+    };
+  }
 
-  return {
-    client_email: email,
-    private_key: normalizePrivateKey(key),
-  };
+  if (key) {
+    const parsed = parseServiceAccountJson(key);
+    if (parsed?.client_email && parsed.private_key) {
+      return {
+        client_email: stripWrappingQuotes(parsed.client_email),
+        private_key: normalizePrivateKey(parsed.private_key),
+      };
+    }
+  }
+
+  return null;
 }
 
 export function getGa4PropertyId(): string | null {
@@ -101,6 +170,10 @@ export function getGa4ConnectionStatus(): { connected: false; reason: string } |
       connected: false,
       reason: "Analytics connection required",
     };
+  }
+  if (!isPemPrivateKey(account.private_key)) {
+    console.error(INVALID_PEM_REASON);
+    return { connected: false, reason: INVALID_PEM_REASON };
   }
   return { connected: true, propertyId, account };
 }
