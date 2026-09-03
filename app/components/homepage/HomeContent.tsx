@@ -27,6 +27,8 @@ type Props = {
   loading?: boolean;
   totalCount?: number;
   filterKey?: string;
+  countryName?: string;
+  addListingHref?: string;
 };
 
 export default function HomeContent({
@@ -39,6 +41,8 @@ export default function HomeContent({
   loading = false,
   totalCount = 0,
   filterKey = "",
+  countryName,
+  addListingHref,
 }: Props) {
   const infeedBanners = bannersForPlacement(banners, "infeed");
   const railBanners = bannersForHomepageRail(banners);
@@ -79,6 +83,8 @@ export default function HomeContent({
             banners={infeedBanners}
             loading={loading}
             totalLive={totalCount}
+            countryName={countryName}
+            addListingHref={addListingHref}
           />
 
           {!loading && (

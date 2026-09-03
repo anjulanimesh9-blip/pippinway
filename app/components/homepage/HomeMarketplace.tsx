@@ -13,7 +13,9 @@ import useFeaturedListings from "@/app/hooks/useFeaturedListings";
 import useHomeFilters from "@/app/hooks/useHomeFilters";
 import useBanners from "@/app/hooks/useBanners";
 import { parseListingPrice } from "@/lib/formatPrice";
+import CountryFlag from "@/app/components/CountryFlag";
 import {
+  addListingPath,
   countryMarketplacePath,
   getCountryByFirestoreValue,
   persistSelectedCountry,
@@ -93,8 +95,13 @@ export default function HomeMarketplace({
       <section className="mx-auto w-full max-w-[1600px] px-4 py-5">
         {market && (
           <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-white">
-              {market.flag} {market.displayName} Marketplace
+            <p className="flex items-center gap-2 text-sm font-semibold text-white">
+              <CountryFlag
+                iso2={market.iso2}
+                title={market.displayName}
+                className="h-5 w-5"
+              />
+              {market.displayName} Marketplace
             </p>
             <Link
               href="/"
@@ -134,6 +141,8 @@ export default function HomeMarketplace({
           loading={loading}
           totalCount={listings.length}
           filterKey={`${selectedCountry}|${selectedCategory}|${search}|${location}|${sortBy}`}
+          countryName={market?.displayName}
+          addListingHref={addListingPath(selectedCountry)}
         />
       </section>
     </>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import CountryFlag from "@/app/components/CountryFlag";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 
 const steps = [
@@ -52,9 +53,11 @@ export default function CountryLanding() {
             href={`/${country.slug}`}
             className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#111827] px-3 py-5 text-center transition hover:border-[#FBB03B]/50 hover:bg-[#1a2234]"
           >
-            <span className="text-4xl leading-none" aria-hidden="true">
-              {country.flag}
-            </span>
+            <CountryFlag
+              iso2={country.iso2}
+              title={country.displayName}
+              className="h-10 w-10 sm:h-12 sm:w-12"
+            />
             <span className="mt-3 text-sm font-semibold text-white sm:text-base">
               {country.displayName}
             </span>

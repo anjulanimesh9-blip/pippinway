@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import ListingCard from "../ListingCard";
 import BannerRotator from "../Banner/BannerRotator";
 import { GuestAuthLink } from "../../GuestAuthPrompt";
@@ -18,6 +19,8 @@ type LatestListingsProps = {
   banners: Banner[];
   loading?: boolean;
   totalLive?: number;
+  countryName?: string;
+  addListingHref?: string;
 };
 
 type FeedItem =
@@ -96,7 +99,8 @@ export default function LatestListings({
   toggleFavorite,
   banners,
   loading = false,
-  totalLive = 0,
+  countryName,
+  addListingHref = "/add-listing",
 }: LatestListingsProps) {
   const [rotateIndex, setRotateIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -128,20 +132,30 @@ export default function LatestListings({
   }
 
   if (!latestListings.length) {
+    const place = countryName?.trim();
     return (
       <div className="rounded-2xl border border-white/10 bg-[#111827] py-16 text-center px-4">
-        <p className="text-gray-300 font-semibold">No listings found</p>
+        <p className="text-gray-300 font-semibold">
+          {place ? `No listings found in ${place}` : "No listings found"}
+        </p>
         <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
-          {totalLive === 0
-            ? "No ads yet. Be the first to post one."
-            : "Try setting Country to “All Countries” and Category to “All”."}
+          {place
+            ? `Be the first to post an ad in ${place}.`
+            : "Be the first to post an ad."}
         </p>
         <GuestAuthLink
-          href="/add-listing"
+          href={addListingHref}
           className="inline-block mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500"
         >
           + Post an Ad
         </GuestAuthLink>
+        {place && (
+          <div className="mt-3">
+            <Link href="/" className="text-sm text-[#FBB03B] hover:underline">
+              Change Country
+            </Link>
+          </div>
+        )}
       </div>
     );
   }
