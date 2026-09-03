@@ -4,6 +4,7 @@ type CountryFlagProps = {
   iso2: string;
   title?: string;
   className?: string;
+  imgClassName?: string;
 };
 
 /**
@@ -15,6 +16,7 @@ export default function CountryFlag({
   iso2,
   title,
   className = "h-10 w-10",
+  imgClassName = "object-contain",
 }: CountryFlagProps) {
   const emoji = flagEmojiFromIso2(iso2);
 
@@ -29,7 +31,7 @@ export default function CountryFlag({
         src={flagImageUrl(iso2)}
         alt=""
         draggable={false}
-        className="h-full w-full object-contain"
+        className={`h-full w-full ${imgClassName}`}
       />
       <span className="sr-only">{emoji}</span>
     </span>

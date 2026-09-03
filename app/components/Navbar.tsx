@@ -101,8 +101,8 @@ useEffect(() => {
   }, []);
 
   return (
-    <nav className="bg-black border-b border-gray-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:py-4">
 
         {/* Logo */}
        <Link
@@ -115,11 +115,11 @@ useEffect(() => {
     alt="Pippinway Logo"
     width={90}
     height={90}
-    className="h-[90px] w-auto object-contain shrink-0"
+    className="h-10 w-auto shrink-0 object-contain md:h-[90px]"
     priority
   />
 
- <div className="flex flex-col leading-tight min-w-0">
+ <div className="hidden min-w-0 flex-col leading-tight md:flex">
   <span className="text-xl md:text-2xl font-bold text-white">
     pippinway.com
   </span>
@@ -257,7 +257,8 @@ useEffect(() => {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden text-white text-3xl"
+          className="text-2xl leading-none text-white md:hidden"
+          aria-label="Open menu"
           onClick={() =>
             setMenuOpen(
               (prev) =>

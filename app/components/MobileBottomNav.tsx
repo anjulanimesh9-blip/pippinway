@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Home,
+  LayoutGrid,
+  MessageCircle,
+  Plus,
+  User,
+} from "lucide-react";
 import { GuestAuthLink } from "./GuestAuthPrompt";
 import useCountryNavigation from "../hooks/useCountryNavigation";
 
@@ -19,16 +26,15 @@ export default function MobileBottomNav({
     (marketplaceHome !== "/" && pathname === marketplaceHome);
 
   const itemClass = (active: boolean) =>
-    `flex flex-col items-center justify-center text-xs transition ${
-      active ? "text-violet-500" : "text-gray-400"
+    `flex flex-col items-center justify-center gap-0.5 text-[11px] transition ${
+      active ? "text-[#FBB03B]" : "text-gray-400"
     }`;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-[#0B1220] border-t border-white/10 backdrop-blur-xl">
-      <div className="grid grid-cols-5 h-16">
-
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 backdrop-blur-xl lg:hidden">
+      <div className="grid h-16 grid-cols-5">
         <Link href={marketplaceHome} className={itemClass(homeActive)}>
-          <span className="text-2xl">🏠</span>
+          <Home className="h-5 w-5" strokeWidth={1.8} />
           Home
         </Link>
 
@@ -36,7 +42,7 @@ export default function MobileBottomNav({
           href="/categories"
           className={itemClass(pathname.startsWith("/categories"))}
         >
-          <span className="text-2xl">📂</span>
+          <LayoutGrid className="h-5 w-5" strokeWidth={1.8} />
           Categories
         </Link>
 
@@ -44,22 +50,19 @@ export default function MobileBottomNav({
           href={addListingHref}
           className="flex items-center justify-center"
         >
-          <div className="w-14 h-14 -mt-8 rounded-full bg-violet-600 flex items-center justify-center text-white text-3xl shadow-xl border-4 border-[#020817]">
-            +
+          <div className="flex h-14 w-14 -mt-8 items-center justify-center rounded-full border-4 border-[#020817] bg-[#FBB03B] text-[#0B1220] shadow-xl">
+            <Plus className="h-7 w-7" strokeWidth={2.4} />
           </div>
         </GuestAuthLink>
 
         <GuestAuthLink
           href="/messages"
-          className={`relative ${itemClass(
-            pathname.startsWith("/messages")
-          )}`}
+          className={`relative ${itemClass(pathname.startsWith("/messages"))}`}
         >
-          <span className="text-2xl">💬</span>
+          <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
           Chat
-
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-3 bg-red-500 text-white rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px]">
+            <span className="absolute top-1 right-3 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
               {unreadCount}
             </span>
           )}
@@ -69,10 +72,9 @@ export default function MobileBottomNav({
           href="/profile"
           className={itemClass(pathname.startsWith("/profile"))}
         >
-          <span className="text-2xl">👤</span>
+          <User className="h-5 w-5" strokeWidth={1.8} />
           Profile
         </GuestAuthLink>
-
       </div>
     </nav>
   );

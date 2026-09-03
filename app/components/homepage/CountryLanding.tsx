@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import CountryFlag from "@/app/components/CountryFlag";
+import LandingHeroArt from "@/app/components/homepage/LandingHeroArt";
+import LandingSearch from "@/app/components/homepage/LandingSearch";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 
 const steps = [
@@ -28,38 +31,67 @@ const steps = [
 
 export default function CountryLanding() {
   return (
-    <div className="mx-auto w-full max-w-5xl px-3.5 py-5 sm:px-4 sm:py-12">
-      <div className="flex flex-col items-center text-center">
+    <div className="mx-auto w-full max-w-5xl px-4 pb-6 sm:py-12">
+      <div className="sm:hidden">
+        <LandingSearch />
+        <h1 className="mt-5 text-[28px] font-bold leading-tight tracking-tight text-white">
+          Buy & Sell Near You
+        </h1>
+        <p className="mt-2 text-sm text-gray-400">
+          Find{" "}
+          <span className="font-semibold text-[#FBB03B]">great deals</span> from
+          people near you.
+        </p>
+        <LandingHeroArt />
+        <h2
+          id="choose-country"
+          className="mt-5 text-lg font-bold text-white"
+        >
+          Choose your country
+        </h2>
+        <p className="mt-1 text-xs text-gray-500">
+          Select a location to explore local listings.
+        </p>
+      </div>
+
+      <div className="hidden flex-col items-center text-center sm:flex">
         <Image
           src="/images/logo.png"
           alt="Pippinway"
           width={220}
           height={220}
-          className="h-16 w-auto object-contain sm:h-24"
+          className="h-24 w-auto object-contain"
           priority
         />
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:mt-6 sm:text-5xl">
+        <h1 className="mt-6 text-5xl font-bold tracking-tight text-white">
           Buy & Sell Near You
         </h1>
-        <p className="mt-2 max-w-xl text-base text-gray-400 sm:mt-3 sm:text-lg">
+        <p className="mt-3 max-w-xl text-lg text-gray-400">
           Choose your country to explore local listings
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {MARKET_COUNTRIES.map((country) => (
           <Link
             key={country.slug}
             href={`/${country.slug}`}
-            className="flex min-h-24 flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#111827] px-2 py-3 text-center transition hover:border-[#FBB03B]/50 hover:bg-[#1a2234] sm:min-h-[112px] sm:px-3 sm:py-5"
+            className="flex min-h-[76px] items-center gap-2.5 rounded-2xl border border-white/10 bg-[#141B2D] px-3 py-2.5 text-left transition hover:border-[#FBB03B]/50 hover:bg-[#1a2234] sm:min-h-[112px] sm:flex-col sm:items-center sm:justify-center sm:bg-[#111827] sm:px-3 sm:py-5 sm:text-center"
           >
             <CountryFlag
               iso2={country.iso2}
               title={country.displayName}
-              className="h-8 w-8 sm:h-12 sm:w-12"
+              className="h-7 w-10 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12 sm:rounded-none"
+              imgClassName="object-cover sm:object-contain"
             />
-            <span className="mt-2 text-sm font-semibold leading-tight text-white sm:mt-3 sm:text-base">
-              {country.displayName}
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold leading-tight text-white sm:mt-3 sm:text-base">
+                {country.displayName}
+              </span>
+              <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400 sm:hidden">
+                Browse listings
+                <ArrowRight className="h-3 w-3 text-[#FBB03B]" />
+              </span>
             </span>
           </Link>
         ))}

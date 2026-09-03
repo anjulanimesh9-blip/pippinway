@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#020817] pb-20 lg:pb-8">
+    <main className="min-h-screen bg-[#020817] pb-24 lg:pb-8">
       <Navbar />
       <CountryLanding />
       <Footer />
