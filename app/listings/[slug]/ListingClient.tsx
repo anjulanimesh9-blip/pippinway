@@ -18,6 +18,7 @@ import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { PublicListingFields } from "@/lib/getPublicListing";
+import { countryMarketplacePath } from "@/lib/countries";
 import { SUPPORT_EMAIL } from "@/lib/site";
 import {
   doc,
@@ -92,7 +93,7 @@ export default function ListingClient({
         "Listing deleted!"
       );
 
-      router.push("/");
+      router.push(countryMarketplacePath(item?.country));
     };
    
 const startChat = async () => {
@@ -176,7 +177,7 @@ console.log("Owner:", item?.ownerEmail);
   listingData.approved !== true ||
   !isLiveListing(listingData)
 ) {
-  router.push("/");
+  router.push(countryMarketplacePath(listingData.country));
   return;
 }
             setItem(
@@ -222,7 +223,11 @@ console.log("Owner:", item?.ownerEmail);
                   (ad: any) =>
                     ad.id !== slug &&
                     ad.approved === true &&
-                    isLiveListing(ad)
+                    isLiveListing(ad) &&
+                    (!listingData.country ||
+                      !ad.country ||
+                      String(ad.country).trim().toLowerCase() ===
+                        String(listingData.country).trim().toLowerCase())
                 );
 
             setSellerAds(sellerSnap ? toLiveAds(sellerSnap.docs) : []);
@@ -292,7 +297,10 @@ const whatsappLink =
             Home
           </Link>
           <span>›</span>
-          <Link href="/" className="hover:text-sky-400">
+          <Link
+            href={countryMarketplacePath(item.country)}
+            className="hover:text-sky-400"
+          >
             All ads
           </Link>
           {item.category && (

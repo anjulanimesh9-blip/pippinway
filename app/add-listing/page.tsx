@@ -1,10 +1,13 @@
 "use client";
 
 import {
+  Suspense,
   useState,
   useEffect,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { COUNTRY_STORAGE_KEY, countryMarketplacePath } from "@/lib/countries";
+import { canonicalCountry } from "@/lib/filterListings";
 import {
   doc,
   addDoc,
@@ -34,9 +37,24 @@ import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
 import { trackPostAd } from "@/lib/analytics";
 import { parseListingPrice } from "@/lib/formatPrice";
 
-export default function AddListing() {
+export default function AddListingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-black text-white">
+          Loading...
+        </div>
+      }
+    >
+      <AddListing />
+    </Suspense>
+  );
+}
+
+function AddListing() {
   const router =
     useRouter();
+  const searchParams = useSearchParams();
 
 const [checkingAuth, setCheckingAuth] =
   useState(true);
@@ -108,28 +126,33 @@ const [checkingAuth, setCheckingAuth] =
             userRef
           );
 
-        if (
-          userSnap.exists()
-        ) {
-          const userData =
-            userSnap.data();
+        const fromQuery = canonicalCountry(searchParams.get("country"));
+        const stored = canonicalCountry(
+          localStorage.getItem(COUNTRY_STORAGE_KEY) ??
+            localStorage.getItem("country")
+        );
 
-          setCountry(
-            userData.country ||
-              ""
-          );
-
-          setPhone(
-            userData.phone ||
-              ""
-          );
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setPhone(userData.phone || "");
+          if (fromQuery) {
+            setCountry(fromQuery);
+          } else if (userData.country) {
+            setCountry(userData.country);
+          } else if (stored) {
+            setCountry(stored);
+          }
+        } else if (fromQuery) {
+          setCountry(fromQuery);
+        } else if (stored) {
+          setCountry(stored);
         }
       }
     );
 
   return () =>
     unsubscribe();
-}, []);
+}, [searchParams]);
 if (checkingAuth) {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -337,7 +360,7 @@ const created = await addDoc(
 
         <button
           onClick={() =>
-            router.push("/")
+            router.push(countryMarketplacePath(country || searchParams.get("country")))
           }
           className="mb-6 border border-gray-700 px-4 py-2 rounded-2xl"
         >

@@ -2,6 +2,7 @@
 
 import { Search, MapPin } from "lucide-react";
 import { track, trackSearch } from "@/lib/analytics";
+import { MARKET_COUNTRIES } from "@/lib/countries";
 
 const CATEGORIES = [
   "All",
@@ -67,16 +68,11 @@ export default function SearchBar({
           className="rounded-xl border border-white/10 bg-[#111827] px-3 py-3 text-sm text-white outline-none"
         >
           <option value="All">All Countries</option>
-          <option value="Zimbabwe">Zimbabwe</option>
-          <option value="Sri Lanka">Sri Lanka</option>
-          <option value="India">India</option>
-          <option value="Singapore">Singapore</option>
-          <option value="United Kingdom">United Kingdom</option>
-          <option value="USA">USA</option>
-          <option value="Canada">Canada</option>
-          <option value="Thailand">Thailand</option>
-          <option value="Maldives">Maldives</option>
-          <option value="South Africa">South Africa</option>
+          {MARKET_COUNTRIES.map((country) => (
+            <option key={country.slug} value={country.firestoreValue}>
+              {country.displayName}
+            </option>
+          ))}
         </select>
 
         <input

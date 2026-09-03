@@ -1,5 +1,11 @@
 import type { ListingRecord } from "@/lib/types/featured";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
+import {
+  HOME_COUNTRIES,
+  getCountryByFirestoreValue,
+} from "@/lib/countries";
+
+export { HOME_COUNTRIES };
 
 export type HomeFilters = {
   country?: string;
@@ -7,19 +13,6 @@ export type HomeFilters = {
   search?: string;
   location?: string;
 };
-
-export const HOME_COUNTRIES = [
-  "Zimbabwe",
-  "Sri Lanka",
-  "India",
-  "Singapore",
-  "United Kingdom",
-  "USA",
-  "Canada",
-  "Thailand",
-  "Maldives",
-  "South Africa",
-] as const;
 
 const ALL_FILTER_VALUES = new Set([
   "",
@@ -38,8 +31,7 @@ export function isAllFilterValue(value?: string | null): boolean {
 
 export function canonicalCountry(value?: string | null): string | null {
   if (isAllFilterValue(value)) return null;
-  const needle = value!.trim().toLowerCase();
-  return HOME_COUNTRIES.find((country) => country.toLowerCase() === needle) ?? null;
+  return getCountryByFirestoreValue(value)?.firestoreValue ?? null;
 }
 
 function matchesCountry(listing: ListingRecord, country?: string) {

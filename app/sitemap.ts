@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { MARKET_COUNTRIES } from "@/lib/countries";
 import { getPublicListingsForSitemap } from "@/lib/getPublicListing";
 import { SITE_URL } from "@/lib/site";
 
@@ -9,6 +10,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified, changeFrequency: "daily", priority: 1 },
+    ...MARKET_COUNTRIES.map((country) => ({
+      url: `${SITE_URL}/${country.slug}`,
+      lastModified,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    })),
     {
       url: `${SITE_URL}/about`,
       lastModified,

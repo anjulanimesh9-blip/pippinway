@@ -1,10 +1,11 @@
 import Link from "next/link";
+import type { MarketCountry } from "@/lib/countries";
 
 const steps = [
   {
     n: "1",
     title: "Browse or search listings",
-    body: "Use Latest Ads, categories, country and keywords to find something you want.",
+    body: "Use Latest Ads, categories and keywords to find something you want in this country.",
   },
   {
     n: "2",
@@ -23,7 +24,13 @@ const steps = [
   },
 ];
 
-export default function HomeSeoSection() {
+export default function HomeSeoSection({
+  country,
+}: {
+  country?: MarketCountry;
+}) {
+  const marketName = country?.displayName ?? "this market";
+
   return (
     <section className="mt-12 rounded-2xl border border-white/10 bg-[#111827] px-5 py-8 sm:px-8">
       <h2 className="text-xl font-bold text-white sm:text-2xl">
@@ -38,14 +45,13 @@ export default function HomeSeoSection() {
       </p>
 
       <h2 className="mt-10 text-xl font-bold text-white sm:text-2xl">
-        Buy and sell in Zimbabwe
+        Buy and sell in {marketName}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-400 sm:text-base">
-        Zimbabwe is one of Pippinway’s current markets. Choose Zimbabwe in the
-        country filter to see live ads posted there, then open a listing for
-        the seller’s own photos, price and location. The same tools work in
-        Sri Lanka, India, Singapore, the UK, the USA, Canada, Thailand, South
-        Africa and the Maldives.
+        This page shows live ads posted for {marketName}. Open a listing for
+        the seller’s photos, price and location, then contact them through
+        Pippinway chat or WhatsApp. Use Change Country if you want another
+        market.
       </p>
 
       <h2 className="mt-10 text-xl font-bold text-white sm:text-2xl">

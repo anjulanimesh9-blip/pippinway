@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/Navbar";
 import SearchBar from "@/app/components/homepage/Search/SearchBar";
 import HomeContent from "@/app/components/homepage/HomeContent";
@@ -11,13 +13,25 @@ import useFeaturedListings from "@/app/hooks/useFeaturedListings";
 import useHomeFilters from "@/app/hooks/useHomeFilters";
 import useBanners from "@/app/hooks/useBanners";
 import { parseListingPrice } from "@/lib/formatPrice";
+import {
+  countryMarketplacePath,
+  getCountryByFirestoreValue,
+  persistSelectedCountry,
+} from "@/lib/countries";
+import { canonicalCountry } from "@/lib/filterListings";
 
-export default function HomeMarketplace() {
+type HomeMarketplaceProps = {
+  initialCountry: string;
+};
+
+export default function HomeMarketplace({
+  initialCountry,
+}: HomeMarketplaceProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const { listings, loading, error } = useListings();
   const {
     selectedCountry,
-    setSelectedCountry,
     selectedCategory,
     setSelectedCategory,
     search,
@@ -26,8 +40,9 @@ export default function HomeMarketplace() {
     setLocation,
     sortBy,
     setSortBy,
-  } = useHomeFilters();
+  } = useHomeFilters(initialCountry);
   const { favorites, toggleFavorite } = useFavorites(user);
+  const market = getCountryByFirestoreValue(selectedCountry);
 
   const filters = useMemo(
     () => ({
@@ -62,15 +77,39 @@ export default function HomeMarketplace() {
     return next;
   }, [latestListings, sortBy]);
 
+  const handleCountryChange = (value: string) => {
+    const next = canonicalCountry(value);
+    if (!next) {
+      router.push("/");
+      return;
+    }
+    persistSelectedCountry(next);
+    router.push(countryMarketplacePath(next));
+  };
+
   return (
     <>
       <Navbar />
       <section className="mx-auto w-full max-w-[1600px] px-4 py-5">
+        {market && (
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-white">
+              {market.flag} {market.displayName} Marketplace
+            </p>
+            <Link
+              href="/"
+              className="shrink-0 text-sm text-[#FBB03B] hover:underline"
+            >
+              Change Country
+            </Link>
+          </div>
+        )}
+
         <SearchBar
           searchTerm={search}
           setSearchTerm={setSearch}
           selectedCountry={selectedCountry}
-          setSelectedCountry={setSelectedCountry}
+          setSelectedCountry={handleCountryChange}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           location={location}

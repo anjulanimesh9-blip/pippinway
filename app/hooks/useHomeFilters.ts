@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { persistSelectedCountry } from "@/lib/countries";
 import { canonicalCountry, isAllFilterValue } from "@/lib/filterListings";
 
-const STORAGE_KEY = "pippinway.selectedCountry";
-
-export default function useHomeFilters() {
+export default function useHomeFilters(routeCountry?: string) {
   const searchParams = useSearchParams();
+  const initialCountry = canonicalCountry(routeCountry) ?? "All";
 
-  const [selectedCountry, setSelectedCountryState] = useState("All");
+  const [selectedCountry, setSelectedCountryState] = useState(initialCountry);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
@@ -19,19 +19,20 @@ export default function useHomeFilters() {
     const next = canonicalCountry(value) ?? "All";
     setSelectedCountryState(next);
     if (next === "All") {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("pippinway.selectedCountry");
       localStorage.removeItem("country");
     } else {
-      localStorage.setItem(STORAGE_KEY, next);
+      persistSelectedCountry(next);
     }
   };
 
   useEffect(() => {
-    const stored =
-      localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("country");
-    const next = canonicalCountry(stored);
-    if (next) setSelectedCountryState(next);
-  }, []);
+    const next = canonicalCountry(routeCountry);
+    if (next) {
+      setSelectedCountryState(next);
+      persistSelectedCountry(next);
+    }
+  }, [routeCountry]);
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -40,11 +41,11 @@ export default function useHomeFilters() {
     );
     setSearch(searchParams.get("search") || "");
 
-    const countryParam = searchParams.get("country");
-    if (countryParam) {
-      setSelectedCountry(countryParam);
+    if (!routeCountry) {
+      const countryParam = searchParams.get("country");
+      if (countryParam) setSelectedCountry(countryParam);
     }
-  }, [searchParams]);
+  }, [searchParams, routeCountry]);
 
   return {
     selectedCountry,

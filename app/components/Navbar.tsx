@@ -16,6 +16,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { GuestAuthLink, useGuestAuthPrompt } from "./GuestAuthPrompt";
+import useCountryNavigation from "../hooks/useCountryNavigation";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] =
@@ -30,6 +31,7 @@ const [showNotifications, setShowNotifications] = useState(false);
   const router =
     useRouter();
   const { requireAuth } = useGuestAuthPrompt();
+  const { marketplaceHome, addListingHref } = useCountryNavigation();
 
     const {
   notifications,
@@ -126,7 +128,7 @@ useEffect(() => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6 text-white font-medium items-center">
-  <Link href="/">
+  <Link href={marketplaceHome}>
     Home
   </Link>
   <Link href="/about">
@@ -139,7 +141,7 @@ useEffect(() => {
     Contact
   </Link>
 
-  <GuestAuthLink href="/add-listing">
+  <GuestAuthLink href={addListingHref}>
     Add Listing
   </GuestAuthLink>
   <a
@@ -277,7 +279,7 @@ useEffect(() => {
       className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
       onClick={() => {
         setMenuOpen(false);
-        router.push("/");
+        router.push(marketplaceHome);
       }}
     >
       Home
@@ -314,7 +316,7 @@ useEffect(() => {
       className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
       onClick={() => {
         setMenuOpen(false);
-        requireAuth("/add-listing");
+        requireAuth(addListingHref);
       }}
     >
       Add Listing

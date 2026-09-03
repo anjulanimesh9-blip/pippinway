@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { GuestAuthLink } from "../../GuestAuthPrompt";
+import useCountryNavigation from "@/app/hooks/useCountryNavigation";
 
 const PIPPINWAY_LINKS = [
   { href: "/about", label: "About" },
@@ -19,11 +20,6 @@ const LEGAL_LINKS = [
   { href: "/terms", label: "Terms & Conditions" },
 ];
 
-const MARKETPLACE_LINKS = [
-  { href: "/", label: "Browse Listings" },
-  { href: "/categories", label: "Categories" },
-  { href: "/add-listing", label: "Post Ad", auth: true },
-];
 
 function FooterLinks({
   links,
@@ -56,6 +52,13 @@ function FooterLinks({
 }
 
 export default function Footer() {
+  const { marketplaceHome, addListingHref } = useCountryNavigation();
+  const marketplaceLinks = [
+    { href: marketplaceHome, label: "Browse Listings" },
+    { href: "/categories", label: "Categories" },
+    { href: addListingHref, label: "Post Ad", auth: true },
+  ];
+
   return (
     <footer className="mt-16 border-t border-gray-800 bg-[#020817] lg:mt-24">
       <div className="mx-auto max-w-7xl px-4 py-14">
@@ -87,7 +90,7 @@ export default function Footer() {
 
           <div>
             <h3 className="mb-4 text-lg font-bold text-white">Marketplace</h3>
-            <FooterLinks links={MARKETPLACE_LINKS} />
+            <FooterLinks links={marketplaceLinks} />
           </div>
         </div>
 

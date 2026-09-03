@@ -4,6 +4,7 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Footer from "../components/homepage/Footer/Footer";
+import useCountryNavigation from "../hooks/useCountryNavigation";
 
 const categories = [
   { name: "Cars", icon: "🚗", href: "/?category=Cars" },
@@ -20,12 +21,14 @@ const categories = [
 ];
 
 export default function CategoriesPage() {
+  const { marketplaceHome } = useCountryNavigation();
+
   return (
     <main className="min-h-screen bg-[#020817] text-white pb-24">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-[#020817] border-b border-gray-800">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center">
-          <Link href="/" className="text-violet-400 font-medium">
+          <Link href={marketplaceHome} className="text-violet-400 font-medium">
             ← Back
           </Link>
 
@@ -47,7 +50,11 @@ export default function CategoriesPage() {
         {categories.map((category) => (
           <Link
             key={category.name}
-            href={category.href}
+            href={
+              marketplaceHome === "/"
+                ? category.href
+                : `${marketplaceHome}?category=${encodeURIComponent(category.name)}`
+            }
             onClick={() => track("select_category", { category: category.name })}
             className="bg-[#111827] border border-gray-700 rounded-2xl p-6 flex flex-col items-center justify-center hover:border-violet-500 transition"
           >
