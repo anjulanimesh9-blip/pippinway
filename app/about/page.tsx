@@ -116,6 +116,20 @@ export default function AboutPage() {
 
       <section>
         <h2 className="mb-3 text-xl font-semibold text-white">
+          Zimbabwe as a current market
+        </h2>
+        <p>
+          Zimbabwe is an important current market on Pippinway. Sellers in
+          Harare, Bulawayo and other towns can post cars, phones, furniture,
+          jobs and services with photos, a price and a WhatsApp number.
+          Buyers choose Zimbabwe in the country filter to see those live ads
+          without creating an account. Deals still happen between the two
+          people — Pippinway hosts the listing and the chat tools.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-xl font-semibold text-white">
           Making local buying and selling simple
         </h2>
         <p>

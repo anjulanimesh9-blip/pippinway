@@ -344,9 +344,20 @@ const created = await addDoc(
           ← Back to Home
         </button>
 
-        <h1 className="text-3xl font-bold mb-6">
+        <h1 className="text-3xl font-bold mb-3">
           Add Listing
         </h1>
+        <p className="mb-6 text-sm text-gray-400">
+          Post a truthful ad with real photos. Read the{" "}
+          <a href="/posting-rules" className="text-[#FBB03B] hover:underline">
+            posting rules
+          </a>{" "}
+          and{" "}
+          <a href="/safety" className="text-[#FBB03B] hover:underline">
+            safety guidance
+          </a>{" "}
+          before you publish.
+        </p>
 
         <form
           onSubmit={

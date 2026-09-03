@@ -86,7 +86,12 @@ export default function TermsPage() {
           WhatsApp numbers you add will be visible on the public listing.
           Listings may be limited in number of images and may expire after a
           period set by the service. Pippinway or its admins may hide, reject
-          or remove an ad.
+          or remove an ad. Practical posting rules, including prohibited and
+          duplicate ads, are on{" "}
+          <Link href="/posting-rules" className="text-[#FBB03B] hover:underline">
+            Posting rules
+          </Link>
+          .
         </p>
       </section>
 

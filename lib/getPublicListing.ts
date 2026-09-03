@@ -13,6 +13,10 @@ export type PublicListingFields = {
   country?: string;
   imageUrl?: string;
   imageUrls?: string[];
+  phone?: string;
+  ownerName?: string;
+  ownerId?: string;
+  ownerEmail?: string;
   approved?: boolean;
   expired?: boolean;
   expiresAt?: unknown;
@@ -98,6 +102,10 @@ export const getPublicListingBySlug = cache(
         country: asString(parsed.country),
         imageUrl: asString(parsed.imageUrl),
         imageUrls: asStringArray(parsed.imageUrls),
+        phone: asString(parsed.phone),
+        ownerName: asString(parsed.ownerName),
+        ownerId: asString(parsed.ownerId),
+        ownerEmail: asString(parsed.ownerEmail),
         approved: parsed.approved === true,
         expired: parsed.expired === true || parsed.expired === "true",
         expiresAt: parsed.expiresAt,
@@ -111,3 +119,90 @@ export const getPublicListingBySlug = cache(
     }
   }
 );
+
+function listingFromFirestoreDoc(
+  name: string | undefined,
+  fields: Record<string, unknown> | undefined
+): PublicListingFields | null {
+  if (!fields) return null;
+  const id = name?.split("/").pop();
+  if (!id) return null;
+
+  const parsed: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    parsed[key] = firestoreValue(value);
+  }
+
+  const listing: PublicListingFields = {
+    id,
+    title: asString(parsed.title),
+    description: asString(parsed.description),
+    category: asString(parsed.category),
+    location: asString(parsed.location),
+    country: asString(parsed.country),
+    imageUrl: asString(parsed.imageUrl),
+    imageUrls: asStringArray(parsed.imageUrls),
+    approved: parsed.approved === true,
+    expired: parsed.expired === true || parsed.expired === "true",
+    expiresAt: parsed.expiresAt,
+    publishedAt: parsed.publishedAt,
+    createdAt: parsed.createdAt,
+    price: parsed.price,
+    amount: parsed.amount,
+  };
+
+  return isPublicListing(listing) ? listing : null;
+}
+
+export async function getPublicListingsForSitemap(
+  limit = 200
+): Promise<PublicListingFields[]> {
+  const listings: PublicListingFields[] = [];
+  let pageToken: string | undefined;
+
+  try {
+    while (listings.length < limit) {
+      const params = new URLSearchParams({
+        key: API_KEY,
+        pageSize: "100",
+      });
+      if (pageToken) params.set("pageToken", pageToken);
+
+      const url =
+        `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
+        `/databases/(default)/documents/listings?${params.toString()}`;
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      const response = await fetch(url, {
+        next: { revalidate: 3600 },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (!response.ok) break;
+
+      const payload = (await response.json()) as {
+        documents?: Array<{
+          name?: string;
+          fields?: Record<string, unknown>;
+        }>;
+        nextPageToken?: string;
+      };
+
+      for (const doc of payload.documents ?? []) {
+        const listing = listingFromFirestoreDoc(doc.name, doc.fields);
+        if (listing) listings.push(listing);
+        if (listings.length >= limit) break;
+      }
+
+      if (!payload.nextPageToken || listings.length >= limit) break;
+      pageToken = payload.nextPageToken;
+    }
+  } catch {
+    return listings;
+  }
+
+  return listings;
+}
+

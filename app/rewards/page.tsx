@@ -172,6 +172,11 @@ export default function RewardsPage() {
           <p className="mt-2 text-sm text-gray-400">
             Normal: 3 approved ads = 1 spin · Mega: 10 approved ads = 1 mega spin
           </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Spins come from eligible published listings only. Viewing or
+            clicking advertisements does not earn Rewards, Featured Credits or
+            cash prizes.
+          </p>
         </div>
 
         {cashBanners.length > 0 && (

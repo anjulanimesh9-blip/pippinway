@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { getPublicListingBySlug } from "@/lib/getPublicListing";
+import { notFound } from "next/navigation";
+import { getPublicListingBySlug, isPublicListing } from "@/lib/getPublicListing";
 import {
   jsonLdScript,
   listingJsonLd,
@@ -22,6 +23,11 @@ export async function generateMetadata({
 export default async function ListingPage({ params }: ListingPageProps) {
   const { slug } = await params;
   const listing = await getPublicListingBySlug(slug);
+
+  if (!listing || !isPublicListing(listing)) {
+    notFound();
+  }
+
   const jsonLd = listingJsonLd(slug, listing);
 
   return (
@@ -32,7 +38,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
           dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
         />
       ) : null}
-      <ListingClient />
+      <ListingClient initialItem={listing} />
     </>
   );
 }

@@ -37,6 +37,11 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+      <p className="mx-auto max-w-5xl px-4 pt-4 text-sm leading-6 text-gray-400">
+        Choose a category to browse live classified ads. You do not need an
+        account to look. Posting an ad still requires sign-in.
+      </p>
+
       {/* Categories Grid */}
       <div className="max-w-5xl mx-auto p-4 grid grid-cols-2 gap-4">
         {categories.map((category) => (

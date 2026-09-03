@@ -218,6 +218,10 @@ export default function SafetyPage() {
 
       <p>
         More detail:{" "}
+        <Link href="/posting-rules" className="text-[#FBB03B] hover:underline">
+          Posting rules
+        </Link>
+        ,{" "}
         <Link
           href="/guides/buying-safely"
           className="text-[#FBB03B] hover:underline"

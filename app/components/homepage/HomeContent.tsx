@@ -6,8 +6,6 @@ import LatestPager from "./LatestAds/LatestPager";
 import CategorySidebar from "./CategorySidebar";
 import CategoryFilter from "./CategoryFilter";
 import RightSidebar from "./RightSidebar";
-import TrustBadges from "./TrustBadges";
-import HomeSeoSection from "./HomeSeoSection";
 import {
   bannersForHomepageRail,
   bannersForPlacement,
@@ -99,9 +97,6 @@ export default function HomeContent({
           </div>
         </aside>
       </div>
-
-      <TrustBadges />
-      <HomeSeoSection />
     </>
   );
 }

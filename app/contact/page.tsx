@@ -53,7 +53,12 @@ const TOPICS: Array<{ title: string; body: ReactNode }> = [
         <GuestAuthLink href="/profile/listings" className="text-[#FBB03B] hover:underline">
           My Listings
         </GuestAuthLink>
-        . On an ad you own, Edit and Delete appear on the listing page.
+        . On an ad you own, Edit and Delete appear on the listing page. Follow
+        the{" "}
+        <Link href="/posting-rules" className="text-[#FBB03B] hover:underline">
+          posting rules
+        </Link>{" "}
+        so ads stay accurate and lawful.
       </>
     ),
   },

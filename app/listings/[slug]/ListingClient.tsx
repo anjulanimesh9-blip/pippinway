@@ -17,6 +17,7 @@ import { trackListingView, trackSellerContact } from "@/lib/analytics";
 import { getRelativeTime } from "@/lib/formatPrice";
 import { isLiveListing } from "@/lib/filterListings";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
+import type { PublicListingFields } from "@/lib/getPublicListing";
 import { SUPPORT_EMAIL } from "@/lib/site";
 import {
   doc,
@@ -36,9 +37,13 @@ import {
   useRouter,
 } from "next/navigation";
 
-export default function ListingClient() {
+export default function ListingClient({
+  initialItem = null,
+}: {
+  initialItem?: PublicListingFields | null;
+}) {
   const [item, setItem] =
-    useState<any>(null);
+    useState<any>(initialItem);
   const [saved, setSaved] = useState(false);
   const [sellerAds, setSellerAds] = useState<any[]>([]);
   const [relatedAds, setRelatedAds] =

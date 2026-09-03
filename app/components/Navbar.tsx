@@ -129,6 +129,15 @@ useEffect(() => {
   <Link href="/">
     Home
   </Link>
+  <Link href="/about">
+    About
+  </Link>
+  <Link href="/safety">
+    Safety
+  </Link>
+  <Link href="/contact">
+    Contact
+  </Link>
 
   <GuestAuthLink href="/add-listing">
     Add Listing
@@ -272,6 +281,33 @@ useEffect(() => {
       }}
     >
       Home
+    </button>
+    <button
+      className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/about");
+      }}
+    >
+      About
+    </button>
+    <button
+      className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/safety");
+      }}
+    >
+      Safety
+    </button>
+    <button
+      className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
+      onClick={() => {
+        setMenuOpen(false);
+        router.push("/contact");
+      }}
+    >
+      Contact
     </button>
 
     <button
