@@ -28,37 +28,37 @@ const steps = [
 
 export default function CountryLanding() {
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
+    <div className="mx-auto w-full max-w-5xl px-3.5 py-5 sm:px-4 sm:py-12">
       <div className="flex flex-col items-center text-center">
         <Image
           src="/images/logo.png"
           alt="Pippinway"
           width={220}
           height={220}
-          className="h-20 w-auto object-contain sm:h-24"
+          className="h-16 w-auto object-contain sm:h-24"
           priority
         />
-        <h1 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:mt-6 sm:text-5xl">
           Buy & Sell Near You
         </h1>
-        <p className="mt-3 max-w-xl text-base text-gray-400 sm:text-lg">
+        <p className="mt-2 max-w-xl text-base text-gray-400 sm:mt-3 sm:text-lg">
           Choose your country to explore local listings
         </p>
       </div>
 
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {MARKET_COUNTRIES.map((country) => (
           <Link
             key={country.slug}
             href={`/${country.slug}`}
-            className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#111827] px-3 py-5 text-center transition hover:border-[#FBB03B]/50 hover:bg-[#1a2234]"
+            className="flex min-h-24 flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#111827] px-2 py-3 text-center transition hover:border-[#FBB03B]/50 hover:bg-[#1a2234] sm:min-h-[112px] sm:px-3 sm:py-5"
           >
             <CountryFlag
               iso2={country.iso2}
               title={country.displayName}
-              className="h-10 w-10 sm:h-12 sm:w-12"
+              className="h-8 w-8 sm:h-12 sm:w-12"
             />
-            <span className="mt-3 text-sm font-semibold text-white sm:text-base">
+            <span className="mt-2 text-sm font-semibold leading-tight text-white sm:mt-3 sm:text-base">
               {country.displayName}
             </span>
           </Link>
