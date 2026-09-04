@@ -96,16 +96,18 @@ export default function HomeMarketplace({
       <Navbar />
       <section className="mx-auto w-full max-w-[1600px] px-4 py-5">
         {market && (
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="flex items-center gap-2 text-sm font-semibold text-white">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-white">
               <CountryFlag
                 iso2={market.iso2}
                 title={countryLabel(market.firestoreValue)}
-                className="h-5 w-5"
+                className="h-5 w-5 shrink-0"
               />
-              {t("home.marketplace", {
-                country: countryLabel(market.firestoreValue),
-              })}
+              <span className="truncate">
+                {t("home.marketplace", {
+                  country: countryLabel(market.firestoreValue),
+                })}
+              </span>
             </p>
             <Link
               href="/"

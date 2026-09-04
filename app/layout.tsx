@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Noto_Sans_Devanagari,
+  Noto_Sans_SC,
+  Noto_Sans_Sinhala,
+  Noto_Sans_Tamil,
+  Noto_Sans_Thaana,
+  Noto_Sans_Thai,
+} from "next/font/google";
 import Script from "next/script";
 import GaScripts from "./components/analytics/GaScripts";
 import { GuestAuthProvider } from "./components/GuestAuthPrompt";
@@ -15,6 +24,54 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const notoSinhala = Noto_Sans_Sinhala({
+  subsets: ["sinhala"],
+  weight: ["400", "600", "700"],
+  variable: "--font-noto-sinhala",
+  display: "swap",
+  preload: false,
+});
+
+const notoTamil = Noto_Sans_Tamil({
+  subsets: ["tamil"],
+  weight: ["400", "600", "700"],
+  variable: "--font-noto-tamil",
+  display: "swap",
+  preload: false,
+});
+
+const notoThai = Noto_Sans_Thai({
+  subsets: ["thai"],
+  weight: ["400", "600", "700"],
+  variable: "--font-noto-thai",
+  display: "swap",
+  preload: false,
+});
+
+const notoDevanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  weight: ["400", "600", "700"],
+  variable: "--font-noto-devanagari",
+  display: "swap",
+  preload: false,
+});
+
+const notoSc = Noto_Sans_SC({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-noto-sc",
+  display: "swap",
+  preload: false,
+});
+
+const notoThaana = Noto_Sans_Thaana({
+  subsets: ["thaana"],
+  weight: ["400", "600", "700"],
+  variable: "--font-noto-thaana",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -90,7 +147,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoSinhala.variable} ${notoTamil.variable} ${notoThai.variable} ${notoDevanagari.variable} ${notoSc.variable} ${notoThaana.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <script

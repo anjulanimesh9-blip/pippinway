@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Bell, MapPin, Menu, Plus, Search } from "lucide-react";
 import { trackSearch } from "@/lib/analytics";
 import useNotifications from "../../hooks/useNotifications";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 
 const LOCATIONS = [
   "All Locations",
@@ -123,6 +124,8 @@ export default function ProfileTopBar({
             <Search size={16} />
           </button>
         </form>
+
+        <LanguageSwitcher compact />
 
         <Link
           href="/add-listing"

@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+SC:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Thaana:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap");
 
 /* =========================================================
    PIPPINWAY GLOBAL CSS
@@ -815,27 +814,27 @@ button{
 ========================================================= */
 
 html[data-script="sinhala"] body {
-  font-family: "Noto Sans Sinhala", Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-sinhala), "Noto Sans Sinhala", Arial, Helvetica, sans-serif;
 }
 
 html[data-script="tamil"] body {
-  font-family: "Noto Sans Tamil", Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-tamil), "Noto Sans Tamil", Arial, Helvetica, sans-serif;
 }
 
 html[data-script="thai"] body {
-  font-family: "Noto Sans Thai", Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-thai), "Noto Sans Thai", Arial, Helvetica, sans-serif;
 }
 
 html[data-script="devanagari"] body {
-  font-family: "Noto Sans Devanagari", Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-devanagari), "Noto Sans Devanagari", Arial, Helvetica, sans-serif;
 }
 
 html[data-script="han"] body {
-  font-family: "Noto Sans SC", Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-sc), "Noto Sans SC", Arial, Helvetica, sans-serif;
 }
 
 html[data-script="thaana"] body {
-  font-family: "Noto Sans Thaana", Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-thaana), "Noto Sans Thaana", Arial, Helvetica, sans-serif;
 }
 
 html[data-script="thaana"] :where(h1, h2, h3, h4, p, button, a, label, li, span, small, option, dt, dd, legend) {

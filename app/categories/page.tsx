@@ -21,6 +21,7 @@ import MobileBottomNav from "../components/MobileBottomNav";
 import Footer from "../components/homepage/Footer/Footer";
 import useCountryNavigation from "../hooks/useCountryNavigation";
 import { useI18n } from "@/lib/i18n";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 
 const categories: {
   name: string;
@@ -67,7 +68,7 @@ export default function CategoriesPage() {
             {t("categories.heading")}
           </h1>
 
-          <div className="w-12" />
+          <LanguageSwitcher compact />
         </div>
       </div>
 

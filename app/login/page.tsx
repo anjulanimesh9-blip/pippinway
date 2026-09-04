@@ -11,6 +11,7 @@ import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 import { useI18n } from "@/lib/i18n";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 
 function LoginPage() {
   const { t } = useI18n();
@@ -83,6 +84,9 @@ const handleResetPassword =
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020817] px-4">
       <div className="w-full max-w-md bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-2xl">
+        <div className="mb-4 flex justify-end">
+          <LanguageSwitcher compact />
+        </div>
         <h1 className="text-3xl font-bold mb-6 text-center text-white">
           {t("auth.login")}
         </h1>
