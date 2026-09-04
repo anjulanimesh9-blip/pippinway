@@ -1,61 +1,43 @@
+"use client";
+
 import Link from "next/link";
 import type { MarketCountry } from "@/lib/countries";
-
-const steps = [
-  {
-    n: "1",
-    title: "Browse or search listings",
-    body: "Use Latest Ads, categories and keywords to find something you want in this country.",
-  },
-  {
-    n: "2",
-    title: "Check the listing and seller",
-    body: "Open the ad. Read the description, photos, price, location and the name on the seller card.",
-  },
-  {
-    n: "3",
-    title: "Contact the seller",
-    body: "Use Pippinway chat or the WhatsApp number the seller chose to share on that listing.",
-  },
-  {
-    n: "4",
-    title: "Arrange the deal safely",
-    body: "Inspect the item before you pay, meet in public where you can, and never share OTPs or banking passwords.",
-  },
-];
+import { useI18n } from "@/lib/i18n";
 
 export default function HomeSeoSection({
   country,
 }: {
   country?: MarketCountry;
 }) {
-  const marketName = country?.displayName ?? "this market";
+  const { t, countryLabel } = useI18n();
+  const marketName = country
+    ? countryLabel(country.firestoreValue)
+    : t("home.thisMarket");
+  const steps = [
+    { n: "1", title: t("home.seoStep1Title"), body: t("home.seoStep1Body") },
+    { n: "2", title: t("home.seoStep2Title"), body: t("home.seoStep2Body") },
+    { n: "3", title: t("home.seoStep3Title"), body: t("home.seoStep3Body") },
+    { n: "4", title: t("home.seoStep4Title"), body: t("home.seoStep4Body") },
+  ];
 
   return (
     <section className="mt-12 rounded-2xl border border-white/10 bg-[#111827] px-5 py-8 sm:px-8">
       <h2 className="text-xl font-bold text-white sm:text-2xl">
-        About Pippinway
+        {t("home.seoAbout")}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-400 sm:text-base">
-        Pippinway is a classified marketplace. Independent people post ads for
-        cars, motorbikes, property, electronics, fashion, jobs, services and
-        more. Pippinway provides the listing pages, search, chat and account
-        tools. It does not own most of the items shown and does not guarantee
-        that a private sale will complete.
+        {t("home.seoAboutBody")}
       </p>
 
       <h2 className="mt-10 text-xl font-bold text-white sm:text-2xl">
-        Buy and sell in {marketName}
+        {t("home.seoBuySellIn", { market: marketName })}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-400 sm:text-base">
-        This page shows live ads posted for {marketName}. Open a listing for
-        the seller’s photos, price and location, then contact them through
-        Pippinway chat or WhatsApp. Use Change Country if you want another
-        market.
+        {t("home.seoBuySellBody", { market: marketName })}
       </p>
 
       <h2 className="mt-10 text-xl font-bold text-white sm:text-2xl">
-        How Pippinway works
+        {t("home.seoHowTitle")}
       </h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step) => (
@@ -63,7 +45,9 @@ export default function HomeSeoSection({
             key={step.n}
             className="rounded-xl border border-white/10 bg-[#0f172a] p-4"
           >
-            <p className="text-xs font-bold text-[#FBB03B]">Step {step.n}</p>
+            <p className="text-xs font-bold text-[#FBB03B]">
+              {t("home.step", { n: step.n })}
+            </p>
             <h3 className="mt-1 text-sm font-semibold text-white">
               {step.title}
             </h3>
@@ -73,45 +57,44 @@ export default function HomeSeoSection({
       </div>
 
       <div className="mt-8 rounded-xl border border-sky-500/20 bg-sky-500/5 p-5">
-        <h2 className="text-lg font-semibold text-white">Marketplace safety</h2>
+        <h2 className="text-lg font-semibold text-white">
+          {t("home.marketplaceSafety")}
+        </h2>
         <p className="mt-2 text-sm leading-6 text-gray-400">
-          Listings are user-generated. Compare similar ads, inspect goods in
-          person when you can, and treat advance-payment requests with caution.
-          Pippinway is not an escrow service. Read the{" "}
+          {t("home.seoSafetyBodyBefore")}{" "}
           <Link href="/safety" className="text-[#FBB03B] hover:underline">
-            Safety Center
+            {t("home.safetyCenter")}
           </Link>
           ,{" "}
           <Link href="/posting-rules" className="text-[#FBB03B] hover:underline">
-            posting rules
+            {t("home.postingRulesLink")}
           </Link>{" "}
-          and{" "}
+          {t("home.safetyBlurbAnd")}{" "}
           <Link href="/how-it-works" className="text-[#FBB03B] hover:underline">
-            how Pippinway works
+            {t("home.howPippinwayWorks")}
           </Link>
           .
         </p>
       </div>
 
       <p className="mt-8 text-sm text-gray-500">
-        Learn more in{" "}
+        {t("home.seoLearnMore")}{" "}
         <Link href="/about" className="text-[#FBB03B] hover:underline">
-          About Pippinway
+          {t("pages.about")}
         </Link>
         ,{" "}
         <Link href="/contact" className="text-[#FBB03B] hover:underline">
-          Contact
+          {t("nav.contact")}
         </Link>
         ,{" "}
         <Link href="/privacy" className="text-[#FBB03B] hover:underline">
-          Privacy
+          {t("home.privacyShort")}
         </Link>{" "}
-        and{" "}
+        {t("home.safetyBlurbAnd")}{" "}
         <Link href="/terms" className="text-[#FBB03B] hover:underline">
-          Terms
+          {t("home.termsShort")}
         </Link>
-        . Featured Credits highlight a live ad; Rewards come from eligible
-        listing activity, not from viewing or clicking advertisements.
+        . {t("home.seoFeaturedNote")}
       </p>
     </section>
   );

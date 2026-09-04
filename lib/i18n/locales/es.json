@@ -1,0 +1,11 @@
+{
+  "nav": { "home": "Inicio", "categories": "Categorías", "postAd": "Publicar", "chats": "Chats", "profile": "Perfil", "about": "Acerca de", "safety": "Seguridad", "contact": "Contacto", "addListing": "Publicar anuncio", "login": "Iniciar sesión", "register": "Registrarse", "logout": "Cerrar sesión", "chat": "Chat" },
+  "common": { "cancel": "Cancelar", "confirm": "Confirmar", "all": "Todo", "search": "Buscar", "loading": "Cargando...", "featured": "Destacado", "ads": "Anuncios", "close": "Cerrar", "back": "Atrás" },
+  "language": { "title": "Idioma", "suggested": "Sugeridos para {{country}}", "all": "Todos los idiomas", "confirmTitle": "¿Cambiar idioma?", "confirmBody": "¿Cambiar la interfaz de Pippinway a {{language}}?", "switch": "Cambiar" },
+  "categories": { "All": "Todo", "Cars": "Autos", "Motorbikes": "Motos", "Property": "Propiedad", "Electronics": "Electrónica", "Fashion": "Moda", "Jobs": "Empleos", "Services": "Servicios", "Animals": "Animales", "Furniture": "Muebles", "Education": "Educación", "Other": "Otros", "heading": "Categorías", "allCategories": "Todas las categorías" },
+  "countries": { "all": "Todos los países", "select": "Seleccionar país", "Sri Lanka": "Sri Lanka", "Zimbabwe": "Zimbabue", "India": "India", "Singapore": "Singapur", "United Kingdom": "Reino Unido", "USA": "Estados Unidos", "Canada": "Canadá", "South Africa": "Sudáfrica", "Maldives": "Maldivas", "Thailand": "Tailandia" },
+  "home": { "postAnAd": "Publicar anuncio", "featuredAds": "Anuncios destacados", "latestAds": "Últimos anuncios", "empty": "No se encontraron anuncios.", "marketplace": "Mercado de {{country}}", "changeCountry": "Cambiar país" },
+  "search": { "newest": "Más recientes", "priceLow": "Precio: menor", "priceHigh": "Precio: mayor", "searchAds": "Buscar anuncios..." },
+  "auth": { "login": "Iniciar sesión", "register": "Registrarse", "email": "Correo", "password": "Contraseña", "forgotPassword": "¿Olvidaste tu contraseña?", "authInvalid": "Correo o contraseña no válidos." },
+  "profile": { "favorites": "Favoritos", "messages": "Mensajes", "settings": "Ajustes", "logout": "Cerrar sesión" }
+}

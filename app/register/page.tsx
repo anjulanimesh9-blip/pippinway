@@ -11,8 +11,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
+import { MARKET_COUNTRIES } from "@/lib/countries";
+import { useI18n } from "@/lib/i18n";
 
 function RegisterPage() {
+  const { t, countryLabel } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -105,7 +108,7 @@ await setDoc(
   router.push(returnUrl);
     } catch (error: any) {
       setSuccessMessage(
-  "❌ something went wrong. please try again."
+  t("auth.authGeneric")
 );  }
   };
   
@@ -115,26 +118,26 @@ await setDoc(
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
     <div
       className={`w-full max-w-md rounded-[30px] border shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300 ${
-        successMessage.startsWith("❌")
+        successMessage === t("auth.authGeneric")
           ? "bg-[#1a0f12] border-red-500/30"
           : "bg-[#0f172a] border-green-500/30"
       }`}
     >
       <div className="text-5xl mb-4">
-        {successMessage.startsWith("❌")
+        {successMessage === t("auth.authGeneric")
           ? "❌"
           : "📩"}
       </div>
 
       <h2 className="text-2xl font-bold text-white mb-3">
-        {successMessage.startsWith("❌")
-          ? "Something Went Wrong"
-          : "Verify Your Email"}
+        {successMessage === t("auth.authGeneric")
+          ? t("auth.somethingWrong")
+          : t("auth.verifyYourEmail")}
       </h2>
 
       <p
         className={`text-sm md:text-base leading-relaxed ${
-          successMessage.startsWith("❌")
+          successMessage === t("auth.authGeneric")
             ? "text-red-300"
             : "text-gray-300"
         }`}
@@ -142,13 +145,9 @@ await setDoc(
         {successMessage}
       </p>
 
-      {!successMessage.startsWith(
-        "❌"
-      ) && (
+      {successMessage !== t("auth.authGeneric") && (
         <p className="text-xs text-gray-500 mt-4">
-          Please check Inbox,
-          Spam or Promotions
-          folder.
+          {t("auth.checkFolders")}
         </p>
       )}
     </div>
@@ -159,7 +158,7 @@ await setDoc(
       <div className="w-full max-w-md bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-2xl">
        
         <h1 className="text-3xl font-bold mb-6 text-center text-white">
-          Register
+          {t("auth.register")}
         </h1>
 
         <form
@@ -168,7 +167,7 @@ await setDoc(
         >
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t("auth.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={`w-full border p-4 rounded-2xl bg-[#111827] text-white caret-white placeholder-gray-400 ${
@@ -180,7 +179,7 @@ await setDoc(
 
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t("auth.password")}
             value={password}
             onChange={(e) =>
               setPassword(e.target.value)
@@ -193,7 +192,7 @@ await setDoc(
           />
           <input
   type="text"
-  placeholder="WhatsApp Number"
+  placeholder={t("auth.whatsappNumber")}
   value={phone}
   onChange={(e) => setPhone(e.target.value)}
   className={`w-full border p-4 rounded-2xl bg-[#111827] text-white caret-white placeholder-gray-400 ${
@@ -212,21 +211,16 @@ await setDoc(
     : "border-gray-700"
 }`}
 >
-  <option value="">Select Country</option>
-  <option value="Singapore">Singapore</option>
-  <option value="India">India</option>
-  <option value="Thailand">Thailand</option>
-  <option value="Zimbabwe">Zimbabwe</option>
-  <option value="USA">USA</option>
-  <option value="Maldives">Maldives</option>
-  <option value="Sri Lanka">Sri Lanka</option>
-  <option value="South Africa">South Africa</option>
-  <option value="United Kingdom">United Kingdom</option>
-  <option value="Canada">Canada</option>
+  <option value="">{t("post.selectCountry")}</option>
+  {MARKET_COUNTRIES.map((item) => (
+    <option key={item.firestoreValue} value={item.firestoreValue}>
+      {countryLabel(item.firestoreValue)}
+    </option>
+  ))}
 </select>
   <div className="grid grid-cols-2 gap-3 mt-6">
   <button className="bg-black hover:bg-gray-900 transition text-white w-full py-4 rounded-2xl">
-    Create Account
+    {t("auth.createAccountBtn")}
   </button>
 
   <Link href="/" className="w-full">
@@ -234,7 +228,7 @@ await setDoc(
       type="button"
       className="border border-gray-700 bg-[#111827] hover:bg-[#1f2937] transition text-white py-4 rounded-2xl w-full"
     >
-      🏠 Back to Home
+      🏠 {t("auth.backHome")}
     </button>
   </Link>
 </div>
@@ -247,11 +241,12 @@ await setDoc(
 }
 
 export default function Register() {
+  const { t } = useI18n();
   return (
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
-          Loading...
+          {t("common.loading")}
         </div>
       }
     >

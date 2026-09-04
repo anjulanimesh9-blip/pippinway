@@ -17,6 +17,8 @@ import {
 import { auth } from "../firebase";
 import { GuestAuthLink, useGuestAuthPrompt } from "./GuestAuthPrompt";
 import useCountryNavigation from "../hooks/useCountryNavigation";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useI18n } from "@/lib/i18n";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] =
@@ -26,12 +28,11 @@ export default function Navbar() {
 
 const [showNotifications, setShowNotifications] = useState(false);
 
-// Temporary demo count
-
   const router =
     useRouter();
   const { requireAuth } = useGuestAuthPrompt();
   const { marketplaceHome, addListingHref } = useCountryNavigation();
+  const { t } = useI18n();
 
     const {
   notifications,
@@ -129,28 +130,29 @@ useEffect(() => {
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6 text-white font-medium items-center">
   <Link href={marketplaceHome}>
-    Home
+    {t("nav.home")}
   </Link>
   <Link href="/about">
-    About
+    {t("nav.about")}
   </Link>
   <Link href="/safety">
-    Safety
+    {t("nav.safety")}
   </Link>
   <Link href="/contact">
-    Contact
+    {t("nav.contact")}
   </Link>
 
   <GuestAuthLink href={addListingHref}>
-    Add Listing
+    {t("nav.addListing")}
   </GuestAuthLink>
+  <LanguageSwitcher compact />
   <a
   href="https://www.facebook.com/profile.php?id=61589186823471"
   target="_blank"
   rel="noopener noreferrer"
   className="flex items-center gap-2 hover:text-blue-400 transition"
 >
-  📘 Facebook
+  📘 {t("nav.facebook")}
 </a>
   {user ? (
     <>
@@ -175,14 +177,14 @@ useEffect(() => {
     <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A] shadow-2xl">
 
       <div className="border-b border-white/10 p-4 font-bold">
-        Notifications
+        {t("notifications.title")}
       </div>
 
      <div className="divide-y divide-white/5">
 
   {notifications.length === 0 ? (
     <div className="p-6 text-center text-sm text-gray-400">
-      No notifications
+      {t("notifications.none")}
     </div>
   ) : (
     notifications.slice(0, 5).map((item) => (
@@ -209,7 +211,7 @@ useEffect(() => {
     onClick={() => setShowNotifications(false)}
     className="flex-1 p-3 text-sm text-gray-300 hover:bg-white/5"
   >
-    Close
+    {t("common.close")}
   </button>
 
   <button
@@ -219,7 +221,7 @@ useEffect(() => {
     }}
     className="flex-1 border-l border-white/10 p-3 text-sm text-cyan-400 hover:bg-white/5"
   >
-    View All
+    {t("notifications.viewAll")}
   </button>
 
 </div>
@@ -230,7 +232,7 @@ useEffect(() => {
 </div>
 
       <GuestAuthLink href="/profile">
-        Profile
+        {t("nav.profile")}
       </GuestAuthLink>
 
       <button
@@ -239,17 +241,17 @@ useEffect(() => {
         }
         className="hover:text-red-400 transition"
       >
-        Logout
+        {t("nav.logout")}
       </button>
     </>
   ) : (
     <>
       <Link href="/login">
-        Login
+        {t("nav.login")}
       </Link>
 
       <Link href="/register">
-        Register
+        {t("nav.register")}
       </Link>
     </>
   )}
@@ -258,7 +260,7 @@ useEffect(() => {
         {/* Mobile Menu Button */}
         <button
           className="text-2xl leading-none text-white md:hidden"
-          aria-label="Open menu"
+          aria-label={t("auth.openMenu")}
           onClick={() =>
             setMenuOpen(
               (prev) =>
@@ -283,7 +285,7 @@ useEffect(() => {
         router.push(marketplaceHome);
       }}
     >
-      Home
+      {t("nav.home")}
     </button>
     <button
       className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
@@ -292,7 +294,7 @@ useEffect(() => {
         router.push("/about");
       }}
     >
-      About
+      {t("nav.about")}
     </button>
     <button
       className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
@@ -301,7 +303,7 @@ useEffect(() => {
         router.push("/safety");
       }}
     >
-      Safety
+      {t("nav.safety")}
     </button>
     <button
       className="text-left py-2 px-3 rounded-xl hover:bg-blue-500/10 hover:text-blue-400 transition"
@@ -310,7 +312,7 @@ useEffect(() => {
         router.push("/contact");
       }}
     >
-      Contact
+      {t("nav.contact")}
     </button>
 
     <button
@@ -320,7 +322,7 @@ useEffect(() => {
         requireAuth(addListingHref);
       }}
     >
-      Add Listing
+      {t("nav.addListing")}
     </button>
   <a
   href="https://www.facebook.com/profile.php?id=61589186823471"
@@ -328,8 +330,9 @@ useEffect(() => {
   rel="noopener noreferrer"
   className="flex items-center gap-2 hover:text-blue-400 transition"
 >
-  📘 Facebook
+  📘 {t("nav.facebook")}
 </a>
+    <LanguageSwitcher />
 
     {user ? (
       
@@ -343,7 +346,7 @@ useEffect(() => {
   }}
 >
   <span>
-    🔔 Notifications
+    🔔 {t("notifications.title")}
     </span>
 
   {unreadCount > 0 && (
@@ -360,7 +363,7 @@ useEffect(() => {
             requireAuth("/profile");
           }}
         >
-          Profile
+          {t("nav.profile")}
         </button>
 
         <button
@@ -370,7 +373,7 @@ useEffect(() => {
             setMenuOpen(false);
           }}
         >
-          Logout
+          {t("nav.logout")}
         </button>
       </>
     ) : (
@@ -382,7 +385,7 @@ useEffect(() => {
             router.push("/login");
           }}
         >
-          Login
+          {t("nav.login")}
         </button>
 
         <button
@@ -392,7 +395,7 @@ useEffect(() => {
             router.push("/register");
           }}
         >
-          Register
+          {t("nav.register")}
         </button>
         
       </>

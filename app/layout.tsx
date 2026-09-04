@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import GaScripts from "./components/analytics/GaScripts";
 import { GuestAuthProvider } from "./components/GuestAuthPrompt";
+import { I18nProvider } from "@/lib/i18n";
+import { LANGUAGE_STORAGE_KEY } from "@/lib/i18n/languages";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -91,7 +93,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <GuestAuthProvider>{children}</GuestAuthProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var k=${JSON.stringify(LANGUAGE_STORAGE_KEY)};var v=localStorage.getItem(k);if(!v){var m=document.cookie.match(new RegExp('(?:^|; )'+k.replace(/\\./g,'\\\\.')+'=([^;]*)'));v=m?decodeURIComponent(m[1]):'';}if(v){document.documentElement.lang=v;document.documentElement.setAttribute('data-lang',v);var s={si:'sinhala',ta:'tamil',th:'thai',hi:'devanagari',zh:'han',dv:'thaana'};document.documentElement.setAttribute('data-script',s[v]||'latin');}}catch(e){}})();`,
+          }}
+        />
+        <I18nProvider>
+          <GuestAuthProvider>{children}</GuestAuthProvider>
+        </I18nProvider>
         <GaScripts />
 
         {/* Meta Pixel */}

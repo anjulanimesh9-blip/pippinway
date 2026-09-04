@@ -1,0 +1,11 @@
+{
+  "nav": { "home": "Laman utama", "categories": "Kategori", "postAd": "Iklan", "chats": "Sembang", "profile": "Profil", "about": "Tentang", "safety": "Keselamatan", "contact": "Hubungi", "addListing": "Siarkan iklan", "login": "Log masuk", "register": "Daftar", "logout": "Log keluar", "chat": "Sembang" },
+  "common": { "cancel": "Batal", "confirm": "Sahkan", "all": "Semua", "search": "Cari", "loading": "Memuatkan...", "featured": "Pilihan", "ads": "Iklan", "close": "Tutup", "back": "Kembali" },
+  "language": { "title": "Bahasa", "suggested": "Dicadangkan untuk {{country}}", "all": "Semua bahasa", "confirmTitle": "Tukar bahasa?", "confirmBody": "Tukar antara muka Pippinway kepada {{language}}?", "switch": "Tukar" },
+  "categories": { "All": "Semua", "Cars": "Kereta", "Motorbikes": "Motosikal", "Property": "Hartanah", "Electronics": "Elektronik", "Fashion": "Fesyen", "Jobs": "Pekerjaan", "Services": "Perkhidmatan", "Animals": "Haiwan", "Furniture": "Perabot", "Education": "Pendidikan", "Other": "Lain-lain", "heading": "Kategori", "allCategories": "Semua kategori" },
+  "countries": { "all": "Semua negara", "select": "Pilih negara", "Sri Lanka": "Sri Lanka", "Zimbabwe": "Zimbabwe", "India": "India", "Singapore": "Singapura", "United Kingdom": "United Kingdom", "USA": "Amerika Syarikat", "Canada": "Kanada", "South Africa": "Afrika Selatan", "Maldives": "Maldives", "Thailand": "Thailand" },
+  "home": { "postAnAd": "Siarkan iklan", "featuredAds": "Iklan pilihan", "latestAds": "Iklan terbaru", "empty": "Tiada iklan dijumpai.", "marketplace": "Pasaran {{country}}", "changeCountry": "Tukar negara" },
+  "search": { "newest": "Terbaru", "priceLow": "Harga: rendah", "priceHigh": "Harga: tinggi", "searchAds": "Cari iklan..." },
+  "auth": { "login": "Log masuk", "register": "Daftar", "email": "E-mel", "password": "Kata laluan", "forgotPassword": "Lupa kata laluan?", "authInvalid": "E-mel atau kata laluan tidak sah." },
+  "profile": { "favorites": "Kegemaran", "messages": "Mesej", "settings": "Tetapan", "logout": "Log keluar" }
+}

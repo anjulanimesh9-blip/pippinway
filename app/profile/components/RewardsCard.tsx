@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { EMPTY_REWARDS, MEGA_CYCLE, NORMAL_CYCLE, normalSpinTrackDisplay } from "@/lib/rewards";
+import { useI18n } from "@/lib/i18n";
 
 type RewardsCardProps = {
   userData?: any;
@@ -24,6 +25,7 @@ export default function RewardsCard({
   userData,
   loading = false,
 }: RewardsCardProps) {
+  const { t } = useI18n();
   const rewards = userData
     ? {
         availableSpins: Number(userData.availableSpins ?? 0),
@@ -43,11 +45,11 @@ export default function RewardsCard({
   return (
     <section className="flex flex-wrap items-center gap-3 rounded-xl border border-[#FBB03B]/20 bg-[#151A22] px-3 py-2.5">
       <Link href="/rewards" className="shrink-0 text-sm font-bold text-white hover:text-[#FBB03B]">
-        Rewards
+        {t("profile.rewards")}
       </Link>
 
       {loading ? (
-        <p className="text-xs text-gray-400">Loading...</p>
+        <p className="text-xs text-gray-400">{t("common.loading")}</p>
       ) : (
         <>
           <div className="min-w-[120px] flex-1">
@@ -73,7 +75,7 @@ export default function RewardsCard({
                 : "border border-white/10 text-gray-300 hover:bg-white/5"
             }`}
           >
-            {spinReady ? "SPIN" : "Open"}
+            {spinReady ? t("rewards.spinNow") : t("rewards.open")}
           </Link>
         </>
       )}

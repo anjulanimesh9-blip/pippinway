@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import ListingPhoto, { RELATED_AD_SIZES } from "@/app/components/ListingPhoto";
 import { formatPrice } from "@/lib/formatPrice";
+import { useI18n } from "@/lib/i18n";
 
 type RelatedAdsProps = {
   relatedAds: any[];
@@ -15,11 +16,12 @@ export default function RelatedAds({
   relatedAds,
   sellerName,
 }: RelatedAdsProps) {
+  const { t } = useI18n();
   if (!relatedAds.length) return null;
 
   const heading = sellerName
-    ? `More ads from ${sellerName}`
-    : "Similar ads";
+    ? t("listing.moreFrom", { name: sellerName })
+    : t("listing.similarAds");
 
   return (
     <section className="mt-10 border-t border-white/10 pt-8">
@@ -42,7 +44,7 @@ export default function RelatedAds({
                 />
                 {ad.featured && (
                   <span className="absolute left-2 top-2 rounded bg-yellow-400 px-2 py-0.5 text-[10px] font-bold text-black">
-                    Featured
+                    {t("listing.featured")}
                   </span>
                 )}
               </div>
@@ -55,7 +57,9 @@ export default function RelatedAds({
                 </h3>
                 <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
                   <MapPin size={11} />
-                  <span className="truncate">{ad.location || "Unknown"}</span>
+                  <span className="truncate">
+                    {ad.location || t("listing.unknown")}
+                  </span>
                 </p>
               </div>
             </Link>

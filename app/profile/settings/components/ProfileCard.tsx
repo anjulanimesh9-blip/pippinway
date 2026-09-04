@@ -1,6 +1,7 @@
 "use client";
 
 import { countries } from "../../data/countries";
+import { useI18n } from "@/lib/i18n";
 
 interface ProfileCardProps {
   displayName: string;
@@ -25,16 +26,17 @@ export default function ProfileCard({
   saving,
   onSave,
 }: ProfileCardProps) {
+  const { t, countryLabel } = useI18n();
   return (
     <div className="bg-[#0F172A] border border-slate-700 rounded-xl p-6 mt-6">
       <h2 className="text-xl font-semibold text-white mb-6">
-        Profile Information
+        {t("settings.profileInfo")}
       </h2>
 
       <div className="space-y-5">
         <div>
           <label className="block text-gray-300 mb-2">
-            Display Name
+            {t("settings.displayName")}
           </label>
 
           <input
@@ -42,13 +44,13 @@ export default function ProfileCard({
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             className="w-full rounded-lg bg-[#1E293B] border border-slate-600 p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your display name"
+            placeholder={t("settings.displayNamePlaceholder")}
           />
         </div>
 
         <div>
           <label className="block text-gray-300 mb-2">
-            Email
+            {t("auth.email")}
           </label>
 
           <input
@@ -61,7 +63,7 @@ export default function ProfileCard({
 
         <div>
           <label className="block text-gray-300 mb-2">
-            Phone Number
+            {t("settings.phoneNumber")}
           </label>
 
           <input
@@ -69,13 +71,13 @@ export default function ProfileCard({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full rounded-lg bg-[#1E293B] border border-slate-600 p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your phone number"
+            placeholder={t("settings.phoneNumber")}
           />
         </div>
 
         <div>
           <label className="block text-gray-300 mb-2">
-            Country
+            {t("auth.country")}
           </label>
 
           <select
@@ -83,11 +85,11 @@ export default function ProfileCard({
             onChange={(e) => setCountry(e.target.value)}
             className="w-full rounded-lg bg-[#1E293B] border border-slate-600 p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select Country</option>
+            <option value="">{t("post.selectCountry")}</option>
 
             {countries.map((item) => (
               <option key={item} value={item}>
-                {item}
+                {countryLabel(item)}
               </option>
             ))}
           </select>
@@ -98,7 +100,7 @@ export default function ProfileCard({
           disabled={saving}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg py-3 text-white font-semibold transition-colors"
         >
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? t("settings.saving") : t("settings.saveChanges")}
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/formatPrice";
+import { useI18n } from "@/lib/i18n";
 
 type ListingInfoProps = {
   title?: string;
@@ -28,14 +29,18 @@ export default function ListingInfo({
   country,
   showBoost = false,
 }: ListingInfoProps) {
+  const { t, categoryLabel, countryLabel } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const longText = (description || "").length > 280;
 
   const specs = [
-    ["Category", category],
-    ["Location", location],
-    ["Country", country],
-    ["Type", featured ? "Featured listing" : "Standard listing"],
+    [t("listing.category"), category ? categoryLabel(category) : ""],
+    [t("listing.location"), location],
+    [t("listing.country"), country ? countryLabel(country) : ""],
+    [
+      t("listing.type"),
+      featured ? t("listing.featuredListing") : t("listing.standardListing"),
+    ],
   ].filter(([, value]) => Boolean(value));
 
   return (
@@ -62,13 +67,15 @@ export default function ListingInfo({
       </div>
 
       <div className="mt-6 border-t border-white/10 pt-4">
-        <h2 className="mb-3 text-base font-semibold text-white">Description</h2>
+        <h2 className="mb-3 text-base font-semibold text-white">
+          {t("listing.description")}
+        </h2>
         <p
           className={`whitespace-pre-line text-sm leading-7 text-gray-300 ${
             expanded || !longText ? "" : "line-clamp-5"
           }`}
         >
-          {description || "No description provided."}
+          {description || t("listing.noDescription")}
         </p>
         {longText && (
           <button
@@ -76,7 +83,7 @@ export default function ListingInfo({
             onClick={() => setExpanded((v) => !v)}
             className="mt-2 text-sm font-semibold text-sky-400 hover:underline"
           >
-            {expanded ? "Show less" : "Show more"}
+            {expanded ? t("listing.showLess") : t("listing.showMore")}
           </button>
         )}
       </div>
@@ -86,7 +93,7 @@ export default function ListingInfo({
           href="/featured-packages"
           className="mt-6 flex w-full items-center justify-center rounded-md bg-[#FBB03B] py-3 text-sm font-bold text-black hover:bg-[#ffc14d]"
         >
-          Boost this ad
+          {t("listing.boostAd")}
         </Link>
       )}
     </div>

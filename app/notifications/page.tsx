@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import useNotifications from "../hooks/useNotifications";
+import { useI18n } from "@/lib/i18n";
 
 export default function NotificationsPage() {
+  const { t } = useI18n();
   const {
     notifications,
     loading,
@@ -13,17 +15,17 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-[#020817] p-6 text-white">
       <h1 className="mb-6 text-3xl font-bold">
-        🔔 Notifications
+        🔔 {t("notifications.title")}
       </h1>
 
       {loading ? (
         <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-6">
-          Loading...
+          {t("common.loading")}
         </div>
       ) : notifications.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-6">
           <p className="text-gray-400">
-            No notifications yet.
+            {t("notifications.noneYet")}
           </p>
         </div>
       ) : (
@@ -45,7 +47,7 @@ export default function NotificationsPage() {
 
                 {!notification.isRead && (
                   <span className="rounded-full bg-red-500 px-2 py-1 text-xs font-bold">
-                    NEW
+                    {t("common.new")}
                   </span>
                 )}
               </div>
@@ -60,7 +62,7 @@ export default function NotificationsPage() {
                   onClick={() => markAsRead(notification.id)}
                   className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-700"
                 >
-                  View Listing
+                  {t("notifications.viewListing")}
                 </Link>
               )}
 

@@ -1,0 +1,11 @@
+{
+  "nav": { "home": "Accueil", "categories": "Catégories", "postAd": "Publier", "chats": "Messages", "profile": "Profil", "about": "À propos", "safety": "Sécurité", "contact": "Contact", "addListing": "Publier une annonce", "login": "Connexion", "register": "Inscription", "logout": "Déconnexion", "chat": "Discussion" },
+  "common": { "cancel": "Annuler", "confirm": "Confirmer", "all": "Tout", "search": "Rechercher", "loading": "Chargement...", "featured": "En vedette", "ads": "Annonces", "close": "Fermer", "back": "Retour" },
+  "language": { "title": "Langue", "suggested": "Suggérées pour {{country}}", "all": "Toutes les langues", "confirmTitle": "Changer de langue ?", "confirmBody": "Passer l’interface Pippinway en {{language}} ?", "switch": "Changer" },
+  "categories": { "All": "Tout", "Cars": "Voitures", "Motorbikes": "Motos", "Property": "Immobilier", "Electronics": "Électronique", "Fashion": "Mode", "Jobs": "Emplois", "Services": "Services", "Animals": "Animaux", "Furniture": "Meubles", "Education": "Éducation", "Other": "Autre", "heading": "Catégories", "allCategories": "Toutes les catégories" },
+  "countries": { "all": "Tous les pays", "select": "Choisir un pays", "Sri Lanka": "Sri Lanka", "Zimbabwe": "Zimbabwe", "India": "Inde", "Singapore": "Singapour", "United Kingdom": "Royaume-Uni", "USA": "États-Unis", "Canada": "Canada", "South Africa": "Afrique du Sud", "Maldives": "Maldives", "Thailand": "Thaïlande" },
+  "home": { "postAnAd": "Publier une annonce", "featuredAds": "Annonces en vedette", "latestAds": "Dernières annonces", "empty": "Aucune annonce trouvée.", "marketplace": "Marché {{country}}", "changeCountry": "Changer de pays" },
+  "search": { "newest": "Plus récentes", "priceLow": "Prix : bas", "priceHigh": "Prix : haut", "searchAds": "Rechercher des annonces..." },
+  "auth": { "login": "Connexion", "register": "Inscription", "email": "E-mail", "password": "Mot de passe", "forgotPassword": "Mot de passe oublié ?", "authInvalid": "E-mail ou mot de passe invalide." },
+  "profile": { "favorites": "Favoris", "messages": "Messages", "settings": "Paramètres", "logout": "Déconnexion" }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, KeyboardEvent } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface MessageInputProps {
   onSend: (message: string) => Promise<void> | void;
@@ -9,6 +10,7 @@ interface MessageInputProps {
 export default function MessageInput({
   onSend,
 }: MessageInputProps) {
+  const { t } = useI18n();
   const [message, setMessage] = useState("");
 
   const send = async () => {
@@ -40,7 +42,7 @@ export default function MessageInput({
             setMessage(e.target.value)
           }
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
+          placeholder={t("chat.typeMessage")}
           className="flex-1 bg-[#111827] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500"
         />
 
@@ -48,7 +50,7 @@ export default function MessageInput({
           onClick={send}
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold transition"
         >
-          Send
+          {t("common.send")}
         </button>
       </div>
     </div>

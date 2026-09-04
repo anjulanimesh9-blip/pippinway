@@ -4,9 +4,11 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { storedCountryPath } from "@/lib/countries";
+import { useI18n } from "@/lib/i18n";
 
 export default function LandingSearch() {
   const router = useRouter();
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -39,7 +41,7 @@ export default function LandingSearch() {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search ads..."
+          placeholder={t("search.searchAds")}
           className="h-11 w-full rounded-2xl border border-white/10 bg-[#141B2D] pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#FBB03B]/50"
         />
       </label>

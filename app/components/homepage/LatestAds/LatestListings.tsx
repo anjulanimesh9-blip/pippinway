@@ -7,6 +7,7 @@ import BannerRotator from "../Banner/BannerRotator";
 import { GuestAuthLink } from "../../GuestAuthPrompt";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
+import { useI18n } from "@/lib/i18n";
 
 type LatestListingsProps = {
   latestListings: ListingRecord[];
@@ -102,6 +103,7 @@ export default function LatestListings({
   countryName,
   addListingHref = "/add-listing",
 }: LatestListingsProps) {
+  const { t } = useI18n();
   const [rotateIndex, setRotateIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -136,23 +138,21 @@ export default function LatestListings({
     return (
       <div className="rounded-2xl border border-white/10 bg-[#111827] py-16 text-center px-4">
         <p className="text-gray-300 font-semibold">
-          {place ? `No listings found in ${place}` : "No listings found"}
+          {place ? t("home.noListingsIn", { place }) : t("home.empty")}
         </p>
         <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
-          {place
-            ? `Be the first to post an ad in ${place}.`
-            : "Be the first to post an ad."}
+          {place ? t("home.beFirstIn", { place }) : t("home.beFirst")}
         </p>
         <GuestAuthLink
           href={addListingHref}
           className="inline-block mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500"
         >
-          + Post an Ad
+          {t("home.postAnAdPlus")}
         </GuestAuthLink>
         {place && (
           <div className="mt-3">
             <Link href="/" className="text-sm text-[#FBB03B] hover:underline">
-              Change Country
+              {t("home.changeCountry")}
             </Link>
           </div>
         )}

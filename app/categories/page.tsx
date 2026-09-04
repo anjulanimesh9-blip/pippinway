@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Footer from "../components/homepage/Footer/Footer";
 import useCountryNavigation from "../hooks/useCountryNavigation";
+import { useI18n } from "@/lib/i18n";
 
 const categories: {
   name: string;
@@ -41,6 +42,7 @@ const categories: {
 
 export default function CategoriesPage() {
   const { marketplaceHome } = useCountryNavigation();
+  const { t, categoryLabel } = useI18n();
   const mainCategories = categories.filter((category) => category.name !== "Other");
   const otherCategory = categories.find((category) => category.name === "Other");
   const OtherIcon = otherCategory?.icon;
@@ -58,11 +60,11 @@ export default function CategoriesPage() {
             href={marketplaceHome}
             className="text-sm font-medium text-[#FBB03B]"
           >
-            ← Back
+            ← {t("common.back")}
           </Link>
 
           <h1 className="flex-1 text-center text-xl font-bold sm:text-2xl">
-            Categories
+            {t("categories.heading")}
           </h1>
 
           <div className="w-12" />
@@ -70,8 +72,7 @@ export default function CategoriesPage() {
       </div>
 
       <p className="mx-auto max-w-5xl px-4 pt-3 text-sm leading-5 text-gray-400 sm:pt-4 sm:leading-6">
-        Choose a category to browse live classified ads. You do not need an
-        account to look. Posting an ad still requires sign-in.
+        {t("categories.intro")}
       </p>
 
       <div className="mx-auto grid max-w-5xl grid-cols-2 gap-2.5 px-4 pt-4 pb-4 sm:gap-4 sm:p-4">
@@ -92,7 +93,7 @@ export default function CategoriesPage() {
                 <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#FBB03B]" />
               </span>
               <span className="text-center text-sm font-semibold text-white sm:text-lg">
-                {category.name}
+                {categoryLabel(category.name)}
               </span>
             </Link>
           );
@@ -111,9 +112,9 @@ export default function CategoriesPage() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-white">
-                {otherCategory.name}
+                {categoryLabel(otherCategory.name)}
               </span>
-              <span className="block text-xs text-gray-500">More categories</span>
+              <span className="block text-xs text-gray-500">{t("categories.more")}</span>
             </span>
             <ChevronRight className="h-5 w-5 text-gray-500" />
           </Link>

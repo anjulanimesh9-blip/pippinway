@@ -1,6 +1,7 @@
 "use client";
 
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/lib/i18n";
 
 type CategoryFilterProps = {
   selectedCategory: string;
@@ -26,6 +27,7 @@ export default function CategoryFilter({
   selectedCategory,
   setSelectedCategory,
 }: CategoryFilterProps) {
+  const { categoryLabel } = useI18n();
   return (
     <div className="overflow-x-auto">
       <div className="flex gap-3 pb-2 w-max">
@@ -48,7 +50,7 @@ export default function CategoryFilter({
               <span className="text-2xl">{category.icon}</span>
 
               <span className="text-xs font-medium mt-2 text-center px-1">
-                {category.name}
+                {categoryLabel(category.name)}
               </span>
             </button>
           );

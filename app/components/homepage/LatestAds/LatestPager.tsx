@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
+
 type LatestPagerProps = {
   hasPrev: boolean;
   hasNext: boolean;
@@ -19,12 +21,13 @@ export default function LatestPager({
   onPrev,
   onNext,
 }: LatestPagerProps) {
+  const { t } = useI18n();
   if (!hasPrev && !hasNext) return null;
 
   return (
     <nav
       className="mt-4 flex items-center justify-between gap-3"
-      aria-label="Latest ads pages"
+      aria-label={t("home.pagerLabel")}
     >
       {hasPrev ? (
         <button
@@ -35,7 +38,7 @@ export default function LatestPager({
           }}
           className="rounded-xl border border-white/10 bg-[#111827] px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/5"
         >
-          Previous
+          {t("common.previous")}
         </button>
       ) : (
         <span />
@@ -49,7 +52,7 @@ export default function LatestPager({
           }}
           className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-500"
         >
-          Next
+          {t("common.next")}
         </button>
       ) : (
         <span />

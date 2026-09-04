@@ -1,6 +1,7 @@
 "use client";
 
 import ProfileListingCard from "./ProfileListingCard";
+import { useI18n } from "@/lib/i18n";
 
 type FavoritesProps = {
   favoriteAds: any[];
@@ -13,6 +14,7 @@ export default function Favorites({
   loading = false,
   onRemove,
 }: FavoritesProps) {
+  const { t } = useI18n();
   if (loading && favoriteAds.length === 0) {
     return (
       <div
@@ -41,14 +43,14 @@ export default function Favorites({
         id="favorites"
         className="rounded-2xl border border-white/8 bg-[#151A22] py-16 text-center text-gray-500"
       >
-        No favorites yet.
+        {t("profile.noFavorites")}
       </div>
     );
   }
 
   return (
     <div id="favorites">
-      <h2 className="mb-4 text-lg font-bold text-white">Favorites</h2>
+      <h2 className="mb-4 text-lg font-bold text-white">{t("profile.favorites")}</h2>
       <div className="grid grid-cols-2 items-stretch gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {favoriteAds.map((ad) => (
         <div key={ad.id} className="h-full">

@@ -21,6 +21,7 @@ import {
   persistSelectedCountry,
 } from "@/lib/countries";
 import { canonicalCountry } from "@/lib/filterListings";
+import { useI18n } from "@/lib/i18n";
 
 type HomeMarketplaceProps = {
   initialCountry: string;
@@ -31,6 +32,7 @@ export default function HomeMarketplace({
 }: HomeMarketplaceProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const { t, countryLabel } = useI18n();
   const { listings, loading, error } = useListings();
   const {
     selectedCountry,
@@ -98,16 +100,18 @@ export default function HomeMarketplace({
             <p className="flex items-center gap-2 text-sm font-semibold text-white">
               <CountryFlag
                 iso2={market.iso2}
-                title={market.displayName}
+                title={countryLabel(market.firestoreValue)}
                 className="h-5 w-5"
               />
-              {market.displayName} Marketplace
+              {t("home.marketplace", {
+                country: countryLabel(market.firestoreValue),
+              })}
             </p>
             <Link
               href="/"
               className="shrink-0 text-sm text-[#FBB03B] hover:underline"
             >
-              Change Country
+              {t("home.changeCountry")}
             </Link>
           </div>
         )}
@@ -141,7 +145,9 @@ export default function HomeMarketplace({
           loading={loading}
           totalCount={listings.length}
           filterKey={`${selectedCountry}|${selectedCategory}|${search}|${location}|${sortBy}`}
-          countryName={market?.displayName}
+          countryName={
+            market ? countryLabel(market.firestoreValue) : undefined
+          }
           addListingHref={addListingPath(selectedCountry)}
         />
       </section>

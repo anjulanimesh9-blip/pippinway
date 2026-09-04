@@ -36,13 +36,30 @@ import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
 import { trackPostAd } from "@/lib/analytics";
 import { parseListingPrice } from "@/lib/formatPrice";
+import { MARKET_COUNTRIES } from "@/lib/countries";
+import { useI18n } from "@/lib/i18n";
+
+const POST_CATEGORIES = [
+  { value: "Cars", icon: "🚗" },
+  { value: "Motorbikes", icon: "🏍️" },
+  { value: "Property", icon: "🏠" },
+  { value: "Electronics", icon: "📱" },
+  { value: "Fashion", icon: "👕" },
+  { value: "Jobs", icon: "💼" },
+  { value: "Services", icon: "🛠️" },
+  { value: "Animals", icon: "🐶" },
+  { value: "Furniture", icon: "🛋️" },
+  { value: "Education", icon: "📚" },
+  { value: "Other", icon: "📦" },
+];
 
 export default function AddListingPage() {
+  const { t } = useI18n();
   return (
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-black text-white">
-          Loading...
+          {t("common.loading")}
         </div>
       }
     >
@@ -52,6 +69,7 @@ export default function AddListingPage() {
 }
 
 function AddListing() {
+  const { t, categoryLabel, countryLabel } = useI18n();
   const router =
     useRouter();
   const searchParams = useSearchParams();
@@ -156,7 +174,7 @@ const [checkingAuth, setCheckingAuth] =
 if (checkingAuth) {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
-      Loading...
+      {t("common.loading")}
     </div>
   );
 }
@@ -223,7 +241,7 @@ if (checkingAuth) {
       const user = auth.currentUser;
 
       if (!user) {
-        alert("Please login first");
+        alert(t("post.loginFirst"));
         return;
       }
 
@@ -322,7 +340,7 @@ const created = await addDoc(
     category,
     country,
   });
-  alert("Your ad is now live on Pippinway.");
+  alert(t("post.publishedBody"));
   router.push(
     "/profile"
   );
@@ -347,7 +365,7 @@ const created = await addDoc(
     .trim();
 
   alert(
-    detail || "Upload failed"
+    detail || t("post.uploadFailed")
   );
 } finally {
   setLoading(false);
@@ -364,22 +382,22 @@ const created = await addDoc(
           }
           className="mb-6 border border-gray-700 px-4 py-2 rounded-2xl"
         >
-          ← Back to Home
+          ← {t("auth.backHome")}
         </button>
 
         <h1 className="text-3xl font-bold mb-3">
-          Add Listing
+          {t("post.addListing")}
         </h1>
         <p className="mb-6 text-sm text-gray-400">
-          Post a truthful ad with real photos. Read the{" "}
+          {t("post.hintBefore")}{" "}
           <a href="/posting-rules" className="text-[#FBB03B] hover:underline">
-            posting rules
+            {t("post.postingRules")}
           </a>{" "}
-          and{" "}
+          {t("post.hintAnd")}{" "}
           <a href="/safety" className="text-[#FBB03B] hover:underline">
-            safety guidance
+            {t("post.safetyGuidance")}
           </a>{" "}
-          before you publish.
+          {t("post.hintAfter")}
         </p>
 
         <form
@@ -389,7 +407,7 @@ const created = await addDoc(
         >
           <input
             type="text"
-            placeholder="Title"
+            placeholder={t("post.title")}
             value={title}
            onChange={(e) => {
   setTitle(e.target.value);
@@ -410,7 +428,7 @@ const created = await addDoc(
 
           <input
             type="text"
-            placeholder="Price"
+            placeholder={t("post.price")}
             value={price}
            onChange={(e) => {
   setPrice(e.target.value);
@@ -452,43 +470,18 @@ onChange={(e) => {
 }`}
 >
   <option value="">
-    Select Country
+    {t("post.selectCountry")}
   </option>
-  <option value="Singapore">
-    Singapore
-  </option>
-  <option value="India">
-    India
-  </option>
-  <option value="Thailand">
-    Thailand
-  </option>
-  <option value="Zimbabwe">
-    Zimbabwe
-  </option>
-  <option value="USA">
-    USA
-  </option>
-  <option value="Maldives">
-    Maldives
-  </option>
-  <option value="Sri Lanka">
-    Sri Lanka
-  </option>
-  <option value="South Africa">
-    South Africa
-  </option>
-  <option value="United Kingdom">
-    United Kingdom
-  </option>
-  <option value="Canada">
-    Canada
-  </option>
+  {MARKET_COUNTRIES.map((item) => (
+    <option key={item.firestoreValue} value={item.firestoreValue}>
+      {countryLabel(item.firestoreValue)}
+    </option>
+  ))}
 </select>
            
           <input
             type="text"
-            placeholder="City / Location"
+            placeholder={t("post.location")}
             value={
               location
             }
@@ -511,7 +504,7 @@ onChange={(e) => {
 
        <input
   type="text"
-  placeholder="WhatsApp Number (e.g. +91 9876543210)"
+  placeholder={t("post.phonePlaceholder")}
   value={phone}
   onChange={(e) => {
   setPhone(e.target.value);
@@ -531,7 +524,7 @@ onChange={(e) => {
 />
 
 <p className="text-xs text-gray-400 mb-4 ml-2">
-  Example: +91 9876543210
+  {t("post.phoneExample")}
 </p>
 
           <select
@@ -551,56 +544,17 @@ onChange={(e) => {
 }`}
   >
   <option value="">
-    Select Category
+    {t("post.selectCategory")}
   </option>
-
-  <option value="Cars">
-    🚗 Cars
-  </option>
-
-  <option value="Motorbikes">
-    🏍️ Motorbikes
-  </option>
-
-  <option value="Property">
-    🏠 Property
-  </option>
-
-  <option value="Electronics">
-    📱 Electronics
-  </option>
-
-  <option value="Fashion">
-    👕 Fashion
-  </option>
-
-  <option value="Jobs">
-    💼 Jobs
-  </option>
-
-  <option value="Services">
-    🛠️ Services
-  </option>
-
-  <option value="Animals">
-    🐶 Animals
-  </option>
-
-  <option value="Furniture">
-    🛋️ Furniture
-  </option>
-
-  <option value="Education">
-    📚 Education
-  </option>
-
-  <option value="Other">
-    📦 Other
-  </option>
+  {POST_CATEGORIES.map((item) => (
+    <option key={item.value} value={item.value}>
+      {item.icon} {categoryLabel(item.value)}
+    </option>
+  ))}
 </select>
 
           <textarea
-            placeholder="Description"
+            placeholder={t("post.description")}
             value={
               description
             }
@@ -622,7 +576,7 @@ onChange={(e) => {
           />
 <div className="space-y-3 mb-5">
   <p className="text-xs text-gray-400">
-    Maximum {MAX_LISTING_IMAGES} photos
+    {t("post.maxPhotos", { count: MAX_LISTING_IMAGES })}
   </p>
   {Array.from({ length: MAX_LISTING_IMAGES }, (_, i) => i + 1).map((num, index) => (
     <div
@@ -634,7 +588,7 @@ onChange={(e) => {
       }`}
     >
       <label className="block text-sm text-gray-300 mb-2">
-        Photo {num}
+        {t("post.photoN", { n: num })}
       </label>
 
       <input
@@ -675,7 +629,7 @@ onChange={(e) => {
 
           {index === 0 && (
             <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded z-10">
-              ⭐ Cover Photo
+              ⭐ {t("post.coverPhoto")}
             </div>
           )}
 
@@ -693,7 +647,7 @@ onChange={(e) => {
 
           <img
             src={URL.createObjectURL(images[index])}
-            alt={`Photo ${num}`}
+            alt={t("post.photoN", { n: num })}
             onClick={() =>
               setPreviewImage(
                 URL.createObjectURL(images[index])
@@ -715,7 +669,7 @@ onChange={(e) => {
 
   {errors.image && (
     <p className="text-red-500 text-sm mt-2 text-center">
-      Please upload up to {MAX_LISTING_IMAGES} photos
+      {t("post.uploadPhotosError", { count: MAX_LISTING_IMAGES })}
     </p>
   )}
 </div>
@@ -726,8 +680,8 @@ onChange={(e) => {
   className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:scale-[1.02] transition text-white font-bold py-4 rounded-[24px] text-lg shadow-lg disabled:opacity-60"
 >
   {loading
-    ? "Uploading..."
-    : "Post Listing"}
+    ? t("post.uploadingSimple")
+    : t("post.postListing")}
 </button>
 {previewImage && (
   <div
@@ -736,7 +690,7 @@ onChange={(e) => {
   >
     <img
       src={previewImage}
-      alt="Preview"
+      alt={t("post.preview")}
       className="max-w-[90%] max-h-[90%] rounded-xl"
     />
   </div>

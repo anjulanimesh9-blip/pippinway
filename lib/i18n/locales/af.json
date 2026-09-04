@@ -1,0 +1,11 @@
+{
+  "nav": { "home": "Tuis", "categories": "Kategorieë", "postAd": "Plaas advertensie", "chats": "Gesels", "profile": "Profiel", "login": "Meld aan", "register": "Registreer", "logout": "Meld af" },
+  "common": { "cancel": "Kanselleer", "confirm": "Bevestig", "all": "Alles", "search": "Soek", "loading": "Laai...", "featured": "Uitgelig", "ads": "Advertensies" },
+  "language": { "title": "Taal", "suggested": "Voorgestel vir {{country}}", "all": "Alle tale", "confirmTitle": "Verander taal?", "confirmBody": "Skakel die Pippinway-koppelvlak oor na {{language}}?", "switch": "Skakel oor" },
+  "categories": { "All": "Alles", "Cars": "Motors", "Motorbikes": "Motorfietse", "Property": "Eiendom", "Electronics": "Elektronika", "Fashion": "Mode", "Jobs": "Werksgeleenthede", "Services": "Dienste", "Animals": "Diere", "Furniture": "Meubels", "Education": "Onderwys", "Other": "Ander", "heading": "Kategorieë" },
+  "countries": { "all": "Alle lande", "select": "Kies land", "Sri Lanka": "Sri Lanka", "Zimbabwe": "Zimbabwe", "India": "Indië", "Singapore": "Singapoer", "United Kingdom": "Verenigde Koninkryk", "USA": "Verenigde State", "Canada": "Kanada", "South Africa": "Suid-Afrika", "Maldives": "Maledive", "Thailand": "Thailand" },
+  "home": { "postAnAd": "Plaas ’n advertensie", "featuredAds": "Uitgeligte advertensies", "latestAds": "Nuutste advertensies", "empty": "Geen advertensies gevind nie." },
+  "search": { "newest": "Nuutste", "priceLow": "Prys: laag", "priceHigh": "Prys: hoog" },
+  "auth": { "login": "Meld aan", "register": "Registreer" },
+  "profile": { "favorites": "Gunstelinge", "messages": "Boodskappe", "settings": "Instellings", "logout": "Meld af" }
+}

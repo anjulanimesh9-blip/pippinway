@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 type SellerCardProps = {
   uid?: string;
@@ -10,7 +11,8 @@ type SellerCardProps = {
 };
 
 export default function SellerCard({ uid, name, location }: SellerCardProps) {
-  const displayName = name || "Private Seller";
+  const { t } = useI18n();
+  const displayName = name || t("listing.privateSeller");
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -23,7 +25,7 @@ export default function SellerCard({ uid, name, location }: SellerCardProps) {
           <div className="flex items-center gap-1.5">
             <h3 className="truncate font-semibold text-white">{displayName}</h3>
           </div>
-          <p className="text-xs text-gray-400">Member</p>
+          <p className="text-xs text-gray-400">{t("common.member")}</p>
           {location && (
             <p className="mt-0.5 truncate text-xs text-gray-500">{location}</p>
           )}
@@ -35,7 +37,7 @@ export default function SellerCard({ uid, name, location }: SellerCardProps) {
           href={`/seller/${uid}`}
           className="mt-3 block text-sm font-semibold text-sky-400 hover:underline"
         >
-          View seller shop
+          {t("listing.viewShop")}
         </Link>
       )}
     </div>

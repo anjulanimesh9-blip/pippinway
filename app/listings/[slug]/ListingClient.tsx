@@ -37,6 +37,7 @@ import {
   useParams,
   useRouter,
 } from "next/navigation";
+import { useI18n } from "@/lib/i18n";
 
 export default function ListingClient({
   initialItem = null,
@@ -59,6 +60,7 @@ export default function ListingClient({
   const router = useRouter();
   const params = useParams();
   const { requireAuth } = useGuestAuthPrompt();
+  const { t, categoryLabel, countryLabel } = useI18n();
   const lastViewedListingId = useRef<string | null>(null);
 
   const slug =
@@ -89,9 +91,7 @@ export default function ListingClient({
         )
       );
 
-      alert(
-        "Listing deleted!"
-      );
+      alert(t("listing.listingDeleted"));
 
       router.push(countryMarketplacePath(item?.country));
     };
@@ -109,7 +109,7 @@ const startChat = async () => {
     item?.postedBy;
 
   if (!sellerEmail) {
-    alert("Seller email not found.");
+    alert(t("listing.sellerEmailMissing"));
     return;
   }
 
@@ -118,7 +118,7 @@ console.log("Seller:", sellerEmail);
 console.log("Owner:", item?.ownerEmail);
 
   if (sellerEmail === currentUser.email) {
-    alert("You can't chat with yourself.");
+    alert(t("listing.cantChatSelf"));
     return;
   }
 
@@ -257,7 +257,7 @@ console.log("Owner:", item?.ownerEmail);
   if (!item) {
     return (
       <h1 className="p-10 text-xl text-white bg-black min-h-screen">
-        Loading...
+        {t("common.loading")}
       </h1>
     );
   }
@@ -273,8 +273,13 @@ const whatsappLink =
         ?.toLowerCase()
     ] || "Rs.";
 
-  const place = [item.location, item.country].filter(Boolean).join(", ");
-  const posted = getRelativeTime(item.createdAt) || "Recently";
+  const place = [
+    item.location,
+    item.country ? countryLabel(item.country) : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const posted = getRelativeTime(item.createdAt) || t("listing.recently");
   const isOwner = currentUser?.email === item.ownerEmail;
   const moreFromSeller = sellerAds.length > 0 ? sellerAds : relatedAds;
 
@@ -283,7 +288,7 @@ const whatsappLink =
       navigator.share({ title: item.title, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied!");
+      alert(t("listing.linkCopied"));
     }
   };
 
@@ -294,19 +299,19 @@ const whatsappLink =
       <div className="mx-auto max-w-6xl px-4 py-4">
         <nav className="mb-3 flex flex-wrap items-center gap-1 text-xs text-gray-500">
           <Link href="/" className="hover:text-sky-400">
-            Home
+            {t("nav.home")}
           </Link>
           <span>›</span>
           <Link
             href={countryMarketplacePath(item.country)}
             className="hover:text-sky-400"
           >
-            All ads
+            {t("listing.allAds")}
           </Link>
           {item.category && (
             <>
               <span>›</span>
-              <span className="text-gray-400">{item.category}</span>
+              <span className="text-gray-400">{categoryLabel(item.category)}</span>
             </>
           )}
           <span>›</span>
@@ -321,8 +326,9 @@ const whatsappLink =
               {item.title}
             </h1>
             <p className="mt-1 text-sm text-gray-400">
-              Posted {posted}
-              {place ? ` in ${place}` : ""}
+              {place
+                ? t("listing.postedIn", { time: posted, place })
+                : t("listing.postedAgo", { time: posted })}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
@@ -332,7 +338,7 @@ const whatsappLink =
               className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white"
             >
               <Share2 size={16} />
-              <span className="hidden sm:inline">Share</span>
+              <span className="hidden sm:inline">{t("listing.share")}</span>
             </button>
             <button
               type="button"
@@ -343,7 +349,7 @@ const whatsappLink =
                 size={16}
                 className={saved ? "fill-red-500 text-red-500" : ""}
               />
-              <span className="hidden sm:inline">Save ad</span>
+              <span className="hidden sm:inline">{t("listing.saveAd")}</span>
             </button>
           </div>
         </div>
@@ -386,23 +392,23 @@ const whatsappLink =
 
             <div className="rounded-lg border border-sky-500/25 bg-sky-500/5 p-4">
               <h3 className="mb-2 text-sm font-semibold text-sky-300">
-                Stay Alert: Avoid Online Scams
+                {t("listing.stayAlert")}
               </h3>
               <ul className="space-y-1.5 text-xs leading-5 text-gray-400">
-                <li>Never send money before inspecting the item.</li>
-                <li>Meet in a public place for exchanges.</li>
-                <li>Do not share OTPs or banking details.</li>
+                <li>{t("listing.scam1")}</li>
+                <li>{t("listing.scam2")}</li>
+                <li>{t("listing.scam3")}</li>
                 <li>
-                  If an ad looks fraudulent, email the listing link to{" "}
+                  {t("listing.scam4Before")}{" "}
                   <a
                     href={`mailto:${SUPPORT_EMAIL}`}
                     className="text-sky-300 hover:underline"
                   >
                     {SUPPORT_EMAIL}
                   </a>
-                  . Read more on{" "}
+                  {t("listing.scam4After")}{" "}
                   <Link href="/safety" className="text-sky-300 hover:underline">
-                    Safety
+                    {t("nav.safety")}
                   </Link>
                   .
                 </li>
@@ -416,14 +422,14 @@ const whatsappLink =
                   onClick={() => router.push(`/edit/${slug}`)}
                   className="rounded-lg bg-[#FBB03B] py-3 text-sm font-bold text-black"
                 >
-                  Edit
+                  {t("common.edit")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
                   className="rounded-lg border border-red-500/40 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10"
                 >
-                  Delete
+                  {t("common.delete")}
                 </button>
               </div>
             )}
@@ -435,7 +441,7 @@ const whatsappLink =
           currencyMap={currencyMap}
           sellerName={
             sellerAds.length > 0
-              ? item.ownerName || "this seller"
+              ? item.ownerName || t("listing.thisSeller")
               : undefined
           }
         />

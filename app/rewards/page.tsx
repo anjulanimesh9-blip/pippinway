@@ -26,6 +26,7 @@ import SpinResultModal from "./components/SpinResultModal";
 import RewardHistory from "./components/RewardHistory";
 import ConfettiBurst from "./components/ConfettiBurst";
 import PaymentDetailsForm from "./components/PaymentDetailsForm";
+import { useI18n } from "@/lib/i18n";
 
 function landingRotation(segmentIndex: number, count: number, previous: number) {
   const slice = 360 / count;
@@ -38,6 +39,7 @@ function landingRotation(segmentIndex: number, count: number, previous: number) 
 }
 
 export default function RewardsPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { rewards, history, loading: rewardsLoading } = useRewards(user?.uid);
@@ -128,7 +130,7 @@ export default function RewardsPage() {
     } catch (err) {
       spinningLock.current = false;
       setSpinning(false);
-      setError(err instanceof Error ? err.message : "Could not spin. Try again.");
+      setError(err instanceof Error ? err.message : t("rewards.spinFailed"));
     }
   };
 
@@ -150,7 +152,7 @@ export default function RewardsPage() {
   if (authLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
-        Loading...
+        {t("common.loading")}
       </div>
     );
   }
@@ -163,19 +165,17 @@ export default function RewardsPage() {
       <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-6 text-center md:text-left">
           <p className="text-sm font-semibold tracking-wide text-[#FBB03B]">
-            Pippinway Rewards
+            {t("rewards.title")}
           </p>
           <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">
-            🎡 Pippinway Prize Wheel
+            🎡 {t("rewards.prizeWheel")}
           </h1>
-          <p className="mt-2 text-gray-300">Post more. Spin more. Win more!</p>
+          <p className="mt-2 text-gray-300">{t("rewards.tagline")}</p>
           <p className="mt-2 text-sm text-gray-400">
-            Normal: 3 approved ads = 1 spin · Mega: 10 approved ads = 1 mega spin
+            {t("rewards.normalHint")}
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            Spins come from eligible published listings only. Viewing or
-            clicking advertisements does not earn Rewards, Featured Credits or
-            cash prizes.
+            {t("rewards.adsOnly")}
           </p>
         </div>
 
@@ -214,7 +214,7 @@ export default function RewardsPage() {
           <div className="order-2 space-y-4 lg:order-1">
             <div className="rounded-2xl border border-white/10 bg-[#111827] p-4 sm:p-5">
               <ProgressBlock
-                title="Normal Spin"
+                title={t("rewards.normalSpin")}
                 current={normalTrack.current}
                 total={NORMAL_CYCLE}
                 hint={normalTrack.hint}
@@ -223,34 +223,34 @@ export default function RewardsPage() {
               />
               <div className="mt-4">
                 <ProgressBlock
-                  title="Mega Spin"
+                  title={t("rewards.megaSpin")}
                   current={rewards.rewardMegaProgress}
                   total={MEGA_CYCLE}
-                  hint="Post 10 approved ads to unlock a Mega Spin."
+                  hint={t("rewards.megaHint")}
                   loading={rewardsLoading}
                 />
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-white/8 bg-[#020817] p-3">
-                  <p className="text-xs text-gray-400">🎟️ Available Spins</p>
+                  <p className="text-xs text-gray-400">🎟️ {t("rewards.availableSpins")}</p>
                   <p className="text-2xl font-extrabold">{rewards.availableSpins}</p>
                 </div>
                 <div className="rounded-xl border border-white/8 bg-[#020817] p-3">
-                  <p className="text-xs text-gray-400">🎁 Available Mega Spins</p>
+                  <p className="text-xs text-gray-400">🎁 {t("rewards.availableMegaSpins")}</p>
                   <p className="text-2xl font-extrabold">{rewards.availableMegaSpins}</p>
                 </div>
               </div>
 
               {hasAnySpin && (
                 <p className="mt-4 text-center text-sm font-extrabold tracking-wide text-[#FBB03B] lg:text-left">
-                  SPIN AVAILABLE
+                  {t("rewards.spinAvailable")}
                 </p>
               )}
 
               {!hasAnySpin && !rewardsLoading && (
                 <p className="mt-4 text-sm text-amber-200">
-                  Post more approved ads to unlock your next spin.
+                  {t("rewards.postMoreUnlock")}
                 </p>
               )}
 
@@ -267,7 +267,7 @@ export default function RewardsPage() {
                   onClick={() => spin("normal")}
                   className="min-h-12 flex-1 rounded-xl bg-[#FBB03B] px-4 py-3 text-sm font-extrabold text-black transition hover:bg-[#ffc14d] disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
                 >
-                  🎡 SPIN NOW
+                  🎡 {t("rewards.spinNow")}
                 </button>
                 <button
                   type="button"
@@ -275,7 +275,7 @@ export default function RewardsPage() {
                   onClick={() => spin("mega")}
                   className="min-h-12 flex-1 rounded-xl border border-[#FBB03B]/40 bg-[#020817] px-4 py-3 text-sm font-extrabold text-[#FBB03B] transition hover:bg-[#FBB03B]/10 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-500"
                 >
-                  🎁 MEGA SPIN
+                  🎁 {t("rewards.megaSpinNow")}
                 </button>
               </div>
             </div>
@@ -321,6 +321,7 @@ function ProgressBlock({
   status?: string;
   loading: boolean;
 }) {
+  const { t } = useI18n();
   const clamped = Math.min(Math.max(current, 0), total);
   const pct = loading ? 0 : Math.round((clamped / total) * 100);
 
@@ -329,7 +330,10 @@ function ProgressBlock({
       <div className="mb-1 flex items-center justify-between gap-2">
         <p className="font-semibold text-white">{title}</p>
         <p className="text-sm text-[#FBB03B]">
-          Approved Ads: {loading ? "…" : clamped} / {total}
+          {t("rewards.approvedAds", {
+            current: loading ? "…" : clamped,
+            total,
+          })}
         </p>
       </div>
       <div className="h-2.5 overflow-hidden rounded-full bg-white/10">

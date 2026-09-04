@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { GuestAuthLink } from "./GuestAuthPrompt";
 import useCountryNavigation from "../hooks/useCountryNavigation";
+import { useI18n } from "@/lib/i18n";
 
 interface MobileBottomNavProps {
   unreadCount?: number;
@@ -21,6 +22,7 @@ export default function MobileBottomNav({
 }: MobileBottomNavProps) {
   const pathname = usePathname();
   const { marketplaceHome, addListingHref } = useCountryNavigation();
+  const { t } = useI18n();
   const homeActive =
     pathname === marketplaceHome ||
     (marketplaceHome !== "/" && pathname === marketplaceHome);
@@ -35,7 +37,7 @@ export default function MobileBottomNav({
       <div className="grid h-16 grid-cols-5">
         <Link href={marketplaceHome} className={itemClass(homeActive)}>
           <Home className="h-5 w-5" strokeWidth={1.8} />
-          Home
+          {t("nav.home")}
         </Link>
 
         <Link
@@ -43,7 +45,7 @@ export default function MobileBottomNav({
           className={itemClass(pathname.startsWith("/categories"))}
         >
           <LayoutGrid className="h-5 w-5" strokeWidth={1.8} />
-          Categories
+          {t("nav.categories")}
         </Link>
 
         <GuestAuthLink
@@ -60,7 +62,7 @@ export default function MobileBottomNav({
           className={`relative ${itemClass(pathname.startsWith("/messages"))}`}
         >
           <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
-          Chat
+          {t("nav.chat")}
           {unreadCount > 0 && (
             <span className="absolute top-1 right-3 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
               {unreadCount}
@@ -73,7 +75,7 @@ export default function MobileBottomNav({
           className={itemClass(pathname.startsWith("/profile"))}
         >
           <User className="h-5 w-5" strokeWidth={1.8} />
-          Profile
+          {t("nav.profile")}
         </GuestAuthLink>
       </div>
     </nav>

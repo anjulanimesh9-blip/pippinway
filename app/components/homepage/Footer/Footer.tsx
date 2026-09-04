@@ -3,23 +3,7 @@
 import Link from "next/link";
 import { GuestAuthLink } from "../../GuestAuthPrompt";
 import useCountryNavigation from "@/app/hooks/useCountryNavigation";
-
-const PIPPINWAY_LINKS = [
-  { href: "/about", label: "About" },
-  { href: "/how-it-works", label: "How it Works" },
-];
-
-const SUPPORT_LINKS = [
-  { href: "/contact", label: "Help / Contact" },
-  { href: "/safety", label: "Safety" },
-  { href: "/posting-rules", label: "Posting Rules" },
-];
-
-const LEGAL_LINKS = [
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms & Conditions" },
-];
-
+import { useI18n } from "@/lib/i18n";
 
 function FooterLinks({
   links,
@@ -53,10 +37,24 @@ function FooterLinks({
 
 export default function Footer() {
   const { marketplaceHome, addListingHref } = useCountryNavigation();
+  const { t } = useI18n();
+  const pippinwayLinks = [
+    { href: "/about", label: t("footer.about") },
+    { href: "/how-it-works", label: t("footer.howItWorks") },
+  ];
+  const supportLinks = [
+    { href: "/contact", label: t("footer.helpContact") },
+    { href: "/safety", label: t("footer.safety") },
+    { href: "/posting-rules", label: t("footer.postingRules") },
+  ];
+  const legalLinks = [
+    { href: "/privacy", label: t("footer.privacy") },
+    { href: "/terms", label: t("footer.terms") },
+  ];
   const marketplaceLinks = [
-    { href: marketplaceHome, label: "Browse Listings" },
-    { href: "/categories", label: "Categories" },
-    { href: addListingHref, label: "Post Ad", auth: true },
+    { href: marketplaceHome, label: t("footer.browseListings") },
+    { href: "/categories", label: t("footer.categories") },
+    { href: addListingHref, label: t("footer.postAd"), auth: true },
   ];
 
   return (
@@ -70,32 +68,30 @@ export default function Footer() {
               className="mb-4 w-[180px] max-w-full sm:w-[220px]"
             />
             <p className="text-sm leading-7 text-gray-400">
-              A classified marketplace for buying and selling locally. Listings
-              are posted by independent users. Read safety guidance before you
-              meet or pay.
+              {t("footer.blurb")}
             </p>
-            <h3 className="mb-3 mt-6 text-lg font-bold text-white">Pippinway</h3>
-            <FooterLinks links={PIPPINWAY_LINKS} />
+            <h3 className="mb-3 mt-6 text-lg font-bold text-white">{t("footer.pippinway")}</h3>
+            <FooterLinks links={pippinwayLinks} />
           </div>
 
           <div>
-            <h3 className="mb-4 text-lg font-bold text-white">Support</h3>
-            <FooterLinks links={SUPPORT_LINKS} />
+            <h3 className="mb-4 text-lg font-bold text-white">{t("footer.support")}</h3>
+            <FooterLinks links={supportLinks} />
           </div>
 
           <div>
-            <h3 className="mb-4 text-lg font-bold text-white">Legal</h3>
-            <FooterLinks links={LEGAL_LINKS} />
+            <h3 className="mb-4 text-lg font-bold text-white">{t("footer.legal")}</h3>
+            <FooterLinks links={legalLinks} />
           </div>
 
           <div>
-            <h3 className="mb-4 text-lg font-bold text-white">Marketplace</h3>
+            <h3 className="mb-4 text-lg font-bold text-white">{t("footer.marketplace")}</h3>
             <FooterLinks links={marketplaceLinks} />
           </div>
         </div>
 
         <div className="mt-10 border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-          <p>© 2026 Pippinway.com — All Rights Reserved</p>
+          <p>{t("footer.copyright", { year: 2026 })}</p>
         </div>
       </div>
     </footer>

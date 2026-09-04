@@ -22,8 +22,10 @@ import {
 } from "@/lib/listingImages";
 import { compressListingImage } from "@/lib/compressImage";
 import { parseListingPrice } from "@/lib/formatPrice";
+import { useI18n } from "@/lib/i18n";
 
 export default function EditListing() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const slug =
@@ -149,9 +151,7 @@ export default function EditListing() {
           }
         );
 
-        alert(
-          "Updated Successfully!"
-        );
+        alert(t("post.updatedSuccess"));
 
         router.push(
           `/listings/${slug}`
@@ -162,9 +162,7 @@ export default function EditListing() {
           error
         );
 
-        alert(
-          "Update failed!"
-        );
+        alert(t("post.updateFailed"));
       }
     };
 
@@ -178,11 +176,11 @@ export default function EditListing() {
           }
           className="mb-6 bg-[#111] border border-gray-700 text-white px-4 py-2 rounded-2xl text-sm"
         >
-          ← Back to Home
+          ← {t("auth.backHome")}
         </button>
 
         <h1 className="text-3xl font-bold mb-6">
-          Edit Listing
+          {t("post.editListing")}
         </h1>
 
         {/* Current Photos */}
@@ -191,7 +189,7 @@ export default function EditListing() {
     <div key={index} className="relative">
       <img
         src={image}
-        alt="Listing"
+        alt={t("listing.fallback")}
         className="w-full h-40 object-cover rounded-2xl border border-gray-700"
       />
 
@@ -212,7 +210,7 @@ export default function EditListing() {
 
         <input
           type="text"
-          placeholder="Title"
+          placeholder={t("post.title")}
           value={title}
           onChange={(e) =>
             setTitle(
@@ -224,7 +222,7 @@ export default function EditListing() {
 
         <input
           type="text"
-          placeholder="WhatsApp Number"
+          placeholder={t("auth.whatsappNumber")}
           value={phone}
           onChange={(e) =>
             setPhone(
@@ -236,7 +234,7 @@ export default function EditListing() {
 
         <input
           type="text"
-          placeholder="Price"
+          placeholder={t("post.price")}
           value={price}
           onChange={(e) =>
             setPrice(
@@ -247,7 +245,7 @@ export default function EditListing() {
         />
 
         <textarea
-          placeholder="Description"
+          placeholder={t("post.description")}
           value={description}
           onChange={(e) =>
             setDescription(
@@ -259,7 +257,7 @@ export default function EditListing() {
 
         <div className="mb-5">
           <label className="block mb-2 text-sm text-gray-400">
-            Upload up to {MAX_LISTING_IMAGES} new photos
+            {t("post.uploadNewPhotos", { count: MAX_LISTING_IMAGES })}
           </label>
 
           <input
@@ -305,7 +303,7 @@ export default function EditListing() {
           }
           className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-2xl transition"
         >
-          Save Changes
+          {t("settings.saveChanges")}
         </button>
 
       </div>

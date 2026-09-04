@@ -1,0 +1,11 @@
+{
+  "nav": { "home": "首页", "categories": "分类", "postAd": "发布", "chats": "聊天", "profile": "我的", "about": "关于", "safety": "安全", "contact": "联系", "addListing": "发布信息", "login": "登录", "register": "注册", "logout": "退出登录", "chat": "聊天" },
+  "common": { "cancel": "取消", "confirm": "确认", "all": "全部", "search": "搜索", "loading": "加载中...", "featured": "精选", "ads": "信息", "close": "关闭", "back": "返回" },
+  "language": { "title": "语言", "suggested": "{{country}}常用语言", "all": "全部语言", "confirmTitle": "更换语言？", "confirmBody": "将 Pippinway 界面切换为{{language}}？", "switch": "切换" },
+  "categories": { "All": "全部", "Cars": "汽车", "Motorbikes": "摩托车", "Property": "房产", "Electronics": "电子产品", "Fashion": "时尚", "Jobs": "招聘", "Services": "服务", "Animals": "宠物", "Furniture": "家具", "Education": "教育", "Other": "其他", "heading": "分类", "allCategories": "全部分类" },
+  "countries": { "all": "所有国家", "select": "选择国家", "Sri Lanka": "斯里兰卡", "Zimbabwe": "津巴布韦", "India": "印度", "Singapore": "新加坡", "United Kingdom": "英国", "USA": "美国", "Canada": "加拿大", "South Africa": "南非", "Maldives": "马尔代夫", "Thailand": "泰国" },
+  "home": { "postAnAd": "发布信息", "featuredAds": "精选信息", "latestAds": "最新信息", "empty": "暂无信息。", "marketplace": "{{country}}市场", "changeCountry": "更换国家" },
+  "search": { "newest": "最新", "priceLow": "价格：低到高", "priceHigh": "价格：高到低", "searchAds": "搜索信息..." },
+  "auth": { "login": "登录", "register": "注册", "email": "邮箱", "password": "密码", "forgotPassword": "忘记密码？", "authInvalid": "邮箱或密码不正确。" },
+  "profile": { "favorites": "收藏", "messages": "消息", "settings": "设置", "logout": "退出登录" }
+}

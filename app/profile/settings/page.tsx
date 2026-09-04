@@ -7,8 +7,11 @@ import SecurityCard from "./components/SecurityCard";
 import DangerZone from "./components/DangerZone";
 
 import { useSettings } from "./hooks/useSettings";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
+import { useI18n } from "@/lib/i18n";
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const settings = useSettings();
 
   if (settings.loading) {
@@ -18,7 +21,7 @@ export default function SettingsPage() {
   if (!settings.user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
-        Please login first.
+        {t("settings.pleaseLogin")}
       </div>
     );
   }
@@ -26,6 +29,13 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-[#020817] p-6">
       <div className="max-w-3xl mx-auto space-y-6">
+        <div className="rounded-xl border border-slate-700 bg-[#0F172A] p-6">
+          <h2 className="mb-4 text-xl font-semibold text-white">
+            {t("settings.language")}
+          </h2>
+          <LanguageSwitcher />
+        </div>
+
         <ProfileImage
           profileImage={settings.profileImage}
           onImageChange={settings.handleImageChange}

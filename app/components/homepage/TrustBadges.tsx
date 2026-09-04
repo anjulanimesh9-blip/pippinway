@@ -1,23 +1,39 @@
-import Link from "next/link";
+"use client";
 
-const items: Array<{
-  icon: string;
-  title: string;
-  text: string;
-  href?: string;
-}> = [
-  { icon: "🏷️", title: "Free to post", text: "Create an ad at no listing fee" },
-  { icon: "🛡️", title: "Local sellers", text: "Connect with people posting nearby" },
-  { icon: "🌍", title: "Multiple countries", text: "Browse ads across Pippinway markets" },
-  {
-    icon: "🎧",
-    title: "Safety guidance",
-    text: "Read tips before you meet or pay",
-    href: "/safety",
-  },
-];
+import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 export default function TrustBadges() {
+  const { t } = useI18n();
+  const items: Array<{
+    icon: string;
+    title: string;
+    text: string;
+    href?: string;
+  }> = [
+    {
+      icon: "🏷️",
+      title: t("home.trustPostTitle"),
+      text: t("home.trustPostBody"),
+    },
+    {
+      icon: "🛡️",
+      title: t("home.trustLocalTitle"),
+      text: t("home.trustLocalBody"),
+    },
+    {
+      icon: "🌍",
+      title: t("home.trustCountriesTitle"),
+      text: t("home.trustCountriesBody"),
+    },
+    {
+      icon: "🎧",
+      title: t("home.trustSafetyTitle"),
+      text: t("home.trustSafetyBody"),
+      href: "/safety",
+    },
+  ];
+
   return (
     <section className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3">
       {items.map((item) => {

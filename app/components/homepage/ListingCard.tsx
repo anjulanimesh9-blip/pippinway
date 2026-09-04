@@ -10,6 +10,7 @@ import { track } from "@/lib/analytics";
 import { formatPrice, getRelativeTime } from "@/lib/formatPrice";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { ListingRecord } from "@/lib/types/featured";
+import { useI18n } from "@/lib/i18n";
 
 type ListingCardProps = {
   item: ListingRecord;
@@ -28,13 +29,24 @@ export default function ListingCard({
   toggleFavorite,
   grid = true,
 }: ListingCardProps) {
+  const { t, categoryLabel, countryLabel } = useI18n();
   const image = item.imageUrls?.[0] || item.imageUrl || "/placeholder.png";
   const slug = item.slug || item.id;
   const isFeatured = isActiveFeaturedListing(item);
   const relativeTime = getRelativeTime(item.createdAt);
-  const locationLabel = [item.location, item.country].filter(Boolean).join(", ");
+  const locationLabel = [
+    item.location,
+    item.country ? countryLabel(item.country) : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
   const price = formatPrice(item.price ?? item.amount, item.country);
-  const meta = [locationLabel, item.category].filter(Boolean).join(", ");
+  const meta = [
+    locationLabel,
+    item.category ? categoryLabel(item.category) : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   const onFeaturedClick = () => {
     if (!isFeatured) return;
@@ -55,13 +67,13 @@ export default function ListingCard({
         <div className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-lg bg-[#0f172a] sm:h-[120px] sm:w-[120px]">
           <ListingPhoto
             src={image}
-            alt={item.title ?? "Listing"}
+            alt={item.title ?? t("listing.fallback")}
             sizes={LISTING_THUMB_SIZES}
             className="object-cover"
           />
           {isFeatured && (
             <span className="absolute left-1 top-1 rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white sm:left-1.5 sm:top-1.5">
-              Featured
+              {t("listing.featured")}
             </span>
           )}
         </div>
@@ -82,7 +94,7 @@ export default function ListingCard({
                 });
               }}
               className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-white/5"
-              aria-label="Save listing"
+              aria-label={t("listing.saveListing")}
             >
               <Heart
                 size={16}
@@ -98,13 +110,13 @@ export default function ListingCard({
           {isFeatured && (
             <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded bg-yellow-400/15 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
               <Star size={10} fill="currentColor" />
-              FEATURED
+              {t("listing.featured")}
             </span>
           )}
 
           <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-400 sm:text-sm">
             <MapPin size={12} className="shrink-0 text-gray-500" />
-            <span className="truncate">{meta || "Location not set"}</span>
+            <span className="truncate">{meta || t("listing.locationNotSet")}</span>
           </p>
 
           <div className="mt-auto flex items-end justify-between gap-3 pt-2">
@@ -132,14 +144,14 @@ export default function ListingCard({
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0f172a]">
         <ListingPhoto
           src={image}
-          alt={item.title ?? "Listing"}
+          alt={item.title ?? t("listing.fallback")}
           sizes={LISTING_GRID_SIZES}
           className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
 
         {isFeatured && (
           <span className="absolute left-3 top-3 rounded-md bg-orange-500 px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow">
-            Featured
+            {t("listing.featured")}
           </span>
         )}
 
@@ -154,7 +166,7 @@ export default function ListingCard({
             });
           }}
           className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md transition hover:scale-105"
-          aria-label="Save listing"
+          aria-label={t("listing.saveListing")}
         >
           <Heart
             size={18}
@@ -178,7 +190,7 @@ export default function ListingCard({
 
         <p className="mt-3 flex items-center gap-1 text-sm text-gray-400">
           <MapPin size={13} className="shrink-0 text-sky-400" />
-          <span className="truncate">{meta || "Location not set"}</span>
+          <span className="truncate">{meta || t("listing.locationNotSet")}</span>
         </p>
 
         {relativeTime && (

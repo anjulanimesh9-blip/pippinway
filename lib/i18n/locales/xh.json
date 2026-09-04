@@ -1,0 +1,11 @@
+{
+  "nav": { "home": "Ikhaya", "categories": "Iindidi", "postAd": "Faka Isibhengezo", "chats": "Incoko", "profile": "Iprofayile", "login": "Ngena", "register": "Bhalisa", "logout": "Phuma" },
+  "common": { "cancel": "Rhoxisa", "confirm": "Qinisekisa", "all": "Konke", "search": "Khangela", "loading": "Iyalayisha...", "featured": "Okubalulekileyo", "ads": "Izibhengezo" },
+  "language": { "title": "Ulwimi", "suggested": "Okucetywayo e-{{country}}", "all": "Zonke iilwimi", "confirmTitle": "Tshintsha ulwimi?", "confirmBody": "Tshintsha i-interface ye-Pippinway ibe {{language}}?", "switch": "Tshintsha" },
+  "categories": { "All": "Konke", "Cars": "Iimoto", "Motorbikes": "Izithuthuthu", "Property": "Ipropati", "Electronics": "I-elektroniki", "Fashion": "Ifashoni", "Jobs": "Imisebenzi", "Services": "Iinkonzo", "Animals": "Izilwanyana", "Furniture": "Ifenitshala", "Education": "Imfundo", "Other": "Okunye", "heading": "Iindidi" },
+  "countries": { "all": "Onke amazwe", "select": "Khetha ilizwe", "Sri Lanka": "Sri Lanka", "Zimbabwe": "Zimbabwe", "India": "India", "Singapore": "Singapore", "United Kingdom": "United Kingdom", "USA": "United States", "Canada": "Canada", "South Africa": "Mzantsi Afrika", "Maldives": "Maldives", "Thailand": "Thailand" },
+  "home": { "postAnAd": "Faka isibhengezo", "featuredAds": "Izibhengezo ezibalulekileyo", "latestAds": "Izibhengezo ezitsha", "empty": "Akukho zibhengezo zifunyenweyo." },
+  "search": { "newest": "Ezintsha", "priceLow": "Ixabiso: eliphantsi", "priceHigh": "Ixabiso: eliphezulu" },
+  "auth": { "login": "Ngena", "register": "Bhalisa" },
+  "profile": { "favorites": "Ezintandokazi", "messages": "Imiyalezo", "settings": "Iisetingi", "logout": "Phuma" }
+}

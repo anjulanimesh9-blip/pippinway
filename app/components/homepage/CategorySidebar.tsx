@@ -1,6 +1,7 @@
 "use client";
 
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/lib/i18n";
 import {
   Car,
   Bike,
@@ -40,6 +41,7 @@ export default function CategorySidebar({
   selectedCategory,
   setSelectedCategory,
 }: Props) {
+  const { t, categoryLabel } = useI18n();
   return (
    <div
   className="
@@ -54,7 +56,7 @@ export default function CategorySidebar({
   "
 >
       <h2 className="text-white text-sm font-bold mb-4 tracking-wider uppercase text-gray-400">
-        Categories
+        {t("categories.heading")}
       </h2>
 
       <div className="space-y-2">
@@ -75,7 +77,7 @@ export default function CategorySidebar({
               }`}
             >
               <Icon size={20} />
-              <span>{category.name}</span>
+              <span>{categoryLabel(category.name)}</span>
             </button>
           );
         })}

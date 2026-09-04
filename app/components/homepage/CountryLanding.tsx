@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -5,52 +7,31 @@ import CountryFlag from "@/app/components/CountryFlag";
 import LandingHeroArt from "@/app/components/homepage/LandingHeroArt";
 import LandingSearch from "@/app/components/homepage/LandingSearch";
 import { MARKET_COUNTRIES } from "@/lib/countries";
-
-const steps = [
-  {
-    n: "1",
-    title: "Choose your country",
-    body: "Open the market where you want to buy or sell so listings match that country.",
-  },
-  {
-    n: "2",
-    title: "Browse local listings",
-    body: "Use search, categories and location to find cars, property, electronics, jobs and more.",
-  },
-  {
-    n: "3",
-    title: "Contact the seller",
-    body: "Read the ad, then use Pippinway chat or the WhatsApp number the seller shared.",
-  },
-  {
-    n: "4",
-    title: "Arrange the transaction safely",
-    body: "Inspect the item before you pay, meet in public where you can, and never share OTPs.",
-  },
-];
+import { useI18n } from "@/lib/i18n";
 
 export default function CountryLanding() {
+  const { t, countryLabel } = useI18n();
+  const steps = [
+    { n: "1", title: t("home.step1Title"), body: t("home.step1Body") },
+    { n: "2", title: t("home.step2Title"), body: t("home.step2Body") },
+    { n: "3", title: t("home.step3Title"), body: t("home.step3Body") },
+    { n: "4", title: t("home.step4Title"), body: t("home.step4Body") },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-6 sm:py-12">
       <div className="sm:hidden">
         <LandingSearch />
         <h1 className="mt-5 text-[28px] font-bold leading-tight tracking-tight text-white">
-          Buy & Sell Near You
+          {t("home.buySellNearYou")}
         </h1>
-        <p className="mt-2 text-sm text-gray-400">
-          Find{" "}
-          <span className="font-semibold text-[#FBB03B]">great deals</span> from
-          people near you.
-        </p>
+        <p className="mt-2 text-sm text-gray-400">{t("home.findGreatDeals")}</p>
         <LandingHeroArt />
-        <h2
-          id="choose-country"
-          className="mt-5 text-lg font-bold text-white"
-        >
-          Choose your country
+        <h2 id="choose-country" className="mt-5 text-lg font-bold text-white">
+          {t("home.chooseCountry")}
         </h2>
         <p className="mt-1 text-xs text-gray-500">
-          Select a location to explore local listings.
+          {t("home.selectLocationExplore")}
         </p>
       </div>
 
@@ -64,10 +45,10 @@ export default function CountryLanding() {
           priority
         />
         <h1 className="mt-6 text-5xl font-bold tracking-tight text-white">
-          Buy & Sell Near You
+          {t("home.buySellNearYou")}
         </h1>
         <p className="mt-3 max-w-xl text-lg text-gray-400">
-          Choose your country to explore local listings
+          {t("home.chooseCountryExplore")}
         </p>
       </div>
 
@@ -80,16 +61,16 @@ export default function CountryLanding() {
           >
             <CountryFlag
               iso2={country.iso2}
-              title={country.displayName}
+              title={countryLabel(country.firestoreValue)}
               className="h-7 w-10 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12 sm:rounded-none"
               imgClassName="object-cover sm:object-contain"
             />
             <span className="min-w-0">
               <span className="block text-sm font-semibold leading-tight text-white sm:mt-3 sm:text-base">
-                {country.displayName}
+                {countryLabel(country.firestoreValue)}
               </span>
               <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400 sm:hidden">
-                Browse listings
+                {t("home.browseListings")}
                 <ArrowRight className="h-3 w-3 text-[#FBB03B]" />
               </span>
             </span>
@@ -99,17 +80,14 @@ export default function CountryLanding() {
 
       <section className="mt-14 rounded-2xl border border-white/10 bg-[#111827] px-5 py-8 sm:px-8">
         <h2 className="text-xl font-bold text-white sm:text-2xl">
-          Buy and Sell with Pippinway
+          {t("home.buySellWith")}
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-400 sm:text-base">
-          Pippinway is a classified marketplace. People post their own ads for
-          cars, property, electronics, jobs, services and more. Choosing a
-          country opens that local marketplace so you can browse listings
-          posted there.
+          {t("home.landingIntro")}
         </p>
 
         <h2 className="mt-10 text-xl font-bold text-white sm:text-2xl">
-          How it works
+          {t("home.howItWorks")}
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step) => (
@@ -117,7 +95,9 @@ export default function CountryLanding() {
               key={step.n}
               className="rounded-xl border border-white/10 bg-[#0f172a] p-4"
             >
-              <p className="text-xs font-bold text-[#FBB03B]">Step {step.n}</p>
+              <p className="text-xs font-bold text-[#FBB03B]">
+                {t("home.step", { n: step.n })}
+              </p>
               <h3 className="mt-1 text-sm font-semibold text-white">
                 {step.title}
               </h3>
@@ -127,31 +107,27 @@ export default function CountryLanding() {
         </div>
 
         <h2 className="mt-10 text-xl font-bold text-white sm:text-2xl">
-          Shop by location
+          {t("home.shopByLocation")}
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-400 sm:text-base">
-          Each country page shows listings for that market. Zimbabwe opens
-          Zimbabwe ads, Sri Lanka opens Sri Lankan ads, and so on. You can
-          change country later from the marketplace.
+          {t("home.shopByLocationBody")}
         </p>
 
         <div className="mt-8 rounded-xl border border-sky-500/20 bg-sky-500/5 p-5">
           <h2 className="text-lg font-semibold text-white">
-            Marketplace safety
+            {t("home.marketplaceSafety")}
           </h2>
           <p className="mt-2 text-sm leading-6 text-gray-400">
-            Listings are user-generated. Inspect items before you pay and meet
-            in public where you can. Pippinway does not guarantee private
-            sales. Read the{" "}
+            {t("home.safetyBlurbBefore")}{" "}
             <Link href="/safety" className="text-[#FBB03B] hover:underline">
-              Safety Center
+              {t("home.safetyCenter")}
             </Link>{" "}
-            and{" "}
+            {t("home.safetyBlurbAnd")}{" "}
             <Link
               href="/how-it-works"
               className="text-[#FBB03B] hover:underline"
             >
-              how Pippinway works
+              {t("home.howPippinwayWorks")}
             </Link>
             .
           </p>

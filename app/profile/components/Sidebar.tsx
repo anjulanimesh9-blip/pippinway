@@ -17,6 +17,7 @@ import {
   Star,
   User,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export type ProfileNavKey =
   | "dashboard"
@@ -49,15 +50,15 @@ const SIDE_LINK_CLASS =
 
 const NAV_ITEMS: Array<{
   key: ProfileNavKey;
-  label: string;
+  labelKey: string;
   icon: typeof Package;
 }> = [
-  { key: "messages", label: "Messages", icon: MessageSquare },
-  { key: "favorites", label: "Favorites", icon: Heart },
-  { key: "credits", label: "Featured Credits", icon: Star },
-  { key: "packages", label: "Packages", icon: Boxes },
-  { key: "settings", label: "Settings", icon: Settings },
-  { key: "help", label: "Help", icon: HelpCircle },
+  { key: "messages", labelKey: "profile.messages", icon: MessageSquare },
+  { key: "favorites", labelKey: "profile.favorites", icon: Heart },
+  { key: "credits", labelKey: "profile.featuredCredits", icon: Star },
+  { key: "packages", labelKey: "profile.packages", icon: Boxes },
+  { key: "settings", labelKey: "profile.settings", icon: Settings },
+  { key: "help", labelKey: "profile.help", icon: HelpCircle },
 ];
 
 export default function Sidebar({
@@ -70,6 +71,7 @@ export default function Sidebar({
   onClose,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const listingsActive =
     pathname === "/profile/listings" || pathname.startsWith("/profile/listings/");
 
@@ -113,7 +115,7 @@ export default function Sidebar({
         <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
           <Link href="/" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
             <Home size={18} />
-            <span>Home</span>
+            <span>{t("nav.home")}</span>
           </Link>
 
           <Link
@@ -130,7 +132,7 @@ export default function Sidebar({
             `}
           >
             <User size={18} />
-            <span>Profile</span>
+            <span>{t("nav.profile")}</span>
           </Link>
 
           {isAdmin && (
@@ -140,7 +142,7 @@ export default function Sidebar({
               className={SIDE_LINK_CLASS}
             >
               <Shield size={18} />
-              <span>Admin</span>
+              <span>{t("profile.admin")}</span>
             </Link>
           )}
 
@@ -150,7 +152,7 @@ export default function Sidebar({
             className={SIDE_LINK_CLASS}
           >
             <Gift size={18} />
-            <span>🎡 Rewards</span>
+            <span>🎡 {t("profile.rewards")}</span>
           </Link>
 
           <Link
@@ -167,7 +169,7 @@ export default function Sidebar({
             `}
           >
             <Package size={18} />
-            <span>My Listings</span>
+            <span>{t("profile.myListings")}</span>
           </Link>
 
           {NAV_ITEMS.map((item) => {
@@ -190,7 +192,7 @@ export default function Sidebar({
                 `}
               >
                 <Icon size={18} />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
                 {item.key === "messages" && unreadCount > 0 && (
                   <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                     {unreadCount}
@@ -209,7 +211,7 @@ export default function Sidebar({
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-gray-400 transition hover:bg-red-500/10 hover:text-red-400"
           >
             <LogOut size={18} />
-            Logout
+            {t("nav.logout")}
           </button>
         </nav>
       </aside>

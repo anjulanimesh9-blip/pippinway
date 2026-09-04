@@ -7,8 +7,10 @@ import ChatWindow from "./components/ChatWindow";
 import MessageInput from "./components/MessageInput";
 
 import { useChat } from "./hooks/useChat";
+import { useI18n } from "@/lib/i18n";
 
 export default function ChatPage() {
+  const { t } = useI18n();
   const {
     loading,
     conversations,
@@ -23,7 +25,7 @@ export default function ChatPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
-        Loading chats...
+        {t("chat.loadingChats")}
       </div>
     );
   }
@@ -52,7 +54,7 @@ export default function ChatPage() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-slate-400">
-            Select a conversation to start chatting.
+            {t("chat.selectConversation")}
           </div>
         )}
       </div>

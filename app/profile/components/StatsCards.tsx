@@ -1,4 +1,7 @@
+"use client";
+
 import { Users } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 type StatsCardsProps = {
   totalAds: number;
@@ -23,15 +26,16 @@ export default function StatsCards({
   listingsLoaded = false,
   countsReady = false,
 }: StatsCardsProps) {
+  const { t } = useI18n();
   const items = [
     ...(isAdmin
-      ? [{ label: "Users", value: totalUsers ?? "—" }]
+      ? [{ label: t("profile.users"), value: totalUsers ?? "—" }]
       : []),
-    { label: "Ads", value: countsReady ? totalAds : "—" },
-    { label: "Active", value: listingsLoaded ? activeAds : "—" },
-    { label: "Sold", value: soldAds == null ? "—" : soldAds },
-    { label: "Saved", value: favorites == null ? "—" : favorites },
-    { label: "Chats", value: messages },
+    { label: t("common.ads"), value: countsReady ? totalAds : "—" },
+    { label: t("profile.active"), value: listingsLoaded ? activeAds : "—" },
+    { label: t("profile.sold"), value: soldAds == null ? "—" : soldAds },
+    { label: t("profile.saved"), value: favorites == null ? "—" : favorites },
+    { label: t("profile.chats"), value: messages },
   ];
 
   return (
@@ -41,7 +45,7 @@ export default function StatsCards({
           key={item.label}
           className="flex min-w-[72px] items-baseline gap-1.5 rounded-lg border border-white/8 bg-[#151A22] px-2.5 py-1.5"
         >
-          {item.label === "Users" && (
+          {item.label === t("profile.users") && (
             <Users size={12} className="text-cyan-400" />
           )}
           <span className="text-sm font-extrabold text-white">{item.value}</span>

@@ -10,8 +10,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
 import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
+import { useI18n } from "@/lib/i18n";
 
 function LoginPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] =
@@ -50,7 +52,7 @@ router.push(returnUrl);
   setLoginErrorText(
     code || message
       ? [code, message].filter(Boolean).join(" — ")
-      : "Invalid email or password"
+      : t("auth.authInvalid")
   );
 }
   };
@@ -58,7 +60,7 @@ const handleResetPassword =
   async () => {
     if (!email) {
       setResetMessage(
-        "Please enter your email first."
+        t("auth.pleaseEnterEmail")
       );
       return;
     }
@@ -70,11 +72,11 @@ const handleResetPassword =
       );
 
       setResetMessage(
-        "📩 Password reset link sent. Check your inbox or spam folder."
+        t("auth.resetLinkSent")
       );
     } catch (error: any) {
       setResetMessage(
-        "Failed to send reset email."
+        t("auth.resetFailed")
       );
     }
   };
@@ -82,7 +84,7 @@ const handleResetPassword =
     <div className="min-h-screen flex items-center justify-center bg-[#020817] px-4">
       <div className="w-full max-w-md bg-[#0f172a] border border-gray-800 p-8 rounded-[30px] shadow-2xl">
         <h1 className="text-3xl font-bold mb-6 text-center text-white">
-          Login
+          {t("auth.login")}
         </h1>
         <form
           onSubmit={handleLogin}
@@ -90,7 +92,7 @@ const handleResetPassword =
         >
     <input
   type="email"
-  placeholder="Email"
+  placeholder={t("auth.email")}
   value={email}
   onChange={(e) =>
     setEmail(e.target.value)
@@ -116,13 +118,13 @@ const handleResetPassword =
     }
     className="text-sm text-blue-400 hover:text-blue-300 transition ml-auto"
   >
-    Forgot Password?
+    {t("auth.forgotPassword")}
   </button>
 </div>
 
 <input
   type="password"
-  placeholder="Password"
+  placeholder={t("auth.password")}
   value={password}
   onChange={(e) =>
     setPassword(
@@ -138,7 +140,7 @@ const handleResetPassword =
 
                 {loginError && (
   <p className="text-red-500 text-sm">
-    {loginErrorText || "Invalid email or password"}
+    {loginErrorText || t("auth.authInvalid")}
   </p>
 )}
 <div className="grid grid-cols-2 gap-3 mt-6">
@@ -146,7 +148,7 @@ const handleResetPassword =
   type="submit"
   className="bg-black hover:bg-gray-900 transition text-white w-full py-4 rounded-2xl"
 >
-  Login
+  {t("auth.login")}
 </button>
 
   <Link href="/" className="w-full">
@@ -154,7 +156,7 @@ const handleResetPassword =
       type="button"
       className="border border-gray-700 bg-[#111827] hover:bg-[#1f2937] transition text-white py-4 rounded-2xl w-full"
     >
-      🏠 Back to Home
+      🏠 {t("auth.backHome")}
     </button>
   </Link>
 </div>
@@ -167,11 +169,12 @@ const handleResetPassword =
 }
 
 export default function Login() {
+  const { t } = useI18n();
   return (
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-[#020817] text-white">
-          Loading...
+          {t("common.loading")}
         </div>
       }
     >

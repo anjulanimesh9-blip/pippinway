@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
+
 export type ProfileTabKey =
   | "listings"
   | "about"
@@ -13,13 +15,14 @@ type ProfileTabsProps = {
   onChange: (tab: ProfileTabKey) => void;
 };
 
-const TABS: Array<{ key: ProfileTabKey; label: string }> = [
-  { key: "about", label: "About" },
-  { key: "listings", label: "My Listings" },
-  { key: "reviews", label: "Reviews" },
+const TABS: Array<{ key: ProfileTabKey; labelKey: string }> = [
+  { key: "about", labelKey: "profile.about" },
+  { key: "listings", labelKey: "profile.myListings" },
+  { key: "reviews", labelKey: "profile.reviews" },
 ];
 
 export default function ProfileTabs({ activeTab, onChange }: ProfileTabsProps) {
+  const { t } = useI18n();
   return (
     <div className="border-b border-white/8">
       <div className="flex gap-1 overflow-x-auto">
@@ -36,7 +39,7 @@ export default function ProfileTabs({ activeTab, onChange }: ProfileTabsProps) {
                   : "border-transparent text-gray-400 hover:text-white"
               }`}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           );
         })}

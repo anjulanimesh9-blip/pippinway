@@ -14,6 +14,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
 
 const DEFAULT_RETURN = "/profile";
 
@@ -89,6 +90,8 @@ function GuestAuthModal({
     };
   }, [open, onClose]);
 
+  const { t } = useI18n();
+
   if (!open) return null;
 
   return (
@@ -108,7 +111,7 @@ function GuestAuthModal({
           type="button"
           onClick={onClose}
           className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-xl text-gray-400 transition hover:bg-white/10 hover:text-white"
-          aria-label="Close"
+          aria-label={t("common.close")}
         >
           ×
         </button>
@@ -117,11 +120,11 @@ function GuestAuthModal({
           id="guest-auth-title"
           className="pr-8 text-2xl font-bold text-white"
         >
-          Sign in to continue
+          {t("auth.signInToContinue")}
         </h2>
 
         <p className="mt-3 text-sm leading-6 text-gray-400 sm:text-base">
-          You need to log in or create an account to use this feature.
+          {t("auth.signInBody")}
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -130,7 +133,7 @@ function GuestAuthModal({
             onClick={onClose}
             className="rounded-2xl bg-black py-3.5 text-center font-semibold text-white transition hover:bg-gray-900"
           >
-            Login
+            {t("auth.login")}
           </Link>
 
           <Link
@@ -138,7 +141,7 @@ function GuestAuthModal({
             onClick={onClose}
             className="rounded-2xl border border-gray-700 bg-[#111827] py-3.5 text-center font-semibold text-white transition hover:bg-[#1f2937]"
           >
-            Create Account
+            {t("auth.createAccountBtn")}
           </Link>
         </div>
 
@@ -147,7 +150,7 @@ function GuestAuthModal({
           onClick={onClose}
           className="mt-4 w-full py-2 text-sm text-gray-400 transition hover:text-white"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </div>
