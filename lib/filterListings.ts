@@ -29,20 +29,49 @@ export function isAllFilterValue(value?: string | null): boolean {
   return ALL_FILTER_VALUES.has(value.trim().toLowerCase());
 }
 
+/** Canonical English Firestore country. Never a translated UI label. */
 export function canonicalCountry(value?: string | null): string | null {
   if (isAllFilterValue(value)) return null;
   return getCountryByFirestoreValue(value)?.firestoreValue ?? null;
 }
 
+export const CANONICAL_CATEGORIES = [
+  "Cars",
+  "Motorbikes",
+  "Property",
+  "Electronics",
+  "Fashion",
+  "Jobs",
+  "Services",
+  "Animals",
+  "Furniture",
+  "Education",
+  "Other",
+] as const;
+
+export type CanonicalCategory = (typeof CANONICAL_CATEGORIES)[number];
+
+/** Canonical English Firestore category. Unknown/translated values do not filter. */
+export function canonicalCategory(value?: string | null): string | null {
+  if (isAllFilterValue(value) || !value?.trim()) return null;
+  const needle = value.trim().toLowerCase();
+  return CANONICAL_CATEGORIES.find((category) => category.toLowerCase() === needle) ?? null;
+}
+
 function matchesCountry(listing: ListingRecord, country?: string) {
   const selected = canonicalCountry(country);
   if (!selected) return true;
+  const listingCountry = canonicalCountry(listing.country);
+  if (listingCountry) return listingCountry === selected;
   return (listing.country ?? "").trim().toLowerCase() === selected.toLowerCase();
 }
 
 function matchesCategory(listing: ListingRecord, category?: string) {
-  if (isAllFilterValue(category)) return true;
-  return (listing.category ?? "").trim().toLowerCase() === category!.trim().toLowerCase();
+  const selected = canonicalCategory(category);
+  if (!selected) return true;
+  const listingCategory = canonicalCategory(listing.category);
+  if (listingCategory) return listingCategory === selected;
+  return (listing.category ?? "").trim().toLowerCase() === selected.toLowerCase();
 }
 
 function matchesSearch(listing: ListingRecord, search?: string) {

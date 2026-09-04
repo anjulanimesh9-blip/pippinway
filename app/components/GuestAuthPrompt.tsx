@@ -193,12 +193,13 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
 
   const requireAuth = useCallback(
     (destination: string) => {
-      if (loading) {
-        pendingRef.current = destination;
+      if (user) {
+        router.push(destination);
         return;
       }
 
-      if (user) {
+      if (loading) {
+        pendingRef.current = destination;
         router.push(destination);
         return;
       }
@@ -211,7 +212,6 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
   const interceptGuestNav = useCallback(
     (event: MouseEvent<HTMLAnchorElement>, destination: string) => {
       if (loading) {
-        event.preventDefault();
         pendingRef.current = destination;
         return;
       }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ListingCard from "../ListingCard";
 import BannerRotator from "../Banner/BannerRotator";
-import { GuestAuthLink } from "../../GuestAuthPrompt";
+import { useGuestAuthPrompt } from "../../GuestAuthPrompt";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 import { useI18n } from "@/lib/i18n";
@@ -104,6 +104,7 @@ export default function LatestListings({
   addListingHref = "/add-listing",
 }: LatestListingsProps) {
   const { t } = useI18n();
+  const { requireAuth } = useGuestAuthPrompt();
   const [rotateIndex, setRotateIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -143,12 +144,13 @@ export default function LatestListings({
         <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
           {place ? t("home.beFirstIn", { place }) : t("home.beFirst")}
         </p>
-        <GuestAuthLink
-          href={addListingHref}
-          className="inline-block mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500"
+        <button
+          type="button"
+          onClick={() => requireAuth(addListingHref)}
+          className="mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500"
         >
           {t("home.postAnAdPlus")}
-        </GuestAuthLink>
+        </button>
         {place && (
           <div className="mt-3">
             <Link href="/" className="text-sm text-[#FBB03B] hover:underline">

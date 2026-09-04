@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { persistSelectedCountry } from "@/lib/countries";
-import { canonicalCountry, isAllFilterValue } from "@/lib/filterListings";
+import { canonicalCategory, canonicalCountry } from "@/lib/filterListings";
 
 export default function useHomeFilters(routeCountry?: string) {
   const searchParams = useSearchParams();
   const initialCountry = canonicalCountry(routeCountry) ?? "All";
 
   const [selectedCountry, setSelectedCountryState] = useState(initialCountry);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategoryState] = useState("All");
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+
+  const setSelectedCategory = (value: string) => {
+    setSelectedCategoryState(canonicalCategory(value) ?? "All");
+  };
 
   const setSelectedCountry = (value: string) => {
     const next = canonicalCountry(value) ?? "All";
@@ -36,9 +40,7 @@ export default function useHomeFilters(routeCountry?: string) {
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
-    setSelectedCategory(
-      isAllFilterValue(categoryParam) ? "All" : categoryParam || "All"
-    );
+    setSelectedCategoryState(canonicalCategory(categoryParam) ?? "All");
     setSearch(searchParams.get("search") || "");
 
     if (!routeCountry) {

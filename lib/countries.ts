@@ -65,7 +65,8 @@ export function getCountryByFirestoreValue(
       (country) =>
         country.firestoreValue.toLowerCase() === needle ||
         country.displayName.toLowerCase() === needle ||
-        country.slug === needle
+        country.slug === needle ||
+        country.iso2.toLowerCase() === needle
     ) ?? null
   );
 }

@@ -33,7 +33,7 @@ export default function HomeMarketplace({
   const router = useRouter();
   const { user } = useAuth();
   const { t, countryLabel } = useI18n();
-  const { listings, loading, error } = useListings();
+  const { listings, loading, error } = useListings(initialCountry);
   const {
     selectedCountry,
     selectedCategory,
@@ -150,7 +150,9 @@ export default function HomeMarketplace({
           countryName={
             market ? countryLabel(market.firestoreValue) : undefined
           }
-          addListingHref={addListingPath(selectedCountry)}
+          addListingHref={addListingPath(
+            canonicalCountry(selectedCountry) ?? initialCountry
+          )}
         />
       </section>
     </>

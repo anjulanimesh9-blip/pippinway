@@ -111,7 +111,11 @@ const [checkingAuth, setCheckingAuth] =
       auth,
       (currentUser) => {
   if (!currentUser) {
-    router.push("/login?returnUrl=/add-listing");
+    const country = searchParams.get("country");
+    const returnUrl = country
+      ? `/add-listing?country=${encodeURIComponent(country)}`
+      : "/add-listing";
+    router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
     return;
   }
 
@@ -120,7 +124,7 @@ const [checkingAuth, setCheckingAuth] =
     );
 
   return () => unsubscribe();
-}, [router]);
+}, [router, searchParams]);
 
     useEffect(() => {
   const unsubscribe =
