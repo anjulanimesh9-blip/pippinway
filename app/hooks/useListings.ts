@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   collection,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -43,50 +44,69 @@ function mergeLiveListings(
     .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
 }
 
+function latestPrimaryQuery() {
+  return query(
+    collection(db, "listings"),
+    where("approved", "==", true),
+    orderBy("createdAt", "desc"),
+    limit(HOME_LATEST_LIMIT)
+  );
+}
+
+function latestFallbackQuery() {
+  return query(
+    collection(db, "listings"),
+    orderBy("createdAt", "desc"),
+    limit(HOME_FALLBACK_LIMIT)
+  );
+}
+
 export default function useListings() {
   const [latest, setLatest] = useState<ListingRecord[]>([]);
   const [featured, setFeatured] = useState<ListingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [orderByCreatedAt, setOrderByCreatedAt] = useState(true);
 
   useEffect(() => {
-    const latestQuery = orderByCreatedAt
-      ? query(
-          collection(db, "listings"),
-          where("approved", "==", true),
-          orderBy("createdAt", "desc"),
-          limit(HOME_LATEST_LIMIT)
-        )
-      : query(
-          collection(db, "listings"),
-          orderBy("createdAt", "desc"),
-          limit(HOME_FALLBACK_LIMIT)
-        );
+    let cancelled = false;
 
-    const unsubscribeLatest = onSnapshot(
-      latestQuery,
-      (snapshot) => {
-        setLatest(toListing(snapshot.docs));
-        setLoading(false);
+    const applyLatest = (
+      docs: Array<{ id: string; data: () => Record<string, unknown> }>
+    ) => {
+      if (cancelled) return;
+      setLatest(toListing(docs));
+      setLoading(false);
+      setError(null);
+    };
+
+    const failLatest = (err: unknown) => {
+      if (cancelled) return;
+      setLoading(false);
+      if (isPermissionDenied(err)) {
+        setLatest([]);
         setError(null);
-      },
-      (err) => {
-        if (orderByCreatedAt) {
-          setOrderByCreatedAt(false);
-          return;
-        }
-        if (isPermissionDenied(err)) {
-          setLatest([]);
-          setLoading(false);
-          setError(null);
-          return;
-        }
-        console.error("useListings error:", err);
-        setLoading(false);
-        setError("Could not load listings. Check your connection and refresh.");
+        return;
       }
-    );
+      console.error("useListings error:", err);
+      setError("Could not load listings. Check your connection and refresh.");
+    };
+
+    async function loadLatest() {
+      try {
+        const snap = await getDocs(latestPrimaryQuery());
+        applyLatest(snap.docs);
+        return "primary" as const;
+      } catch (primaryError) {
+        try {
+          const snap = await getDocs(latestFallbackQuery());
+          applyLatest(snap.docs);
+          return "fallback" as const;
+        } catch (fallbackError) {
+          failLatest(fallbackError ?? primaryError);
+          return "failed" as const;
+        }
+      }
+    }
 
     const unsubscribeFeatured = onSnapshot(
       query(
@@ -95,23 +115,55 @@ export default function useListings() {
         limit(HOME_FEATURED_LIMIT)
       ),
       (snapshot) => {
-        setFeatured(toListing(snapshot.docs));
+        if (!cancelled) setFeatured(toListing(snapshot.docs));
       },
       (err) => {
         if (isPermissionDenied(err)) {
-          setFeatured([]);
+          if (!cancelled) setFeatured([]);
           return;
         }
         console.error("useListings featured error:", err);
-        setFeatured([]);
+        if (!cancelled) setFeatured([]);
       }
     );
 
+    let unsubscribeLatest = () => {};
+
+    void loadLatest().then((mode) => {
+      if (cancelled || mode === "failed") return;
+
+      const liveQuery =
+        mode === "primary" ? latestPrimaryQuery() : latestFallbackQuery();
+
+      unsubscribeLatest = onSnapshot(
+        liveQuery,
+        (snapshot) => applyLatest(snapshot.docs),
+        (err) => {
+          if (mode === "primary") {
+            unsubscribeLatest();
+            unsubscribeLatest = onSnapshot(
+              latestFallbackQuery(),
+              (snapshot) => applyLatest(snapshot.docs),
+              failLatest
+            );
+            return;
+          }
+          failLatest(err);
+        }
+      );
+    });
+
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 10000);
+
     return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
       unsubscribeLatest();
       unsubscribeFeatured();
     };
-  }, [orderByCreatedAt]);
+  }, []);
 
   const listings = useMemo(
     () => mergeLiveListings(latest, featured),
