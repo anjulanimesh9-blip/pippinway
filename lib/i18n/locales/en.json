@@ -453,6 +453,22 @@
     "copyright": "© {{year}} Pippinway.com — All Rights Reserved",
     "lastUpdated": "Last updated: {{date}}"
   },
+  "support": {
+    "badge": "Help Center",
+    "lead": "Use this page to work out where to go for account problems, listings, suspicious ads, payments, Featured Ads, Rewards, privacy concerns and general support.",
+    "quickHelp": "Quick Help",
+    "needHelp": "Need help?",
+    "emailLabel": "Email",
+    "links": "Links",
+    "noPhone": "Pippinway does not publish a phone number or street address.",
+    "facebookHelp": "Facebook Help",
+    "emailSupport": "Email support",
+    "officialEmail": "Official Pippinway support, privacy and contact email.",
+    "facebookHelpBody": "Profile → Help opens Pippinway on Facebook. You can also email support.",
+    "safetyCenter": "Safety Center",
+    "howItWorks": "How It Works",
+    "postingRules": "Posting Rules"
+  },
   "pages": {
     "about": "About Pippinway",
     "safety": "Pippinway Safety Center",

@@ -19,13 +19,18 @@ export default function CountryLanding() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 pb-6 sm:py-12">
+    <div className="mx-auto w-full max-w-5xl overflow-x-hidden px-4 pb-6 sm:py-12">
       <div className="sm:hidden">
         <LandingSearch />
-        <h1 className="mt-5 text-[28px] font-bold leading-tight tracking-tight text-white">
+        <h1 className="pw-land-hero mt-5 text-[28px] font-bold leading-tight tracking-tight text-white">
           {t("home.buySellNearYou")}
         </h1>
-        <p className="mt-2 text-sm text-gray-400">{t("home.findGreatDeals")}</p>
+        <p
+          className="pw-land-hero mt-2 text-sm text-gray-400"
+          style={{ animationDelay: "80ms" }}
+        >
+          {t("home.findGreatDeals")}
+        </p>
         <LandingHeroArt />
         <h2 id="choose-country" className="mt-5 text-lg font-bold text-white">
           {t("home.chooseCountry")}
@@ -41,28 +46,32 @@ export default function CountryLanding() {
           alt="Pippinway"
           width={220}
           height={220}
-          className="h-24 w-auto object-contain"
+          className="pw-land-logo h-24 w-auto object-contain"
           priority
         />
-        <h1 className="mt-6 text-5xl font-bold tracking-tight text-white">
+        <h1 className="pw-land-hero mt-6 text-5xl font-bold tracking-tight text-white">
           {t("home.buySellNearYou")}
         </h1>
-        <p className="mt-3 max-w-xl text-lg text-gray-400">
+        <p
+          className="pw-land-hero mt-3 max-w-xl text-lg text-gray-400"
+          style={{ animationDelay: "90ms" }}
+        >
           {t("home.chooseCountryExplore")}
         </p>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
-        {MARKET_COUNTRIES.map((country) => (
+        {MARKET_COUNTRIES.map((country, index) => (
           <Link
             key={country.slug}
             href={`/${country.slug}`}
-            className="flex min-h-[76px] items-center gap-2.5 rounded-2xl border border-white/10 bg-[#141B2D] px-3 py-2.5 text-left transition hover:border-[#FBB03B]/50 hover:bg-[#1a2234] sm:min-h-[112px] sm:flex-col sm:items-center sm:justify-center sm:bg-[#111827] sm:px-3 sm:py-5 sm:text-center"
+            className="pw-land-card pw-land-card-in flex min-h-[76px] items-center gap-2.5 rounded-2xl border border-white/10 bg-[#141B2D] px-3 py-2.5 text-left sm:min-h-[112px] sm:flex-col sm:items-center sm:justify-center sm:bg-[#111827] sm:px-3 sm:py-5 sm:text-center"
+            style={{ animationDelay: `${180 + index * 55}ms` }}
           >
             <CountryFlag
               iso2={country.iso2}
               title={countryLabel(country.firestoreValue)}
-              className="h-7 w-10 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12 sm:rounded-none"
+              className="pw-land-flag h-7 w-10 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12 sm:rounded-none"
               imgClassName="object-cover sm:object-contain"
             />
             <span className="min-w-0">
@@ -78,7 +87,7 @@ export default function CountryLanding() {
         ))}
       </div>
 
-      <section className="mt-14 rounded-2xl border border-white/10 bg-[#111827] px-5 py-8 sm:px-8">
+      <section className="pw-land-reveal mt-14 rounded-2xl border border-white/10 bg-[#111827] px-5 py-8 sm:px-8">
         <h2 className="text-xl font-bold text-white sm:text-2xl">
           {t("home.buySellWith")}
         </h2>

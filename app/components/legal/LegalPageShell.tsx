@@ -9,6 +9,8 @@ type LegalPageShellProps = {
   title: string;
   updated?: string;
   children: React.ReactNode;
+  wide?: boolean;
+  hideTitle?: boolean;
 };
 
 const TITLE_KEYS: Record<string, string> = {
@@ -28,6 +30,8 @@ export default function LegalPageShell({
   title,
   updated,
   children,
+  wide = false,
+  hideTitle = false,
 }: LegalPageShellProps) {
   const { t } = useI18n();
   const heading = TITLE_KEYS[title] ? t(TITLE_KEYS[title]) : title;
@@ -36,17 +40,27 @@ export default function LegalPageShell({
     <main className="min-h-screen bg-[#020817] pb-20 text-gray-300 lg:pb-8">
       <Navbar />
 
-      <article className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          {heading}
-        </h1>
+      <article
+        className={`mx-auto w-full px-4 sm:px-6 ${
+          wide ? "max-w-[1180px] py-6 sm:py-10" : "max-w-3xl py-8 sm:py-12"
+        }`}
+      >
+        {hideTitle ? null : (
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            {heading}
+          </h1>
+        )}
         {updated ? (
           <p className="mt-2 text-sm text-gray-500">
             {t("footer.lastUpdated", { date: updated })}
           </p>
         ) : null}
 
-        <div className="mt-8 space-y-5 text-[15px] leading-7 text-gray-300 sm:text-base">
+        <div
+          className={`${
+            hideTitle ? "" : "mt-8"
+          } space-y-5 text-[15px] leading-7 text-gray-300 sm:text-base`}
+        >
           {children}
         </div>
       </article>
