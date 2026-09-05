@@ -21,6 +21,7 @@ type ListingCardProps = {
     context?: { category?: string; country?: string }
   ) => void;
   grid?: boolean;
+  eager?: boolean;
 };
 
 export default function ListingCard({
@@ -28,6 +29,7 @@ export default function ListingCard({
   favorites,
   toggleFavorite,
   grid = true,
+  eager = false,
 }: ListingCardProps) {
   const { t, categoryLabel, countryLabel } = useI18n();
   const image = item.imageUrls?.[0] || item.imageUrl || "/placeholder.png";
@@ -61,6 +63,7 @@ export default function ListingCard({
     return (
       <Link
         href={`/listings/${slug}`}
+        prefetch={eager}
         onClick={onFeaturedClick}
         className="group flex gap-3 border-b border-white/8 bg-[#111827] px-3 py-3 transition-colors hover:bg-[#1a2333] sm:gap-4 sm:px-4 sm:py-4"
       >
@@ -70,6 +73,7 @@ export default function ListingCard({
             alt={item.title ?? t("listing.fallback")}
             sizes={LISTING_THUMB_SIZES}
             className="object-cover"
+            eager={eager}
           />
           {isFeatured && (
             <span className="absolute left-1 top-1 rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white sm:left-1.5 sm:top-1.5">
@@ -138,6 +142,7 @@ export default function ListingCard({
   return (
     <Link
       href={`/listings/${slug}`}
+      prefetch={eager}
       onClick={onFeaturedClick}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#1e293b] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/35 hover:shadow-[0_16px_40px_rgba(37,99,235,0.18)]"
     >
@@ -147,6 +152,7 @@ export default function ListingCard({
           alt={item.title ?? t("listing.fallback")}
           sizes={LISTING_GRID_SIZES}
           className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          eager={eager}
         />
 
         {isFeatured && (

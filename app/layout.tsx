@@ -146,7 +146,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-lang="en"
+      data-script="latin"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${notoSinhala.variable} ${notoTamil.variable} ${notoThai.variable} ${notoDevanagari.variable} ${notoSc.variable} ${notoThaana.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

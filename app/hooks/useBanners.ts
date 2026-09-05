@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import { isPermissionDenied } from "@/lib/firestoreErrors";
 import { resolveBannerImageUrl } from "@/lib/bannerImages";
@@ -60,9 +60,11 @@ export default function useBanners(selectedCountry: string | null) {
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, "banners"),
-      (snapshot) => {
+    let cancelled = false;
+
+    getDocs(collection(db, "banners"))
+      .then((snapshot) => {
+        if (cancelled) return;
         setBanners(
           snapshot.docs.map((d) => {
             const data = d.data() as Omit<Banner, "id">;
@@ -74,8 +76,9 @@ export default function useBanners(selectedCountry: string | null) {
           })
         );
         setLoading(false);
-      },
-      (err) => {
+      })
+      .catch((err) => {
+        if (cancelled) return;
         if (isPermissionDenied(err)) {
           setBanners([]);
           setLoading(false);
@@ -83,9 +86,11 @@ export default function useBanners(selectedCountry: string | null) {
         }
         console.error("useBanners error:", err);
         setLoading(false);
-      }
-    );
-    return unsubscribe;
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

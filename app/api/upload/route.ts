@@ -1,40 +1,21 @@
-import { writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
 
-export async function POST(req: Request) {
-  try {
-    const data = await req.formData();
+export const dynamic = "force-dynamic";
 
-    const file: any = data.get("file");
+/**
+ * Disabled. Listing images upload to Firebase Storage with auth + rules.
+ * This route previously wrote arbitrary files to public/uploads with no auth.
+ */
+export async function POST() {
+  return NextResponse.json(
+    { success: false, error: "Upload endpoint disabled" },
+    { status: 403 }
+  );
+}
 
-    if (!file) {
-      return NextResponse.json({
-        success: false,
-      });
-    }
-
-    const bytes = await file.arrayBuffer();
-
-    const buffer = Buffer.from(bytes);
-
-    const filePath = path.join(
-      process.cwd(),
-      "public/uploads",
-      file.name
-    );
-
-    await writeFile(filePath, buffer);
-
-    return NextResponse.json({
-      success: true,
-      filePath: `/uploads/${file.name}`,
-    });
-  } catch (error) {
-    console.log(error);
-
-    return NextResponse.json({
-      success: false,
-    });
-  }
+export async function GET() {
+  return NextResponse.json(
+    { success: false, error: "Upload endpoint disabled" },
+    { status: 405 }
+  );
 }

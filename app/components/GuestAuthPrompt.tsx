@@ -31,6 +31,13 @@ export function safeAuthReturnUrl(raw: string | null | undefined): string {
   if (!value.startsWith("/") || value.startsWith("//")) {
     return DEFAULT_RETURN;
   }
+  if (
+    value.includes("\\") ||
+    value.includes("://") ||
+    /[\u0000-\u001F]/.test(value)
+  ) {
+    return DEFAULT_RETURN;
+  }
   if (value.startsWith("/login") || value.startsWith("/register")) {
     return DEFAULT_RETURN;
   }

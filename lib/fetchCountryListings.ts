@@ -44,7 +44,8 @@ function listingFromRestDocument(
 
 export async function fetchListingsByCanonicalCountry(
   country: string,
-  limitCount = 200
+  limitCount = 80,
+  signal?: AbortSignal
 ): Promise<ListingRecord[]> {
   const canonical = canonicalCountry(country);
   if (!canonical) return [];
@@ -56,6 +57,7 @@ export async function fetchListingsByCanonicalCountry(
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal,
     body: JSON.stringify({
       structuredQuery: {
         from: [{ collectionId: "listings" }],

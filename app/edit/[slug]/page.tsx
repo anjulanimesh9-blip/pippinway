@@ -19,6 +19,10 @@ import {
 import {
   MAX_LISTING_IMAGES,
   MAX_LISTING_IMAGES_MESSAGE,
+  LISTING_TITLE_MAX,
+  LISTING_DESCRIPTION_MAX,
+  LISTING_PHONE_MAX,
+  isAllowedListingImage,
 } from "@/lib/listingImages";
 import { compressListingImage } from "@/lib/compressImage";
 import { parseListingPrice } from "@/lib/formatPrice";
@@ -92,6 +96,19 @@ export default function EditListing() {
 
   const handleUpdate =
     async () => {
+      if (
+        !title.trim() ||
+        title.trim().length > LISTING_TITLE_MAX ||
+        !description.trim() ||
+        description.trim().length > LISTING_DESCRIPTION_MAX ||
+        !phone.trim() ||
+        phone.trim().length > LISTING_PHONE_MAX ||
+        imageFiles.some((image) => !isAllowedListingImage(image))
+      ) {
+        alert(t("post.updateFailed"));
+        return;
+      }
+
       try {
         let updatedImages =
           [...imageUrls];
@@ -139,10 +156,10 @@ export default function EditListing() {
         await updateDoc(
           docRef,
           {
-            title,
+            title: title.trim().slice(0, LISTING_TITLE_MAX),
             price: parseListingPrice(price),
-            description,
-            phone,
+            description: description.trim().slice(0, LISTING_DESCRIPTION_MAX),
+            phone: phone.trim().slice(0, LISTING_PHONE_MAX),
             imageUrls:
               updatedImages.slice(0, MAX_LISTING_IMAGES),
             imageUrl:

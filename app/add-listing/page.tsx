@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { COUNTRY_STORAGE_KEY, countryMarketplacePath } from "@/lib/countries";
-import { canonicalCountry } from "@/lib/filterListings";
+import { canonicalCategory, canonicalCountry } from "@/lib/filterListings";
 import {
   doc,
   addDoc,
@@ -31,6 +31,11 @@ import {
 import {
   MAX_LISTING_IMAGES,
   MAX_LISTING_IMAGES_MESSAGE,
+  LISTING_TITLE_MAX,
+  LISTING_DESCRIPTION_MAX,
+  LISTING_LOCATION_MAX,
+  LISTING_PHONE_MAX,
+  isAllowedListingImage,
 } from "@/lib/listingImages";
 import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
@@ -191,7 +196,10 @@ if (checkingAuth) {
       const newErrors: any =
         {};
 
-      if (!title)
+      const countryValue = canonicalCountry(country);
+      const categoryValue = canonicalCategory(category);
+
+      if (!title.trim() || title.trim().length > LISTING_TITLE_MAX)
         newErrors.title =
           true;
 
@@ -199,23 +207,23 @@ if (checkingAuth) {
         newErrors.price =
           true;
 
-      if (!country)
+      if (!countryValue)
         newErrors.country =
           true;
 
-      if (!location)
+      if (!location.trim() || location.trim().length > LISTING_LOCATION_MAX)
         newErrors.location =
           true;
 
-      if (!phone)
+      if (!phone.trim() || phone.trim().length > LISTING_PHONE_MAX)
         newErrors.phone =
           true;
 
-      if (!category)
+      if (!categoryValue)
         newErrors.category =
           true;
 
-      if (!description)
+      if (!description.trim() || description.trim().length > LISTING_DESCRIPTION_MAX)
         newErrors.description =
           true;
 
@@ -225,7 +233,8 @@ if (checkingAuth) {
 
     if (
       listingImages.length === 0 ||
-      listingImages.length > MAX_LISTING_IMAGES
+      listingImages.length > MAX_LISTING_IMAGES ||
+      listingImages.some((image) => !isAllowedListingImage(image))
     ) {
   newErrors.image = true;
 }
@@ -237,7 +246,9 @@ if (checkingAuth) {
       if (
         Object.keys(
           newErrors
-        ).length > 0
+        ).length > 0 ||
+        !countryValue ||
+        !categoryValue
       ) {
         return;
       }
@@ -302,13 +313,13 @@ const expiresAt = new Date(
 const created = await addDoc(
   collection(db, "listings"),
   {
-    title,
+    title: title.trim().slice(0, LISTING_TITLE_MAX),
     price: parseListingPrice(price),
-    country,
-    location,
-    category,
-    phone,
-    description,
+    country: countryValue,
+    location: location.trim().slice(0, LISTING_LOCATION_MAX),
+    category: categoryValue,
+    phone: phone.trim().slice(0, LISTING_PHONE_MAX),
+    description: description.trim().slice(0, LISTING_DESCRIPTION_MAX),
     imageUrls: imageUrls.slice(0, MAX_LISTING_IMAGES),
     imageUrl: imageUrls[0],
 
@@ -412,6 +423,7 @@ const created = await addDoc(
           <input
             type="text"
             placeholder={t("post.title")}
+            maxLength={LISTING_TITLE_MAX}
             value={title}
            onChange={(e) => {
   setTitle(e.target.value);
@@ -486,6 +498,7 @@ onChange={(e) => {
           <input
             type="text"
             placeholder={t("post.location")}
+            maxLength={LISTING_LOCATION_MAX}
             value={
               location
             }
@@ -509,6 +522,7 @@ onChange={(e) => {
        <input
   type="text"
   placeholder={t("post.phonePlaceholder")}
+  maxLength={LISTING_PHONE_MAX}
   value={phone}
   onChange={(e) => {
   setPhone(e.target.value);
@@ -559,6 +573,7 @@ onChange={(e) => {
 
           <textarea
             placeholder={t("post.description")}
+            maxLength={LISTING_DESCRIPTION_MAX}
             value={
               description
             }

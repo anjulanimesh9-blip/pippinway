@@ -89,6 +89,7 @@ export default function ListingPhoto({
       width={fill ? undefined : width}
       height={fill ? undefined : height}
       loading={eager ? "eager" : "lazy"}
+      priority={eager}
       unoptimized={!optimizeInProd}
       className={className}
       style={style}

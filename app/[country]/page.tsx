@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Footer from "@/app/components/homepage/Footer/Footer";
@@ -80,15 +79,7 @@ export default async function CountryMarketplacePage({
 
   return (
     <main className="min-h-screen bg-[#020817] pb-20 lg:pb-8">
-      <Suspense
-        fallback={
-          <div className="flex min-h-[40vh] items-center justify-center text-white">
-            Loading marketplace...
-          </div>
-        }
-      >
-        <HomeMarketplace initialCountry={market.firestoreValue} />
-      </Suspense>
+      <HomeMarketplace initialCountry={market.firestoreValue} />
 
       <div className="mx-auto w-full max-w-[1600px] px-4">
         <TrustBadges />

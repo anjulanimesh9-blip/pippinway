@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/Navbar";
@@ -33,7 +33,8 @@ export default function HomeMarketplace({
   const router = useRouter();
   const { user } = useAuth();
   const { t, countryLabel } = useI18n();
-  const { listings, loading, error } = useListings(initialCountry);
+  const [reloadKey, setReloadKey] = useState(0);
+  const { listings, loading, error } = useListings(initialCountry, reloadKey);
   const {
     selectedCountry,
     selectedCategory,
@@ -132,9 +133,16 @@ export default function HomeMarketplace({
         />
 
         {error && (
-          <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {error}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((current) => current + 1)}
+              className="rounded-lg bg-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-100 hover:bg-red-500/30"
+            >
+              Retry
+            </button>
+          </div>
         )}
 
         <HomeContent

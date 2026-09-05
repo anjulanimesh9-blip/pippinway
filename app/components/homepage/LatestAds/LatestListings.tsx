@@ -168,7 +168,7 @@ export default function LatestListings({
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {items.map((entry) => {
+      {items.map((entry, index) => {
         if (entry.type === "banner") {
           return (
             <div key={`banner-slot-${entry.slot}`} className="border-b border-white/8 p-3">
@@ -188,6 +188,7 @@ export default function LatestListings({
                 favorites={favorites}
                 toggleFavorite={toggleFavorite}
                 grid={false}
+                eager={index < 3}
               />
             </div>
           );
@@ -200,6 +201,7 @@ export default function LatestListings({
             favorites={favorites}
             toggleFavorite={toggleFavorite}
             grid={false}
+            eager={index < 3}
           />
         );
       })}

@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { persistSelectedCountry } from "@/lib/countries";
 import { canonicalCategory, canonicalCountry } from "@/lib/filterListings";
 
 export default function useHomeFilters(routeCountry?: string) {
-  const searchParams = useSearchParams();
   const initialCountry = canonicalCountry(routeCountry) ?? "All";
 
   const [selectedCountry, setSelectedCountryState] = useState(initialCountry);
@@ -39,15 +37,17 @@ export default function useHomeFilters(routeCountry?: string) {
   }, [routeCountry]);
 
   useEffect(() => {
-    const categoryParam = searchParams.get("category");
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get("category");
     setSelectedCategoryState(canonicalCategory(categoryParam) ?? "All");
-    setSearch(searchParams.get("search") || "");
+    setSearch(params.get("search") || "");
 
     if (!routeCountry) {
-      const countryParam = searchParams.get("country");
+      const countryParam = params.get("country");
       if (countryParam) setSelectedCountry(countryParam);
     }
-  }, [searchParams, routeCountry]);
+  }, [routeCountry]);
 
   return {
     selectedCountry,

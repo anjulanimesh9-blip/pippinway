@@ -5,7 +5,6 @@ import {
   collection,
   getDocs,
   limit,
-  onSnapshot,
   orderBy,
   query,
   where,
@@ -18,9 +17,8 @@ import type { ListingRecord } from "@/lib/types/featured";
 
 export const HOME_LATEST_LIMIT = 80;
 export const HOME_PAGE_SIZE = 20;
-export const HOME_FEATURED_LIMIT = 24;
-export const HOME_FALLBACK_LIMIT = 120;
-export const HOME_COUNTRY_LIMIT = 200;
+export const HOME_FALLBACK_LIMIT = 80;
+export const HOME_COUNTRY_LIMIT = 80;
 
 function isApproved(listing: ListingRecord): boolean {
   const value = listing.approved as unknown;
@@ -33,15 +31,8 @@ function toListing(
   return docs.map((d) => ({ id: d.id, ...d.data() } as ListingRecord));
 }
 
-function mergeLiveListings(
-  latest: ListingRecord[],
-  featured: ListingRecord[]
-): ListingRecord[] {
-  const byId = new Map<string, ListingRecord>();
-  for (const listing of [...latest, ...featured]) {
-    byId.set(listing.id, listing);
-  }
-  return [...byId.values()]
+function liveListings(latest: ListingRecord[]): ListingRecord[] {
+  return latest
     .filter((listing) => isApproved(listing) && isLiveListing(listing))
     .sort((a, b) => getCreatedAtMs(b) - getCreatedAtMs(a));
 }
@@ -87,16 +78,22 @@ function latestFallbackQuery() {
   );
 }
 
-export default function useListings(routeCountry?: string) {
+export default function useListings(
+  routeCountry?: string,
+  reloadKey = 0
+) {
   const canonical = canonicalCountry(routeCountry);
   const [latest, setLatest] = useState<ListingRecord[]>([]);
-  const [featured, setFeatured] = useState<ListingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     let received = false;
+    const restAbort = new AbortController();
+    setLatest([]);
+    setLoading(true);
+    setError(null);
 
     const applyLatest = (rows: ListingRecord[]) => {
       if (cancelled) return;
@@ -125,113 +122,58 @@ export default function useListings(routeCountry?: string) {
     async function loadLatest() {
       if (canonical) {
         try {
-          const snap = await withTimeout(getDocs(countryQuery(canonical)), 8000);
+          const snap = await withTimeout(getDocs(countryQuery(canonical)), 6000);
           applyDocs(snap.docs);
-          return "country" as const;
+          return;
         } catch {
           try {
-            const rows = await withTimeout(
-              fetchListingsByCanonicalCountry(canonical, HOME_COUNTRY_LIMIT),
-              8000
+            const rows = await fetchListingsByCanonicalCountry(
+              canonical,
+              HOME_COUNTRY_LIMIT,
+              restAbort.signal
             );
             applyLatest(rows);
-            return "rest" as const;
-          } catch {
-            // Fall through to the global approved query.
+            return;
+          } catch (restError) {
+            if (cancelled || restAbort.signal.aborted) return;
+            failLatest(restError);
+            return;
           }
         }
       }
 
+      if (cancelled) return;
+
       try {
-        const snap = await withTimeout(getDocs(latestPrimaryQuery()), 8000);
+        const snap = await withTimeout(getDocs(latestPrimaryQuery()), 6000);
         applyDocs(snap.docs);
-        return "primary" as const;
       } catch (primaryError) {
         try {
-          const snap = await withTimeout(getDocs(latestFallbackQuery()), 8000);
+          const snap = await withTimeout(getDocs(latestFallbackQuery()), 6000);
           applyDocs(snap.docs);
-          return "fallback" as const;
         } catch (fallbackError) {
           failLatest(fallbackError ?? primaryError);
-          return "failed" as const;
         }
       }
     }
 
-    const unsubscribeFeatured = onSnapshot(
-      query(
-        collection(db, "listings"),
-        where("featured", "==", true),
-        limit(HOME_FEATURED_LIMIT)
-      ),
-      (snapshot) => {
-        if (!cancelled) setFeatured(toListing(snapshot.docs));
-      },
-      (err) => {
-        if (isPermissionDenied(err)) {
-          if (!cancelled) setFeatured([]);
-          return;
-        }
-        console.error("useListings featured error:", err);
-        if (!cancelled) setFeatured([]);
-      }
-    );
-
-    let unsubscribeLatest = () => {};
-
-    void loadLatest().then((mode) => {
-      if (cancelled || mode === "failed" || mode === "rest") return;
-
-      const liveQuery =
-        mode === "country" && canonical
-          ? countryQuery(canonical)
-          : mode === "primary"
-            ? latestPrimaryQuery()
-            : latestFallbackQuery();
-
-      unsubscribeLatest = onSnapshot(
-        liveQuery,
-        (snapshot) => applyDocs(snapshot.docs),
-        (err) => {
-          if (mode === "country" && canonical) {
-            void fetchListingsByCanonicalCountry(canonical, HOME_COUNTRY_LIMIT)
-              .then(applyLatest)
-              .catch(failLatest);
-            return;
-          }
-          if (mode === "primary") {
-            unsubscribeLatest();
-            unsubscribeLatest = onSnapshot(
-              latestFallbackQuery(),
-              (snapshot) => applyDocs(snapshot.docs),
-              failLatest
-            );
-            return;
-          }
-          failLatest(err);
-        }
-      );
-    });
+    void loadLatest();
 
     const timeout = window.setTimeout(() => {
       if (!cancelled && !received) {
         setLoading(false);
         setError("Could not load listings. Check your connection and refresh.");
       }
-    }, 12000);
+    }, 10000);
 
     return () => {
       cancelled = true;
+      restAbort.abort();
       window.clearTimeout(timeout);
-      unsubscribeLatest();
-      unsubscribeFeatured();
     };
-  }, [canonical]);
+  }, [canonical, reloadKey]);
 
-  const listings = useMemo(
-    () => mergeLiveListings(latest, featured),
-    [latest, featured]
-  );
+  const listings = useMemo(() => liveListings(latest), [latest]);
 
   return { listings, loading, error };
 }
