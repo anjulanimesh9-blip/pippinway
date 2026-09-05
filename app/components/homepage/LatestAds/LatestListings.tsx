@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 
 type LatestListingsProps = {
   latestListings: ListingRecord[];
+  featuredListings?: ListingRecord[];
   favorites: string[];
   toggleFavorite: (
     e: React.MouseEvent,
@@ -19,6 +20,7 @@ type LatestListingsProps = {
   ) => void;
   banners: Banner[];
   loading?: boolean;
+  loadError?: boolean;
   totalLive?: number;
   countryName?: string;
   addListingHref?: string;
@@ -96,10 +98,12 @@ function buildMixedFeed(
 
 export default function LatestListings({
   latestListings,
+  featuredListings,
   favorites,
   toggleFavorite,
   banners,
   loading = false,
+  loadError = false,
   countryName,
   addListingHref = "/add-listing",
 }: LatestListingsProps) {
@@ -109,8 +113,11 @@ export default function LatestListings({
   const [paused, setPaused] = useState(false);
 
   const featuredAds = useMemo(
-    () => latestListings.filter(isActiveFeaturedListing),
-    [latestListings]
+    () =>
+      featuredListings && featuredListings.length > 0
+        ? featuredListings.filter(isActiveFeaturedListing)
+        : latestListings.filter(isActiveFeaturedListing),
+    [featuredListings, latestListings]
   );
   const regularAds = useMemo(
     () => latestListings.filter((listing) => !isActiveFeaturedListing(listing)),
@@ -132,6 +139,10 @@ export default function LatestListings({
 
   if (loading) {
     return <GridSkeleton />;
+  }
+
+  if (loadError && !latestListings.length) {
+    return null;
   }
 
   if (!latestListings.length) {

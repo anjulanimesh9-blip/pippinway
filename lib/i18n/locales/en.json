@@ -117,6 +117,7 @@
     "marketplace": "{{country}} Marketplace",
     "changeCountry": "Change Country",
     "showingRange": "Showing {{from}}–{{to}} of {{total}}",
+    "showingPage": "Showing {{from}}–{{to}}",
     "adsCount": "{{count}} ads",
     "noListingsIn": "No listings found in {{place}}",
     "beFirstIn": "Be the first to post an ad in {{place}}.",

@@ -1,25 +1,22 @@
 "use client";
 
-import { HOME_PAGE_SIZE } from "@/app/hooks/useListings";
 import { useI18n } from "@/lib/i18n";
 
 type Props = {
   count?: number;
-  total?: number;
   from?: number;
   to?: number;
 };
 
 export default function LatestHeading({
   count = 0,
-  total = 0,
   from = 0,
   to = 0,
 }: Props) {
   const { t } = useI18n();
   const label =
-    total > HOME_PAGE_SIZE
-      ? t("home.showingRange", { from, to, total })
+    from > 0 && to > 0
+      ? t("home.showingPage", { from, to })
       : count > 0
         ? t("home.adsCount", { count })
         : null;

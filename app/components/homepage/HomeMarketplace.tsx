@@ -9,7 +9,6 @@ import HomeContent from "@/app/components/homepage/HomeContent";
 import useAuth from "@/app/hooks/useAuth";
 import useListings from "@/app/hooks/useListings";
 import useFavorites from "@/app/hooks/useFavorites";
-import useFeaturedListings from "@/app/hooks/useFeaturedListings";
 import useHomeFilters from "@/app/hooks/useHomeFilters";
 import useBanners from "@/app/hooks/useBanners";
 import { parseListingPrice } from "@/lib/formatPrice";
@@ -34,7 +33,6 @@ export default function HomeMarketplace({
   const { user } = useAuth();
   const { t, countryLabel } = useI18n();
   const [reloadKey, setReloadKey] = useState(0);
-  const { listings, loading, error } = useListings(initialCountry, reloadKey);
   const {
     selectedCountry,
     selectedCategory,
@@ -46,24 +44,31 @@ export default function HomeMarketplace({
     sortBy,
     setSortBy,
   } = useHomeFilters(initialCountry);
+  const {
+    listings,
+    featuredListings,
+    loading,
+    error,
+    from,
+    to,
+    hasPrev,
+    hasNext,
+    goPrev,
+    goNext,
+  } = useListings({
+    country: selectedCountry || initialCountry,
+    category: selectedCategory,
+    search,
+    location,
+    sortBy,
+    reloadKey,
+  });
   const { favorites, toggleFavorite } = useFavorites(user);
   const market = getCountryByFirestoreValue(selectedCountry);
-
-  const filters = useMemo(
-    () => ({
-      country: selectedCountry,
-      category: selectedCategory,
-      search,
-      location,
-    }),
-    [selectedCountry, selectedCategory, search, location]
-  );
-
-  const { latestListings } = useFeaturedListings(listings, filters);
   const { banners } = useBanners(selectedCountry);
 
   const sortedLatest = useMemo(() => {
-    const next = [...latestListings];
+    const next = [...listings];
     if (sortBy === "low-price") {
       next.sort(
         (a, b) =>
@@ -76,11 +81,9 @@ export default function HomeMarketplace({
           parseListingPrice(b.price ?? b.amount) -
           parseListingPrice(a.price ?? a.amount)
       );
-    } else if (sortBy === "oldest") {
-      next.reverse();
     }
     return next;
-  }, [latestListings, sortBy]);
+  }, [listings, sortBy]);
 
   const handleCountryChange = (value: string) => {
     const next = canonicalCountry(value);
@@ -149,12 +152,18 @@ export default function HomeMarketplace({
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           latestListings={sortedLatest}
+          featuredListings={featuredListings}
           favorites={favorites}
           toggleFavorite={toggleFavorite}
           banners={banners}
           loading={loading}
-          totalCount={listings.length}
-          filterKey={`${selectedCountry}|${selectedCategory}|${search}|${location}|${sortBy}`}
+          loadError={Boolean(error)}
+          from={from}
+          to={to}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          onPrev={goPrev}
+          onNext={goNext}
           countryName={
             market ? countryLabel(market.firestoreValue) : undefined
           }

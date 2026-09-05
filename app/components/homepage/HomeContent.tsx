@@ -10,13 +10,13 @@ import {
   bannersForHomepageRail,
   bannersForPlacement,
 } from "@/app/hooks/useBanners";
-import usePagedListings from "@/app/hooks/usePagedListings";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
 
 type Props = {
   selectedCategory: string;
   setSelectedCategory: (value: string) => void;
   latestListings: ListingRecord[];
+  featuredListings?: ListingRecord[];
   favorites: string[];
   toggleFavorite: (
     e: React.MouseEvent,
@@ -25,8 +25,13 @@ type Props = {
   ) => void;
   banners: Banner[];
   loading?: boolean;
-  totalCount?: number;
-  filterKey?: string;
+  loadError?: boolean;
+  from?: number;
+  to?: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  onPrev?: () => void;
+  onNext?: () => void;
   countryName?: string;
   addListingHref?: string;
 };
@@ -35,19 +40,23 @@ export default function HomeContent({
   selectedCategory,
   setSelectedCategory,
   latestListings,
+  featuredListings,
   favorites,
   toggleFavorite,
   banners,
   loading = false,
-  totalCount = 0,
-  filterKey = "",
+  loadError = false,
+  from = 0,
+  to = 0,
+  hasPrev = false,
+  hasNext = false,
+  onPrev,
+  onNext,
   countryName,
   addListingHref,
 }: Props) {
   const infeedBanners = bannersForPlacement(banners, "infeed");
   const railBanners = bannersForHomepageRail(banners);
-  const { pageItems, total, from, to, hasPrev, hasNext, goPrev, goNext } =
-    usePagedListings(latestListings, filterKey);
 
   return (
     <>
@@ -69,20 +78,16 @@ export default function HomeContent({
             />
           </div>
 
-          <LatestHeading
-            count={pageItems.length}
-            total={total}
-            from={from}
-            to={to}
-          />
+          <LatestHeading count={latestListings.length} from={from} to={to} />
 
           <LatestListings
-            latestListings={pageItems}
+            latestListings={latestListings}
+            featuredListings={featuredListings}
             favorites={favorites}
             toggleFavorite={toggleFavorite}
             banners={infeedBanners}
             loading={loading}
-            totalLive={totalCount}
+            loadError={loadError}
             countryName={countryName}
             addListingHref={addListingHref}
           />
@@ -91,8 +96,8 @@ export default function HomeContent({
             <LatestPager
               hasPrev={hasPrev}
               hasNext={hasNext}
-              onPrev={goPrev}
-              onNext={goNext}
+              onPrev={onPrev ?? (() => undefined)}
+              onNext={onNext ?? (() => undefined)}
             />
           )}
         </main>

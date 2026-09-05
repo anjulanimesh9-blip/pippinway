@@ -74,7 +74,7 @@ function matchesCategory(listing: ListingRecord, category?: string) {
   return (listing.category ?? "").trim().toLowerCase() === selected.toLowerCase();
 }
 
-function matchesSearch(listing: ListingRecord, search?: string) {
+export function matchesSearch(listing: ListingRecord, search?: string) {
   if (!search?.trim()) return true;
   const q = search.trim().toLowerCase();
   return (
@@ -84,7 +84,7 @@ function matchesSearch(listing: ListingRecord, search?: string) {
   );
 }
 
-function matchesLocation(listing: ListingRecord, location?: string) {
+export function matchesLocation(listing: ListingRecord, location?: string) {
   if (isAllFilterValue(location) || !location?.trim()) return true;
   const q = location.trim().toLowerCase();
   return (listing.location ?? "").toLowerCase().includes(q);
