@@ -3,6 +3,16 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { vibeCategoryLabel } from "./categories";
 import { VIBE_PATHS } from "./constants";
 
+export const VIBE_OG_IMAGE_PATH = "/images/vibe-og.jpg";
+
+export const VIBE_OG_IMAGE = {
+  url: VIBE_OG_IMAGE_PATH,
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
+  alt: "Pippinway Vibe",
+} as const;
+
 export function vibeUrl(path: string = VIBE_PATHS.home): string {
   return `${SITE_URL}${path}`;
 }
@@ -30,13 +40,13 @@ export function vibeHomeMetadata(): Metadata {
       url: canonical,
       siteName: SITE_NAME,
       type: "website",
-      images: [{ url: "/icon.png", width: 1024, height: 1024, alt: "Pippinway" }],
+      images: [VIBE_OG_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${SITE_NAME}`,
       description: VIBE_HOME_DESCRIPTION,
-      images: ["/icon.png"],
+      images: [VIBE_OG_IMAGE.url],
     },
   };
 }
@@ -58,13 +68,13 @@ export function vibeSectionMetadata(
       url: canonical,
       siteName: SITE_NAME,
       type: "website",
-      images: [{ url: "/icon.png", width: 1024, height: 1024, alt: "Pippinway" }],
+      images: [VIBE_OG_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${SITE_NAME}`,
       description,
-      images: ["/icon.png"],
+      images: [VIBE_OG_IMAGE.url],
     },
   };
 }
@@ -82,19 +92,37 @@ export function vibePostMetadata(post: PublicVibePost | null, id: string): Metad
   const canonical = vibeUrl(VIBE_PATHS.post(id));
   if (!post || post.status !== "visible") {
     return {
-      title: "Vibe post",
+      title: "Pippinway Vibe",
+      description: VIBE_HOME_DESCRIPTION,
       robots: { index: false, follow: false },
       alternates: { canonical },
+      openGraph: {
+        title: `Pippinway Vibe | ${SITE_NAME}`,
+        description: VIBE_HOME_DESCRIPTION,
+        url: canonical,
+        siteName: SITE_NAME,
+        type: "article",
+        images: [VIBE_OG_IMAGE],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `Pippinway Vibe | ${SITE_NAME}`,
+        description: VIBE_HOME_DESCRIPTION,
+        images: [VIBE_OG_IMAGE.url],
+      },
     };
   }
 
   const category = post.category ? vibeCategoryLabel(post.category) : "Vibe";
+  const firstLine = post.text.split(/\n/)[0]?.replace(/^[◆•\-–\s]+/, "").trim() || "";
   const description = clip(
     post.text || `A ${category} post on Pippinway Vibe.`,
     160
   );
-  const title = clip(post.text, 70) || `${category} on Pippinway Vibe`;
-  const image = post.imageUrl?.startsWith("http") ? post.imageUrl : "/icon.png";
+  const title =
+    clip(firstLine, 70) ||
+    clip(post.text, 70) ||
+    `${category} on Pippinway Vibe`;
 
   return {
     title,
@@ -107,13 +135,13 @@ export function vibePostMetadata(post: PublicVibePost | null, id: string): Metad
       url: canonical,
       siteName: SITE_NAME,
       type: "article",
-      images: [{ url: image, alt: title }],
+      images: [VIBE_OG_IMAGE],
     },
     twitter: {
-      card: post.imageUrl ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: `${title} | ${SITE_NAME}`,
       description,
-      images: [image],
+      images: [VIBE_OG_IMAGE.url],
     },
   };
 }
@@ -140,6 +168,13 @@ export function vibeProfileMetadata(
       url: canonical,
       siteName: SITE_NAME,
       type: "profile",
+      images: [VIBE_OG_IMAGE],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${display} | Pippinway Vibe`,
+      description,
+      images: [VIBE_OG_IMAGE.url],
     },
   };
 }
