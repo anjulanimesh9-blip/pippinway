@@ -28,6 +28,7 @@ import {
   VIBE_COMMENT_COOLDOWN_MS,
   VIBE_COMMENT_PAGE_SIZE,
   VIBE_FEED_PAGE_SIZE,
+  VIBE_LIVE_TEXT_FIELD_MAX,
   VIBE_POST_COOLDOWN_MS,
 } from "./constants";
 import type {
@@ -58,6 +59,19 @@ function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function isPermissionDenied(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const rec = err as { code?: string; message?: string };
+  return rec.code === "permission-denied" || /insufficient permissions/i.test(rec.message || "");
+}
+
+function asPublishError(err: unknown): Error {
+  if (isPermissionDenied(err)) {
+    return new Error("Could not publish this post. Please try again in a few seconds.");
+  }
+  return err instanceof Error ? err : new Error("Could not publish.");
+}
+
 export function mapVibePost(id: string, data: Record<string, unknown>): VibePost | null {
   const category = asString(data.category);
   if (!isVibePostCategory(category)) return null;
@@ -69,7 +83,7 @@ export function mapVibePost(id: string, data: Record<string, unknown>): VibePost
     authorId: asString(data.authorId),
     authorName: asString(data.authorName) || "Member",
     authorPhoto: asString(data.authorPhoto),
-    text: asString(data.text),
+    text: asString(data.fullText) || asString(data.text),
     imageUrl: asString(data.imageUrl),
     category,
     postType: postType === "poll" || postType === "image" ? postType : "text",
@@ -156,37 +170,42 @@ export async function authorSnapshot(user: User): Promise<{
 }
 
 export async function ensureVibeProfile(user: User): Promise<VibeProfile> {
-  const refDoc = doc(db, "vibeProfiles", user.uid);
-  const snap = await getDoc(refDoc);
   const author = await authorSnapshot(user);
-  if (!snap.exists()) {
-    await setDoc(refDoc, {
-      displayName: author.name,
-      photoURL: author.photo,
-      bio: "",
-      followerCount: 0,
-      followingCount: 0,
-      postCount: 0,
-      createdAt: serverTimestamp(),
-    });
-    return {
-      id: user.uid,
-      displayName: author.name,
-      photoURL: author.photo,
-      bio: "",
-      followerCount: 0,
-      followingCount: 0,
-      postCount: 0,
-    };
+  const fallback: VibeProfile = {
+    id: user.uid,
+    displayName: author.name,
+    photoURL: author.photo,
+    bio: "",
+    followerCount: 0,
+    followingCount: 0,
+    postCount: 0,
+  };
+  try {
+    const refDoc = doc(db, "vibeProfiles", user.uid);
+    const snap = await getDoc(refDoc);
+    if (!snap.exists()) {
+      await setDoc(refDoc, {
+        displayName: author.name,
+        photoURL: author.photo,
+        bio: "",
+        followerCount: 0,
+        followingCount: 0,
+        postCount: 0,
+        createdAt: serverTimestamp(),
+      });
+      return fallback;
+    }
+    const mapped = mapVibeProfile(user.uid, snap.data() as Record<string, unknown>);
+    const patch: Record<string, string> = {};
+    if (!mapped.displayName && author.name) patch.displayName = author.name;
+    if (!mapped.photoURL && author.photo) patch.photoURL = author.photo;
+    if (Object.keys(patch).length) {
+      await updateDoc(refDoc, { ...patch, updatedAt: serverTimestamp() }).catch(() => undefined);
+    }
+    return { ...mapped, ...patch };
+  } catch {
+    return fallback;
   }
-  const mapped = mapVibeProfile(user.uid, snap.data() as Record<string, unknown>);
-  const patch: Record<string, string> = {};
-  if (!mapped.displayName && author.name) patch.displayName = author.name;
-  if (!mapped.photoURL && author.photo) patch.photoURL = author.photo;
-  if (Object.keys(patch).length) {
-    await updateDoc(refDoc, { ...patch, updatedAt: serverTimestamp() });
-  }
-  return { ...mapped, ...patch };
 }
 
 export async function updateVibeBio(uid: string, bio: string): Promise<string> {
@@ -215,10 +234,20 @@ export async function uploadVibeImage(user: User, file: File): Promise<string> {
     throw new Error("Choose a JPG, PNG, WEBP or GIF under 8MB.");
   }
   const compressed = await compressListingImage(file);
-  const path = `vibe/${user.uid}/${Date.now()}.jpg`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, compressed, { contentType: "image/jpeg" });
-  return getDownloadURL(storageRef);
+  const stamp = Date.now();
+  const paths = [`vibe/${user.uid}/${stamp}.jpg`, `listings/vibe-${user.uid}-${stamp}.jpg`];
+  let lastError: unknown;
+  for (const path of paths) {
+    try {
+      const storageRef = ref(storage, path);
+      await uploadBytes(storageRef, compressed, { contentType: "image/jpeg" });
+      return getDownloadURL(storageRef);
+    } catch (err) {
+      lastError = err;
+      if (!isPermissionDenied(err)) throw err;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Could not upload photo.");
 }
 
 function assertCooldown(map: Map<string, number>, uid: string, waitMs: number, label: string) {
@@ -247,18 +276,26 @@ export async function createVibePost(input: {
   });
   if (!parsed.ok) throw new Error(parsed.error);
 
-  await ensureVibeProfile(user);
+  await ensureVibeProfile(user).catch(() => undefined);
   const author = await authorSnapshot(user);
   let imageUrl = "";
   if (input.imageFile) {
-    imageUrl = await uploadVibeImage(user, input.imageFile);
+    try {
+      imageUrl = await uploadVibeImage(user, input.imageFile);
+    } catch (err) {
+      throw asPublishError(err);
+    }
   }
 
+  const previewText =
+    parsed.text.length <= VIBE_LIVE_TEXT_FIELD_MAX
+      ? parsed.text
+      : parsed.text.slice(0, VIBE_LIVE_TEXT_FIELD_MAX);
   const payload: Record<string, unknown> = {
     authorId: user.uid,
     authorName: author.name,
     authorPhoto: author.photo,
-    text: parsed.text,
+    text: previewText,
     imageUrl,
     category: parsed.category,
     postType: imageUrl ? "image" : "text",
@@ -267,16 +304,21 @@ export async function createVibePost(input: {
     commentCount: 0,
     createdAt: serverTimestamp(),
   };
+  if (parsed.text.length > VIBE_LIVE_TEXT_FIELD_MAX) {
+    payload.fullText = parsed.text;
+  }
   if (parsed.zodiacSign) payload.zodiacSign = parsed.zodiacSign;
 
-  const postRef = await addDoc(collection(db, "vibePosts"), payload);
+  const postRef = await addDoc(collection(db, "vibePosts"), payload).catch((err) => {
+    throw asPublishError(err);
+  });
   await updateDoc(doc(db, "vibeProfiles", user.uid), {
     lastPostAt: serverTimestamp(),
     postCount: increment(1),
     displayName: author.name,
     photoURL: author.photo,
     updatedAt: serverTimestamp(),
-  });
+  }).catch(() => undefined);
   lastPostAtLocal.set(user.uid, Date.now());
   return postRef.id;
 }

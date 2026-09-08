@@ -413,6 +413,16 @@ service cloud.firestore {
           request.auth.uid == userId &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['lastCommentAt'])
+        ) ||
+        (
+          request.auth.uid == userId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastPostAt', 'postCount', 'displayName', 'photoURL', 'updatedAt']) &&
+          (
+            request.resource.data.postCount == resource.data.postCount ||
+            vibeCountBump('postCount')
+          ) &&
+          request.resource.data.postCount >= 0
         )
       );
 
@@ -432,6 +442,13 @@ service cloud.firestore {
         request.resource.data.text is string &&
         request.resource.data.text.size() > 0 &&
         request.resource.data.text.size() <= 100000 &&
+        (
+          !('fullText' in request.resource.data) ||
+          (
+            request.resource.data.fullText is string &&
+            request.resource.data.fullText.size() <= 100000
+          )
+        ) &&
         request.resource.data.authorName is string &&
         request.resource.data.authorName.size() > 0 &&
         request.resource.data.authorName.size() <= 80 &&
