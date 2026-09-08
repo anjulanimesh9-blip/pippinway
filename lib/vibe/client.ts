@@ -30,6 +30,7 @@ import {
   VIBE_FEED_PAGE_SIZE,
   VIBE_LIVE_TEXT_FIELD_MAX,
   VIBE_POST_COOLDOWN_MS,
+  VIBE_SIMILAR_LIMIT,
 } from "./constants";
 import type {
   VibeComment,
@@ -363,6 +364,39 @@ export type FeedPage = {
   posts: VibePost[];
   cursor: QueryDocumentSnapshot | null;
 };
+
+export async function fetchSimilarVibePosts(options: {
+  excludeId: string;
+  category: VibePostCategory;
+  limitCount?: number;
+}): Promise<VibePost[]> {
+  const wanted = options.limitCount ?? VIBE_SIMILAR_LIMIT;
+  const extra = wanted + 1;
+  const sameCategory = await fetchVibeFeed({
+    category: options.category,
+    pageSize: extra,
+  });
+  const picked: VibePost[] = [];
+  const seen = new Set<string>([options.excludeId]);
+  for (const post of sameCategory.posts) {
+    if (seen.has(post.id)) continue;
+    picked.push(post);
+    seen.add(post.id);
+    if (picked.length >= wanted) return picked;
+  }
+
+  const recent = await fetchVibeFeed({
+    category: "all",
+    pageSize: extra,
+  });
+  for (const post of recent.posts) {
+    if (seen.has(post.id)) continue;
+    picked.push(post);
+    seen.add(post.id);
+    if (picked.length >= wanted) break;
+  }
+  return picked;
+}
 
 export async function fetchVibeFeed(options: {
   category?: VibePostCategory | "all";

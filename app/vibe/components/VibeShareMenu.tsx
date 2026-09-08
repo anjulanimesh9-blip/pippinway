@@ -35,10 +35,10 @@ export default function VibeShareMenu({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex w-full min-w-0 items-center justify-center gap-1 py-2.5 text-xs text-gray-300 sm:text-sm"
+        className="inline-flex h-full min-h-11 w-full min-w-0 items-center justify-center gap-0.5 px-0.5 py-2 text-[11px] text-gray-300 sm:gap-1 sm:text-sm"
       >
         <Share2 className="h-4 w-4 shrink-0" />
-        Share
+        <span className="truncate">Share</span>
       </button>
       {open ? (
         <div className="absolute bottom-11 right-0 z-20 w-44 overflow-hidden rounded-xl border border-white/10 bg-[#020817] shadow-xl">

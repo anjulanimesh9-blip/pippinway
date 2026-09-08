@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { trackVibe } from "@/lib/analytics";
 import { getVibePost, isCurrentUserAdmin } from "@/lib/vibe/client";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
 import type { VibePost } from "@/lib/vibe/types";
+import SimilarVibes from "../../components/SimilarVibes";
+import VibePostBackLink from "../../components/VibePostBackLink";
 import VibePostCard from "../../components/VibePostCard";
 import VibeShell from "../../components/VibeShell";
 
-export default function VibePostClient({ id }: { id: string }) {
+function VibePostInner({ id }: { id: string }) {
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from");
   const [post, setPost] = useState<VibePost | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,14 +41,21 @@ export default function VibePostClient({ id }: { id: string }) {
 
   return (
     <VibeShell>
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
-        <Link href={VIBE_PATHS.home} className="text-sm text-[#FBB03B]">
-          ← Back to Vibe
-        </Link>
+      <div className="mx-auto min-w-0 max-w-2xl space-y-4 overflow-x-hidden px-2.5 py-3 pb-10 sm:space-y-6 sm:px-4 sm:py-4">
+        <VibePostBackLink fromParam={fromParam} />
         {loading ? (
           <div className="animate-pulse rounded-2xl border border-white/10 bg-[#0F172A] p-8" />
         ) : post ? (
-          <VibePostCard post={post} isAdmin={isAdmin} showComments />
+          <>
+            <VibePostCard
+              key={post.id}
+              post={post}
+              isAdmin={isAdmin}
+              showComments
+              detail
+            />
+            <SimilarVibes key={post.id} post={post} />
+          </>
         ) : (
           <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-8 text-center">
             <p className="font-semibold">This post is not available</p>
@@ -56,5 +72,21 @@ export default function VibePostClient({ id }: { id: string }) {
         )}
       </div>
     </VibeShell>
+  );
+}
+
+export default function VibePostClient({ id }: { id: string }) {
+  return (
+    <Suspense
+      fallback={
+        <VibeShell>
+          <div className="mx-auto max-w-2xl px-2.5 py-3 sm:px-4 sm:py-4">
+            <div className="animate-pulse rounded-2xl border border-white/10 bg-[#0F172A] p-8" />
+          </div>
+        </VibeShell>
+      }
+    >
+      <VibePostInner key={id} id={id} />
+    </Suspense>
   );
 }

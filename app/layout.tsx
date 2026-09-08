@@ -12,6 +12,7 @@ import {
 import Script from "next/script";
 import GaScripts from "./components/analytics/GaScripts";
 import { GuestAuthProvider } from "./components/GuestAuthPrompt";
+import VibeOriginTracker from "./vibe/components/VibeOriginTracker";
 import { I18nProvider } from "@/lib/i18n";
 import { LANGUAGE_STORAGE_KEY } from "@/lib/i18n/languages";
 import "./critical.css";
@@ -168,6 +169,7 @@ export default function RootLayout({
         <I18nProvider>
           <GuestAuthProvider>{children}</GuestAuthProvider>
         </I18nProvider>
+        <VibeOriginTracker />
         <GaScripts />
 
         {/* Meta Pixel */}

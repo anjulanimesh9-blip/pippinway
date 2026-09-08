@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Bookmark, Flag, Heart, MessageCircle, MoreHorizontal } from "lucide-react";
 import { listingPhotoSrc } from "@/app/components/ListingPhoto";
 import { useGuestAuthPrompt } from "@/app/components/GuestAuthPrompt";
@@ -16,6 +16,12 @@ import {
   toggleSave,
 } from "@/lib/vibe/client";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
+import {
+  isLongVibeText,
+  VIBE_FEED_PREVIEW_CHARS,
+  VIBE_FEED_PREVIEW_LINES,
+  VibeRichText,
+} from "@/lib/vibe/richText";
 import { vibeTimeAgo } from "@/lib/vibe/time";
 import type { VibePost } from "@/lib/vibe/types";
 import { zodiacById } from "@/lib/vibe/zodiac";
@@ -23,7 +29,11 @@ import VibeComments from "./VibeComments";
 import VibeReportModal from "./VibeReportModal";
 import VibeShareMenu from "./VibeShareMenu";
 
-const TEXT_PREVIEW_CHARS = 220;
+const DOUBLE_TAP_MS = 350;
+const EXPAND_CLICK_GUARD_MS = 450;
+/** Article body is text-[17px] leading-[1.8]; 8 lines ≈ first screen of a long post. */
+const DETAIL_COLLAPSE_LINES = 8;
+const DETAIL_COLLAPSE_PX = 17 * 1.8 * DETAIL_COLLAPSE_LINES;
 
 function Avatar({ src, name }: { src: string; name: string }) {
   if (src) {
@@ -43,11 +53,13 @@ export default function VibePostCard({
   post,
   isAdmin = false,
   showComments = false,
+  detail = false,
   onRemoved,
 }: {
   post: VibePost;
   isAdmin?: boolean;
   showComments?: boolean;
+  detail?: boolean;
   onRemoved?: (id: string) => void;
 }) {
   const { user } = useAuth();
@@ -58,11 +70,34 @@ export default function VibePostCard({
   const [commentsOpen, setCommentsOpen] = useState(showComments);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [expanded, setExpanded] = useState(showComments);
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const expanded = expandedPostId === post.id;
+  const [detailOverflows, setDetailOverflows] = useState(false);
+  const articleRef = useRef<HTMLElement>(null);
+  const detailTextRef = useRef<HTMLDivElement>(null);
+  const expandGuardUntil = useRef(0);
+  const lastTextTapAt = useRef(0);
   const sign = post.zodiacSign ? zodiacById(post.zodiacSign) : undefined;
   const likeCount = Math.max(0, post.likeCount + likeDelta);
-  const isLong =
-    post.text.length > TEXT_PREVIEW_CHARS || post.text.split("\n").length > 4;
+  const isLong = detail
+    ? detailOverflows
+    : isLongVibeText(post.text, VIBE_FEED_PREVIEW_CHARS, VIBE_FEED_PREVIEW_LINES);
+  const clampLines = VIBE_FEED_PREVIEW_LINES;
+
+  useLayoutEffect(() => {
+    if (!detail) return;
+    const el = detailTextRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      setDetailOverflows(el.scrollHeight > DETAIL_COLLAPSE_PX + 1);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [detail, post.id, post.text]);
 
   useEffect(() => {
     if (!user) return;
@@ -110,8 +145,15 @@ export default function VibePostCard({
   };
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A]">
-      <div className="flex items-start gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
+    <article
+      ref={articleRef}
+      className="scroll-mt-20 overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A]"
+    >
+      <div
+        className={`flex items-start gap-2.5 sm:gap-3 ${
+          detail ? "px-3 pt-3.5 sm:px-5 sm:pt-5" : "px-4 pt-4 sm:px-5 sm:pt-5"
+        }`}
+      >
         <Link href={VIBE_PATHS.profile(post.authorId)} className="shrink-0">
           <Avatar src={post.authorPhoto} name={post.authorName} />
         </Link>
@@ -121,10 +163,20 @@ export default function VibePostCard({
               <Link href={VIBE_PATHS.profile(post.authorId)} className="block truncate text-sm font-semibold text-white">
                 {post.authorName}
               </Link>
-              <p className="text-[12px] text-gray-500">
-                {vibeTimeAgo(post.createdAt)} · {vibeCategoryLabel(post.category)}
-                {sign ? ` · ${sign.emoji} ${sign.name}` : ""}
-              </p>
+              {detail ? (
+                <p className="truncate text-[12px] text-gray-500">
+                  {vibeTimeAgo(post.createdAt)} · {vibeCategoryLabel(post.category)}
+                  {sign ? ` · ${sign.emoji} ${sign.name}` : ""}
+                </p>
+              ) : (
+                <Link
+                  href={VIBE_PATHS.post(post.id)}
+                  className="block text-[12px] text-gray-500 hover:text-[#FBB03B]"
+                >
+                  {vibeTimeAgo(post.createdAt)} · {vibeCategoryLabel(post.category)}
+                  {sign ? ` · ${sign.emoji} ${sign.name}` : ""}
+                </Link>
+              )}
             </div>
             <button
               type="button"
@@ -138,7 +190,7 @@ export default function VibePostCard({
         </div>
       </div>
       {menuOpen ? (
-        <div className="flex flex-wrap gap-2 px-4 pt-2 sm:px-5">
+        <div className={`flex flex-wrap gap-2 pt-2 ${detail ? "px-3 sm:px-5" : "px-4 sm:px-5"}`}>
           <button
             type="button"
             className="rounded-full border border-white/10 px-2 py-1 text-xs text-gray-300"
@@ -164,41 +216,95 @@ export default function VibePostCard({
           )}
         </div>
       ) : null}
-      <div className="px-4 pt-3 sm:px-5">
-        <p
-          className={`text-sm leading-7 text-gray-100 ${
-            expanded || !isLong ? "whitespace-pre-wrap" : "line-clamp-4"
+      <div className={`${detail ? "px-3 pt-2.5 sm:px-5 sm:pt-4" : "px-4 pt-3 sm:px-5"}`}>
+        <div
+          className={`touch-manipulation overflow-hidden transition-[max-height] duration-300 ease-out ${
+            !detail && !expanded && isLong ? "max-h-[14.5rem]" : ""
           }`}
+          style={
+            detail && !expanded ? { maxHeight: DETAIL_COLLAPSE_PX } : undefined
+          }
+          onDoubleClick={() => {
+            if (!detail && isLong) setExpandedPostId(null);
+          }}
+          onClick={() => {
+            if (detail || !isLong || !expanded) return;
+            const now = Date.now();
+            if (now - lastTextTapAt.current < DOUBLE_TAP_MS) {
+              lastTextTapAt.current = 0;
+              setExpandedPostId(null);
+              return;
+            }
+            lastTextTapAt.current = now;
+          }}
         >
-          {post.text}
-        </p>
+          <div ref={detail ? detailTextRef : undefined}>
+            <VibeRichText
+              text={post.text}
+              variant={detail ? "article" : "feed"}
+              clamped={!detail && !expanded && isLong}
+              clampLines={clampLines}
+            />
+          </div>
+        </div>
         {isLong ? (
           <button
             type="button"
-            className="mt-1.5 text-sm font-medium text-[#FBB03B]"
-            onClick={() => setExpanded((value) => !value)}
+            className="mt-1.5 min-h-10 touch-manipulation px-0.5 text-left text-[13px] font-semibold text-[#FBB03B] sm:mt-2 sm:min-h-11 sm:text-sm"
+            aria-expanded={expanded}
+            onClick={() => {
+              if (expanded) {
+                if (Date.now() < expandGuardUntil.current) return;
+                setExpandedPostId(null);
+                const top = articleRef.current?.getBoundingClientRect().top ?? 0;
+                if (top < 72) {
+                  articleRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }
+                return;
+              }
+              setExpandedPostId(post.id);
+              expandGuardUntil.current = Date.now() + EXPAND_CLICK_GUARD_MS;
+            }}
           >
-            {expanded ? "Read less" : "Read more"}
+            {expanded ? "Show less" : "Read more"}
           </button>
         ) : null}
       </div>
       {post.imageUrl ? (
-        <Link
-          href={VIBE_PATHS.post(post.id)}
-          className="mt-3 block bg-black/40"
-        >
-          {/* Native img keeps each photo's aspect ratio instead of a cropped 16:10 or square box. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={listingPhotoSrc(post.imageUrl)}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="mx-auto block h-auto max-h-[min(72vh,820px)] w-full object-contain"
-          />
-        </Link>
+        detail ? (
+          <div className="mt-3 w-full bg-black/40 sm:mt-4">
+            {/* Native img keeps each photo's aspect ratio instead of a cropped 16:10 or square box. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={listingPhotoSrc(post.imageUrl)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="mx-auto block h-auto max-h-[min(62vh,720px)] w-full object-contain sm:max-h-[min(70vh,720px)]"
+            />
+          </div>
+        ) : (
+          <Link href={VIBE_PATHS.post(post.id)} className="mt-3 block bg-black/40">
+            {/* Native img keeps each photo's aspect ratio instead of a cropped 16:10 or square box. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={listingPhotoSrc(post.imageUrl)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="mx-auto block h-auto max-h-[min(72vh,820px)] w-full object-contain"
+            />
+          </Link>
+        )
       ) : null}
-      <div className="flex items-center justify-between px-4 py-2.5 text-xs text-gray-500 sm:px-5">
+      <div
+        className={`flex items-center justify-between text-xs text-gray-500 ${
+          detail ? "px-3 py-2 sm:px-5 sm:py-2.5" : "px-4 py-2.5 sm:px-5"
+        }`}
+      >
         <span>{likeCount} likes</span>
         <span>{post.commentCount} comments</span>
       </div>
@@ -206,31 +312,31 @@ export default function VibePostCard({
         <button
           type="button"
           onClick={onLike}
-          className={`inline-flex min-w-0 items-center justify-center gap-1 py-2.5 text-xs sm:text-sm ${
+          className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-0.5 px-0.5 py-2 text-[11px] sm:gap-1 sm:text-sm ${
             liked ? "text-red-400" : "text-gray-300"
           }`}
         >
           <Heart className={`h-4 w-4 shrink-0 ${liked ? "fill-current" : ""}`} />
-          Like
+          <span className="truncate">Like</span>
         </button>
         <button
           type="button"
           onClick={() => setCommentsOpen((value) => !value)}
-          className="inline-flex min-w-0 items-center justify-center gap-1 py-2.5 text-xs text-gray-300 sm:text-sm"
+          className="inline-flex min-h-11 min-w-0 items-center justify-center gap-0.5 px-0.5 py-2 text-[11px] text-gray-300 sm:gap-1 sm:text-sm"
         >
           <MessageCircle className="h-4 w-4 shrink-0" />
-          Comment
+          <span className="truncate">Comment</span>
         </button>
         <VibeShareMenu postId={post.id} text={post.text} category={post.category} />
         <button
           type="button"
           onClick={onSave}
-          className={`inline-flex min-w-0 items-center justify-center gap-1 py-2.5 text-xs sm:text-sm ${
+          className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-0.5 px-0.5 py-2 text-[11px] sm:gap-1 sm:text-sm ${
             saved ? "text-[#FBB03B]" : "text-gray-300"
           }`}
         >
           <Bookmark className={`h-4 w-4 shrink-0 ${saved ? "fill-current" : ""}`} />
-          Save
+          <span className="truncate">Save</span>
         </button>
       </div>
       {commentsOpen ? <VibeComments postId={post.id} isAdmin={isAdmin} /> : null}
