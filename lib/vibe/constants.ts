@@ -1,6 +1,6 @@
 export const VIBE_FEED_PAGE_SIZE = 8;
 export const VIBE_COMMENT_PAGE_SIZE = 20;
-export const VIBE_TEXT_MAX = 2000;
+export const VIBE_TEXT_MAX = 100000;
 export const VIBE_COMMENT_MAX = 500;
 export const VIBE_BIO_MAX = 160;
 export const VIBE_NAME_MAX = 80;

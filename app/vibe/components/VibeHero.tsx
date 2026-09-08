@@ -38,7 +38,7 @@ export default function VibeHero({ compact = false }: { compact?: boolean }) {
   return (
     <section
       className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#0f172a] ${
-        compact ? "px-4 py-4 sm:px-6 sm:py-5" : "px-4 py-5 sm:px-8 sm:py-8"
+        compact ? "px-4 py-5 sm:px-6 sm:py-6" : "px-4 py-6 sm:px-8 sm:py-8"
       }`}
     >
       <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-[#FBB03B]/20 blur-3xl" />
@@ -53,13 +53,13 @@ export default function VibeHero({ compact = false }: { compact?: boolean }) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FBB03B]">
             {banner.eyebrow}
           </p>
-          <h1 className={`font-bold tracking-tight text-white ${compact ? "mt-1 text-2xl" : "mt-1 text-3xl sm:text-4xl"}`}>
+          <h1 className={`font-bold tracking-tight text-white ${compact ? "mt-1.5 text-xl sm:text-2xl" : "mt-1.5 text-2xl sm:text-3xl"}`}>
             {banner.title}
           </h1>
-          <p className="mt-1 text-sm font-medium text-gray-100 sm:text-base">
+          <p className="mt-1.5 text-xs font-medium text-gray-100 sm:text-sm">
             {banner.subtitle}
           </p>
-          <p className="mt-1 text-xs text-gray-300 sm:text-sm">
+          <p className="mt-1.5 text-[11px] leading-5 text-gray-300 sm:text-xs">
             {banner.supportingText}
           </p>
           {showCta ? (

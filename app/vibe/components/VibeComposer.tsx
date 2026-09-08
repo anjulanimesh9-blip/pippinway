@@ -83,7 +83,7 @@ export default function VibeComposer({
   return (
     <section
       id="vibe-composer-panel"
-      className="rounded-2xl border border-white/10 bg-[#0F172A] p-3 sm:p-4"
+      className="rounded-2xl border border-white/10 bg-[#0F172A] p-4 sm:p-5"
     >
       <label className="sr-only" htmlFor="vibe-composer">
         What is on your mind?
@@ -95,11 +95,11 @@ export default function VibeComposer({
         onFocus={() => {
           if (!user && !loading) requireAuth("/vibe");
         }}
-        rows={3}
+        rows={4}
         placeholder="What's on your mind? Share a thought, photo or a positive message..."
-        className="w-full resize-none rounded-xl border border-white/10 bg-[#020817] px-3 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#FBB03B]/50 focus:outline-none"
+        className="min-h-[104px] w-full resize-y rounded-xl border border-white/10 bg-[#020817] px-3.5 py-3 text-sm leading-6 text-white placeholder:text-gray-500 focus:border-[#FBB03B]/50 focus:outline-none"
       />
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value as VibePostCategory)}
@@ -125,9 +125,6 @@ export default function VibeComposer({
             ))}
           </select>
         ) : null}
-        <span className="ml-auto text-[11px] text-gray-500">
-          {text.length}/{VIBE_TEXT_MAX}
-        </span>
       </div>
       {preview ? (
         <div className="relative mt-3 overflow-hidden rounded-xl">

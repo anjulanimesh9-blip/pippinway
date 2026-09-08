@@ -191,7 +191,7 @@ export default function VibeFeed({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {posts.map((post) => (
         <VibePostCard
           key={post.id}

@@ -19,7 +19,12 @@ export function clipText(value: string, max: number): string {
 }
 
 export function sanitizeVibeText(value: string, max = VIBE_TEXT_MAX): string {
-  return clipText(value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ""), max);
+  return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, max);
 }
 
 export function countUrls(text: string): number {
@@ -35,7 +40,7 @@ export function validatePostInput(input: {
   const text = sanitizeVibeText(input.text);
   if (!text) return { ok: false, error: "Write something before posting." };
   if (text.length > VIBE_TEXT_MAX) {
-    return { ok: false, error: `Posts can be up to ${VIBE_TEXT_MAX} characters.` };
+    return { ok: false, error: "This post is too long." };
   }
   if (countUrls(text) > 4) {
     return { ok: false, error: "Too many links. Please share your own words." };

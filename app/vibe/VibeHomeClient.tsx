@@ -46,11 +46,11 @@ function VibeHomeInner() {
 
   return (
     <VibeShell>
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-4 lg:grid-cols-[220px_minmax(0,1fr)_260px] lg:py-6">
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-5 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)_260px] lg:gap-8 lg:py-8">
         <aside className="hidden lg:block">
           <VibeSidebar />
         </aside>
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-5 lg:space-y-6">
           <VibeHero compact />
           <VibeExperienceGrid />
           <VibeComposer
@@ -64,10 +64,10 @@ function VibeHomeInner() {
             refreshKey={refreshKey}
           />
         </div>
-        <aside className="hidden space-y-4 lg:block">
-          <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-4">
+        <aside className="hidden space-y-5 lg:block">
+          <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-5">
             <p className="text-sm font-semibold text-white">Try today</p>
-            <div className="mt-3 space-y-2 text-sm">
+            <div className="mt-3 space-y-2.5 text-sm leading-5">
               <Link href="/vibe/stars" className="block rounded-xl bg-[#020817] px-3 py-2 hover:text-[#FBB03B]">
                 ⭐ Your Stars
               </Link>
@@ -82,7 +82,7 @@ function VibeHomeInner() {
               </Link>
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-4 text-sm text-gray-400">
+          <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-5 text-sm leading-6 text-gray-400">
             <p className="font-semibold text-white">Marketplace stays next door</p>
             <p className="mt-2">
               Vibe is for conversation. Listings, prices and Post Ad live in the marketplace. The gold plus button lets you choose Marketplace or Vibe.

@@ -111,14 +111,14 @@ export default function VibePostCard({
 
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A]">
-      <div className="flex items-start gap-3 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="flex items-start gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
         <Link href={VIBE_PATHS.profile(post.authorId)} className="shrink-0">
           <Avatar src={post.authorPhoto} name={post.authorName} />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Link href={VIBE_PATHS.profile(post.authorId)} className="block truncate font-semibold text-white">
+              <Link href={VIBE_PATHS.profile(post.authorId)} className="block truncate text-sm font-semibold text-white">
                 {post.authorName}
               </Link>
               <p className="text-[12px] text-gray-500">
@@ -138,7 +138,7 @@ export default function VibePostCard({
         </div>
       </div>
       {menuOpen ? (
-        <div className="flex flex-wrap gap-2 px-3 pt-2 sm:px-4">
+        <div className="flex flex-wrap gap-2 px-4 pt-2 sm:px-5">
           <button
             type="button"
             className="rounded-full border border-white/10 px-2 py-1 text-xs text-gray-300"
@@ -164,21 +164,21 @@ export default function VibePostCard({
           )}
         </div>
       ) : null}
-      <div className="px-3 pt-2.5 sm:px-4">
+      <div className="px-4 pt-3 sm:px-5">
         <p
-          className={`text-[15px] leading-6 text-gray-100 ${
+          className={`text-sm leading-7 text-gray-100 ${
             expanded || !isLong ? "whitespace-pre-wrap" : "line-clamp-4"
           }`}
         >
           {post.text}
         </p>
-        {isLong && !expanded ? (
+        {isLong ? (
           <button
             type="button"
-            className="mt-1 text-sm font-medium text-[#FBB03B]"
-            onClick={() => setExpanded(true)}
+            className="mt-1.5 text-sm font-medium text-[#FBB03B]"
+            onClick={() => setExpanded((value) => !value)}
           >
-            Read more
+            {expanded ? "Read less" : "Read more"}
           </button>
         ) : null}
       </div>
@@ -198,7 +198,7 @@ export default function VibePostCard({
           />
         </Link>
       ) : null}
-      <div className="flex items-center justify-between px-3 py-2 text-[12px] text-gray-500 sm:px-4">
+      <div className="flex items-center justify-between px-4 py-2.5 text-xs text-gray-500 sm:px-5">
         <span>{likeCount} likes</span>
         <span>{post.commentCount} comments</span>
       </div>
