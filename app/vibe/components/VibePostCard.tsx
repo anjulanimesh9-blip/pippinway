@@ -224,8 +224,24 @@ export default function VibePostCard({
           style={
             detail && !expanded ? { maxHeight: DETAIL_COLLAPSE_PX } : undefined
           }
-          onDoubleClick={() => {
-            if (!detail && isLong) setExpandedPostId(null);
+          onDoubleClick={(event) => {
+            if (!isLong || !expanded) return;
+            if (window.matchMedia("(pointer: coarse)").matches) return;
+            if (
+              event.target instanceof Element &&
+              event.target.closest("a, button")
+            ) {
+              return;
+            }
+            setExpandedPostId(null);
+            if (!detail) return;
+            const top = articleRef.current?.getBoundingClientRect().top ?? 0;
+            if (top < 72) {
+              articleRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
           }}
           onClick={() => {
             if (detail || !isLong || !expanded) return;
