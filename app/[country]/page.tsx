@@ -10,6 +10,10 @@ import {
   countryCanonical,
   getCountryBySlug,
 } from "@/lib/countries";
+import { fetchMarketplaceFirstPage } from "@/lib/fetchCountryListings";
+import { canonicalCategory } from "@/lib/filterListings";
+import { vibeHomeMetadata } from "@/lib/vibe/seo";
+import VibeHomeClient from "../vibe/VibeHomeClient";
 
 type CountryPageProps = {
   params: Promise<{ country: string }>;
@@ -17,7 +21,10 @@ type CountryPageProps = {
 };
 
 export function generateStaticParams() {
-  return MARKET_COUNTRIES.map((country) => ({ country: country.slug }));
+  return [
+    ...MARKET_COUNTRIES.map((country) => ({ country: country.slug })),
+    { country: "vibe" },
+  ];
 }
 
 export const dynamicParams = false;
@@ -45,6 +52,7 @@ export async function generateMetadata({
   searchParams,
 }: CountryPageProps): Promise<Metadata> {
   const { country: slug } = await params;
+  if (slug === "vibe") return vibeHomeMetadata();
   const market = getCountryBySlug(slug);
   if (!market) return { title: "Not found" };
 
@@ -72,14 +80,29 @@ export async function generateMetadata({
 
 export default async function CountryMarketplacePage({
   params,
+  searchParams,
 }: CountryPageProps) {
   const { country: slug } = await params;
+  if (slug === "vibe") return <VibeHomeClient />;
   const market = getCountryBySlug(slug);
   if (!market) notFound();
 
+  const query = await searchParams;
+  const category = canonicalCategory(firstParam(query.category));
+  const hasClientOnlyFilter = Boolean(
+    firstParam(query.search)?.trim() || firstParam(query.location)?.trim()
+  );
+  const initialPage = hasClientOnlyFilter
+    ? null
+    : await fetchMarketplaceFirstPage(market.firestoreValue, category);
+
   return (
     <main className="min-h-screen bg-[#020817] pb-20 lg:pb-8">
-      <HomeMarketplace initialCountry={market.firestoreValue} />
+      <HomeMarketplace
+        initialCountry={market.firestoreValue}
+        initialCategory={category}
+        initialPage={initialPage}
+      />
 
       <div className="mx-auto w-full max-w-[1600px] px-4">
         <TrustBadges />

@@ -14,6 +14,7 @@ import GaScripts from "./components/analytics/GaScripts";
 import { GuestAuthProvider } from "./components/GuestAuthPrompt";
 import { I18nProvider } from "@/lib/i18n";
 import { LANGUAGE_STORAGE_KEY } from "@/lib/i18n/languages";
+import "./critical.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -153,6 +154,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${notoSinhala.variable} ${notoTamil.variable} ${notoThai.variable} ${notoDevanagari.variable} ${notoSc.variable} ${notoThaana.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              "html,body{background:#020817;color:#fff;font-family:Arial,Helvetica,sans-serif;margin:0}a{color:inherit;text-decoration:none}@media(min-width:640px){.pw-mobile-only{display:none!important}}@media(max-width:639px){.pw-desktop-only{display:none!important}}@media(max-width:1023px){.pw-nav-desktop{display:none!important}}@media(min-width:1024px){.pw-nav-mobile{display:none!important}}",
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var k=${JSON.stringify(LANGUAGE_STORAGE_KEY)};var v=localStorage.getItem(k);if(!v){var m=document.cookie.match(new RegExp('(?:^|; )'+k.replace(/\\./g,'\\\\.')+'=([^;]*)'));v=m?decodeURIComponent(m[1]):'';}if(v){document.documentElement.lang=v;document.documentElement.setAttribute('data-lang',v);var s={si:'sinhala',ta:'tamil',th:'thai',hi:'devanagari',zh:'han',dv:'thaana'};document.documentElement.setAttribute('data-script',s[v]||'latin');}}catch(e){}})();`,

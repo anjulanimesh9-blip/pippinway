@@ -15,7 +15,9 @@ import {
 import { db } from "@/app/firebase";
 import {
   fetchCountryListingsPage,
+  MARKETPLACE_PAGE_SIZE,
   type ListingRestCursor,
+  type MarketplaceFirstPage,
 } from "@/lib/fetchCountryListings";
 import { isPermissionDenied } from "@/lib/firestoreErrors";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
@@ -28,7 +30,7 @@ import {
 } from "@/lib/filterListings";
 import type { ListingRecord } from "@/lib/types/featured";
 
-export const HOME_PAGE_SIZE = 16;
+export const HOME_PAGE_SIZE = MARKETPLACE_PAGE_SIZE;
 export const HOME_FEATURED_LIMIT = 16;
 const SEARCH_SCAN_BATCHES = 8;
 
@@ -39,6 +41,7 @@ export type MarketplaceListingsQuery = {
   location?: string;
   sortBy?: string;
   reloadKey?: number;
+  initialPage?: MarketplaceFirstPage | null;
 };
 
 type PageCache = {
@@ -120,6 +123,26 @@ function keepListing(
   );
 }
 
+function initialPageQueryKey(page: MarketplaceFirstPage) {
+  return [
+    canonicalCountry(page.country) ?? "",
+    canonicalCategory(page.category) ?? "",
+    "",
+    "",
+    "newest",
+    "0",
+  ].join("|");
+}
+
+function cacheFromInitialPage(page: MarketplaceFirstPage): PageCache {
+  return {
+    listings: page.listings,
+    lastDoc: null,
+    restCursor: page.cursor,
+    hasMore: page.rawCount === HOME_PAGE_SIZE,
+  };
+}
+
 export default function useListings(input: MarketplaceListingsQuery | string = {}) {
   const options: MarketplaceListingsQuery =
     typeof input === "string" ? { country: input } : input;
@@ -154,11 +177,20 @@ export default function useListings(input: MarketplaceListingsQuery | string = {
     String(reloadKey),
   ].join("|");
 
-  const [listings, setListings] = useState<ListingRecord[]>([]);
+  const initialPage = options.initialPage ?? null;
+  const canUseInitial =
+    Boolean(initialPage) &&
+    initialPageQueryKey(initialPage as MarketplaceFirstPage) === queryKey;
+
+  const [listings, setListings] = useState<ListingRecord[]>(
+    () => (canUseInitial && initialPage ? initialPage.listings : [])
+  );
   const [featured, setFeatured] = useState<ListingRecord[]>([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(
+    () => (canUseInitial && initialPage ? initialPage.rawCount === HOME_PAGE_SIZE : false)
+  );
+  const [loading, setLoading] = useState(() => !canUseInitial);
   const [error, setError] = useState<string | null>(null);
   const cacheRef = useRef(new Map<string, Map<number, PageCache>>());
 
@@ -173,6 +205,22 @@ export default function useListings(input: MarketplaceListingsQuery | string = {
   useEffect(() => {
     let cancelled = false;
     const restAbort = new AbortController();
+
+    const cachedFirst = cacheRef.current.get(queryKey)?.get(1);
+    if (cachedFirst) {
+      applyPage(cachedFirst, 1);
+      return;
+    }
+
+    if (canUseInitial && initialPage) {
+      const seeded = cacheFromInitialPage(initialPage);
+      const pages = new Map<number, PageCache>();
+      pages.set(1, seeded);
+      cacheRef.current.set(queryKey, pages);
+      applyPage(seeded, 1);
+      return;
+    }
+
     setListings([]);
     setPage(1);
     setHasMore(false);
@@ -345,10 +393,12 @@ export default function useListings(input: MarketplaceListingsQuery | string = {
   }, [
     applyPage,
     ascending,
+    canUseInitial,
     canonical,
     category,
     debouncedLocation,
     debouncedSearch,
+    initialPage,
     queryKey,
   ]);
 

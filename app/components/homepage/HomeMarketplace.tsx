@@ -19,15 +19,20 @@ import {
   getCountryByFirestoreValue,
   persistSelectedCountry,
 } from "@/lib/countries";
-import { canonicalCountry } from "@/lib/filterListings";
+import { canonicalCategory, canonicalCountry } from "@/lib/filterListings";
+import type { MarketplaceFirstPage } from "@/lib/fetchCountryListings";
 import { useI18n } from "@/lib/i18n";
 
 type HomeMarketplaceProps = {
   initialCountry: string;
+  initialCategory?: string | null;
+  initialPage?: MarketplaceFirstPage | null;
 };
 
 export default function HomeMarketplace({
   initialCountry,
+  initialCategory = null,
+  initialPage = null,
 }: HomeMarketplaceProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -43,7 +48,16 @@ export default function HomeMarketplace({
     setLocation,
     sortBy,
     setSortBy,
-  } = useHomeFilters(initialCountry);
+  } = useHomeFilters(initialCountry, initialCategory ?? undefined);
+  const filtersMatchInitial =
+    canonicalCountry(selectedCountry || initialCountry) ===
+      canonicalCountry(initialPage?.country ?? initialCountry) &&
+    (canonicalCategory(selectedCategory) ?? null) ===
+      (canonicalCategory(initialPage?.category ?? initialCategory) ?? null) &&
+    !search.trim() &&
+    !location.trim() &&
+    sortBy === "newest" &&
+    reloadKey === 0;
   const {
     listings,
     featuredListings,
@@ -62,6 +76,7 @@ export default function HomeMarketplace({
     location,
     sortBy,
     reloadKey,
+    initialPage: filtersMatchInitial ? initialPage : null,
   });
   const { favorites, toggleFavorite } = useFavorites(user);
   const market = getCountryByFirestoreValue(selectedCountry);

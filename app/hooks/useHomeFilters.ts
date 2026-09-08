@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import { persistSelectedCountry } from "@/lib/countries";
 import { canonicalCategory, canonicalCountry } from "@/lib/filterListings";
 
-export default function useHomeFilters(routeCountry?: string) {
+export default function useHomeFilters(
+  routeCountry?: string,
+  routeCategory?: string
+) {
   const initialCountry = canonicalCountry(routeCountry) ?? "All";
 
   const [selectedCountry, setSelectedCountryState] = useState(initialCountry);
-  const [selectedCategory, setSelectedCategoryState] = useState("All");
+  const [selectedCategory, setSelectedCategoryState] = useState(
+    canonicalCategory(routeCategory) ?? "All"
+  );
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [sortBy, setSortBy] = useState("newest");

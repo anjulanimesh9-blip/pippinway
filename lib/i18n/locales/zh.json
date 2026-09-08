@@ -1,5 +1,5 @@
 {
-  "nav": { "home": "首页", "categories": "分类", "postAd": "发布", "chats": "聊天", "profile": "我的", "about": "关于", "safety": "安全", "contact": "联系", "addListing": "发布信息", "login": "登录", "register": "注册", "logout": "退出登录", "chat": "聊天" },
+  "nav": { "home": "首页", "categories": "分类", "postAd": "发布", "chats": "聊天", "profile": "我的", "about": "关于", "safety": "安全", "contact": "联系", "addListing": "发布信息", "login": "登录", "register": "注册", "logout": "退出登录", "chat": "聊天", "vibe": "Vibe" },
   "common": { "cancel": "取消", "confirm": "确认", "all": "全部", "search": "搜索", "loading": "加载中...", "featured": "精选", "ads": "信息", "close": "关闭", "back": "返回" },
   "language": { "title": "语言", "suggested": "{{country}}常用语言", "all": "全部语言", "confirmTitle": "更换语言？", "confirmBody": "将 Pippinway 界面切换为{{language}}？", "switch": "切换" },
   "categories": { "All": "全部", "Cars": "汽车", "Motorbikes": "摩托车", "Property": "房产", "Electronics": "电子产品", "Fashion": "时尚", "Jobs": "招聘", "Services": "服务", "Animals": "宠物", "Furniture": "家具", "Education": "教育", "Other": "其他", "heading": "分类", "allCategories": "全部分类" },

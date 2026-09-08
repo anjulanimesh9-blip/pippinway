@@ -1,5 +1,5 @@
 {
-  "nav": { "home": "Ikhaya", "categories": "Iindidi", "postAd": "Faka Isibhengezo", "chats": "Incoko", "profile": "Iprofayile", "login": "Ngena", "register": "Bhalisa", "logout": "Phuma" },
+  "nav": { "home": "Ikhaya", "categories": "Iindidi", "postAd": "Faka Isibhengezo", "chats": "Incoko", "profile": "Iprofayile", "login": "Ngena", "register": "Bhalisa", "logout": "Phuma", "vibe": "Vibe" },
   "common": { "cancel": "Rhoxisa", "confirm": "Qinisekisa", "all": "Konke", "search": "Khangela", "loading": "Iyalayisha...", "featured": "Okubalulekileyo", "ads": "Izibhengezo" },
   "language": { "title": "Ulwimi", "suggested": "Okucetywayo e-{{country}}", "all": "Zonke iilwimi", "confirmTitle": "Tshintsha ulwimi?", "confirmBody": "Tshintsha i-interface ye-Pippinway ibe {{language}}?", "switch": "Tshintsha" },
   "categories": { "All": "Konke", "Cars": "Iimoto", "Motorbikes": "Izithuthuthu", "Property": "Ipropati", "Electronics": "I-elektroniki", "Fashion": "Ifashoni", "Jobs": "Imisebenzi", "Services": "Iinkonzo", "Animals": "Izilwanyana", "Furniture": "Ifenitshala", "Education": "Imfundo", "Other": "Okunye", "heading": "Iindidi" },

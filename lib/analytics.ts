@@ -65,6 +65,12 @@ const ALLOWED_PARAM_KEYS = new Set([
   "currency",
   "page_path",
   "page_location",
+  "post_id",
+  "vibe_category",
+  "share_method",
+  "quiz_id",
+  "sign",
+  "content_type",
 ]);
 const LOOKS_LIKE_EMAIL = /@/;
 const LOOKS_LIKE_PHONE = /^\+?\d{8,}$/;
@@ -238,5 +244,23 @@ export function trackFeaturedPurchase(params: FeaturedPurchaseParams): void {
     payment_country: optionalText(params.payment_country),
     value: safeValue,
     currency: safeCurrency,
+  });
+}
+
+export function trackVibe(event: string, params?: {
+  post_id?: string;
+  vibe_category?: string;
+  share_method?: string;
+  quiz_id?: string;
+  sign?: string;
+  content_type?: string;
+}): void {
+  track(event, {
+    post_id: optionalText(params?.post_id),
+    vibe_category: optionalText(params?.vibe_category),
+    share_method: optionalText(params?.share_method),
+    quiz_id: optionalText(params?.quiz_id),
+    sign: optionalText(params?.sign),
+    content_type: optionalText(params?.content_type),
   });
 }

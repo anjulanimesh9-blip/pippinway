@@ -1,5 +1,5 @@
 {
-  "nav": { "home": "Tuis", "categories": "Kategorieë", "postAd": "Plaas advertensie", "chats": "Gesels", "profile": "Profiel", "login": "Meld aan", "register": "Registreer", "logout": "Meld af" },
+  "nav": { "home": "Tuis", "categories": "Kategorieë", "postAd": "Plaas advertensie", "chats": "Gesels", "profile": "Profiel", "login": "Meld aan", "register": "Registreer", "logout": "Meld af", "vibe": "Vibe" },
   "common": { "cancel": "Kanselleer", "confirm": "Bevestig", "all": "Alles", "search": "Soek", "loading": "Laai...", "featured": "Uitgelig", "ads": "Advertensies" },
   "language": { "title": "Taal", "suggested": "Voorgestel vir {{country}}", "all": "Alle tale", "confirmTitle": "Verander taal?", "confirmBody": "Skakel die Pippinway-koppelvlak oor na {{language}}?", "switch": "Skakel oor" },
   "categories": { "All": "Alles", "Cars": "Motors", "Motorbikes": "Motorfietse", "Property": "Eiendom", "Electronics": "Elektronika", "Fashion": "Mode", "Jobs": "Werksgeleenthede", "Services": "Dienste", "Animals": "Diere", "Furniture": "Meubels", "Education": "Onderwys", "Other": "Ander", "heading": "Kategorieë" },

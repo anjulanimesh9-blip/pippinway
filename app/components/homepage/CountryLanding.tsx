@@ -20,27 +20,11 @@ export default function CountryLanding() {
 
   return (
     <div className="mx-auto w-full max-w-5xl overflow-x-hidden px-4 pb-6 sm:py-12 lg:max-w-[1200px] lg:px-8 lg:py-14">
-      <div className="sm:hidden">
+      <div className="pw-mobile-only sm:hidden">
         <LandingSearch />
-        <h1 className="pw-land-hero mt-5 text-[28px] font-bold leading-tight tracking-tight text-white">
-          {t("home.buySellNearYou")}
-        </h1>
-        <p
-          className="pw-land-hero mt-2 text-sm text-gray-400"
-          style={{ animationDelay: "80ms" }}
-        >
-          {t("home.findGreatDeals")}
-        </p>
-        <LandingHeroArt />
-        <h2 id="choose-country" className="mt-5 text-lg font-bold text-white">
-          {t("home.chooseCountry")}
-        </h2>
-        <p className="mt-1 text-xs text-gray-500">
-          {t("home.selectLocationExplore")}
-        </p>
       </div>
 
-      <div className="hidden flex-col items-center text-center sm:flex">
+      <div className="pw-desktop-only hidden flex-col items-center text-center sm:flex">
         <Image
           src="/images/logo.png"
           alt="Pippinway"
@@ -49,19 +33,36 @@ export default function CountryLanding() {
           className="pw-land-logo h-24 w-auto object-contain lg:h-[7.25rem]"
           priority
         />
-        <h1 className="pw-land-hero mt-6 text-5xl font-bold tracking-tight text-white lg:text-[3.25rem]">
-          {t("home.buySellNearYou")}
-        </h1>
-        <p
-          className="pw-land-hero mt-3 max-w-xl text-lg text-gray-400 lg:max-w-2xl"
-          style={{ animationDelay: "90ms" }}
-        >
-          {t("home.chooseCountryExplore")}
-        </p>
       </div>
 
-      <p className="mt-10 hidden text-center text-sm font-medium text-gray-400 sm:block lg:mt-12">
+      <h1 className="pw-land-hero mt-5 text-[28px] font-bold leading-tight tracking-tight text-white sm:mt-6 sm:text-center sm:text-5xl lg:text-[3.25rem]">
+        {t("home.buySellNearYou")}
+      </h1>
+      <p
+        className="pw-mobile-only pw-land-hero mt-2 text-sm text-gray-400 sm:hidden"
+        style={{ animationDelay: "80ms" }}
+      >
+        {t("home.findGreatDeals")}
+      </p>
+      <p
+        className="pw-desktop-only pw-land-hero mx-auto mt-3 hidden max-w-xl text-center text-lg text-gray-400 sm:block lg:max-w-2xl"
+        style={{ animationDelay: "90ms" }}
+      >
+        {t("home.chooseCountryExplore")}
+      </p>
+
+      <div className="pw-mobile-only sm:hidden">
+        <LandingHeroArt />
+      </div>
+
+      <h2
+        id="choose-country"
+        className="mt-5 scroll-mt-20 text-lg font-bold text-white sm:mt-10 sm:text-center sm:text-sm sm:font-medium sm:text-gray-400 lg:mt-12"
+      >
         {t("home.chooseCountry")}
+      </h2>
+      <p className="pw-mobile-only mt-1 text-xs text-gray-500 sm:hidden">
+        {t("home.selectLocationExplore")}
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:grid-cols-3 sm:gap-3 lg:mt-6 lg:grid-cols-5 lg:gap-4">

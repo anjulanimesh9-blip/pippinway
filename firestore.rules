@@ -341,5 +341,231 @@ service cloud.firestore {
         allow update, delete: if isAdmin();
       }
     }
+
+    function vibePostVisible(postId) {
+      return exists(/databases/$(database)/documents/vibePosts/$(postId)) &&
+        get(/databases/$(database)/documents/vibePosts/$(postId)).data.status == 'visible';
+    }
+
+    function isVibePostCategory() {
+      return request.resource.data.category in [
+        'your-stars',
+        'love-relationships',
+        'motivation',
+        'fun-memes',
+        'lifestyle',
+        'trending-zim'
+      ];
+    }
+
+    function vibeCountBump(field) {
+      return request.resource.data[field] == resource.data[field] + 1 ||
+        request.resource.data[field] == resource.data[field] - 1;
+    }
+
+    match /vibeProfiles/{userId} {
+      allow read: if true;
+
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        request.resource.data.displayName is string &&
+        request.resource.data.displayName.size() > 0 &&
+        request.resource.data.displayName.size() <= 80 &&
+        request.resource.data.bio is string &&
+        request.resource.data.bio.size() <= 160 &&
+        request.resource.data.followerCount == 0 &&
+        request.resource.data.followingCount == 0 &&
+        request.resource.data.postCount == 0;
+
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == userId &&
+          request.resource.data.followerCount == resource.data.followerCount &&
+          request.resource.data.displayName is string &&
+          request.resource.data.displayName.size() > 0 &&
+          request.resource.data.displayName.size() <= 80 &&
+          request.resource.data.bio is string &&
+          request.resource.data.bio.size() <= 160 &&
+          (
+            request.resource.data.postCount == resource.data.postCount ||
+            vibeCountBump('postCount')
+          ) &&
+          (
+            request.resource.data.followingCount == resource.data.followingCount ||
+            vibeCountBump('followingCount')
+          ) &&
+          request.resource.data.postCount >= 0 &&
+          request.resource.data.followingCount >= 0
+        ) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['followerCount']) &&
+          vibeCountBump('followerCount') &&
+          request.resource.data.followerCount >= 0
+        ) ||
+        (
+          request.auth.uid == userId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastCommentAt'])
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    match /vibePosts/{postId} {
+      allow read: if resource.data.status == 'visible' ||
+        (isSignedIn() && request.auth.uid == resource.data.authorId) ||
+        isAdmin();
+
+      allow create: if isSignedIn() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.status == 'visible' &&
+        request.resource.data.likeCount == 0 &&
+        request.resource.data.commentCount == 0 &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 2000 &&
+        request.resource.data.authorName is string &&
+        request.resource.data.authorName.size() > 0 &&
+        request.resource.data.authorName.size() <= 80 &&
+        request.resource.data.postType in ['text', 'image', 'poll'] &&
+        isVibePostCategory() &&
+        request.resource.data.createdAt == request.time &&
+        (
+          !exists(/databases/$(database)/documents/vibeProfiles/$(request.auth.uid)) ||
+          !('lastPostAt' in get(/databases/$(database)/documents/vibeProfiles/$(request.auth.uid)).data) ||
+          request.time > get(/databases/$(database)/documents/vibeProfiles/$(request.auth.uid)).data.lastPostAt + duration.value(15, 's')
+        );
+
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == resource.data.authorId &&
+          request.resource.data.authorId == resource.data.authorId &&
+          request.resource.data.likeCount == resource.data.likeCount &&
+          request.resource.data.commentCount == resource.data.commentCount &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          (
+            request.resource.data.status == resource.data.status ||
+            request.resource.data.status in ['hidden', 'removed']
+          )
+        ) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likeCount']) &&
+          vibeCountBump('likeCount') &&
+          request.resource.data.likeCount >= 0
+        ) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['commentCount']) &&
+          vibeCountBump('commentCount') &&
+          request.resource.data.commentCount >= 0
+        )
+      );
+
+      allow delete: if isSignedIn() && (
+        isAdmin() ||
+        request.auth.uid == resource.data.authorId
+      );
+
+      match /likes/{likeId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == likeId ||
+          isAdmin()
+        );
+        allow create: if isSignedIn() &&
+          request.auth.uid == likeId &&
+          vibePostVisible(postId);
+        allow delete: if isSignedIn() && request.auth.uid == likeId;
+      }
+
+      match /comments/{commentId} {
+        allow read: if resource.data.status == 'visible' ||
+          (isSignedIn() && request.auth.uid == resource.data.authorId) ||
+          isAdmin();
+
+        allow create: if isSignedIn() &&
+          request.resource.data.authorId == request.auth.uid &&
+          request.resource.data.status == 'visible' &&
+          request.resource.data.parentId == null &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 500 &&
+          request.resource.data.authorName is string &&
+          request.resource.data.authorName.size() <= 80 &&
+          request.resource.data.createdAt == request.time &&
+          vibePostVisible(postId) &&
+          (
+            !exists(/databases/$(database)/documents/vibeProfiles/$(request.auth.uid)) ||
+            !('lastCommentAt' in get(/databases/$(database)/documents/vibeProfiles/$(request.auth.uid)).data) ||
+            request.time > get(/databases/$(database)/documents/vibeProfiles/$(request.auth.uid)).data.lastCommentAt + duration.value(8, 's')
+          );
+
+        allow update: if isSignedIn() && (
+          isAdmin() ||
+          (
+            request.auth.uid == resource.data.authorId &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'text']) &&
+            request.resource.data.status in ['visible', 'hidden', 'removed']
+          )
+        );
+
+        allow delete: if isSignedIn() && (
+          isAdmin() ||
+          request.auth.uid == resource.data.authorId
+        );
+      }
+    }
+
+    match /vibeFollows/{followId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.followerId ||
+        request.auth.uid == resource.data.followingId ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.followerId &&
+        request.resource.data.followerId != request.resource.data.followingId &&
+        request.resource.data.followingId is string &&
+        request.resource.data.followingId.size() > 0;
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.followerId;
+      allow update: if false;
+    }
+
+    match /vibeReports/{reportId} {
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        request.auth.uid == resource.data.reporterId
+      );
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.reporterId &&
+        request.resource.data.targetType in ['post', 'comment'] &&
+        request.resource.data.reason in [
+          'spam',
+          'harassment',
+          'hate',
+          'sexual',
+          'misinformation',
+          'other'
+        ] &&
+        request.resource.data.note is string &&
+        request.resource.data.note.size() <= 280 &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      match /vibeSaves/{postId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /vibeBlocks/{blockedId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
   }
 }

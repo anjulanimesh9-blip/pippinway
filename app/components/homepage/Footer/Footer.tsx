@@ -40,6 +40,7 @@ export default function Footer() {
   const { t } = useI18n();
   const pippinwayLinks = [
     { href: "/about", label: t("footer.about") },
+    { href: "/vibe", label: t("nav.vibe") },
     { href: "/how-it-works", label: t("footer.howItWorks") },
   ];
   const supportLinks = [

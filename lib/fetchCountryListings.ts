@@ -65,6 +65,17 @@ function fieldFilter(fieldPath: string, stringValue: string) {
   };
 }
 
+export const MARKETPLACE_PAGE_SIZE = 16;
+const FIRST_PAGE_TIMEOUT_MS = 4000;
+
+export type MarketplaceFirstPage = {
+  listings: ListingRecord[];
+  cursor: ListingRestCursor | null;
+  rawCount: number;
+  country: string;
+  category: string | null;
+};
+
 export async function fetchCountryListingsPage(
   options: {
     country: string;
@@ -74,6 +85,7 @@ export async function fetchCountryListingsPage(
     ascending?: boolean;
     skipOrderBy?: boolean;
     signal?: AbortSignal;
+    revalidateSeconds?: number;
   }
 ): Promise<{
   listings: ListingRecord[];
@@ -84,7 +96,7 @@ export async function fetchCountryListingsPage(
   if (!canonical) return { listings: [], cursor: null, rawCount: 0 };
 
   const category = canonicalCategory(options.category ?? null);
-  const limitCount = options.limitCount ?? 16;
+  const limitCount = options.limitCount ?? MARKETPLACE_PAGE_SIZE;
   const filters = [fieldFilter("country", canonical)];
   if (category) filters.push(fieldFilter("category", category));
 
@@ -122,6 +134,9 @@ export async function fetchCountryListingsPage(
     headers: { "Content-Type": "application/json" },
     signal: options.signal,
     body: JSON.stringify({ structuredQuery }),
+    ...(options.revalidateSeconds
+      ? { next: { revalidate: options.revalidateSeconds } }
+      : {}),
   });
 
   if (!response.ok) {
@@ -145,9 +160,41 @@ export async function fetchCountryListingsPage(
   };
 }
 
+export async function fetchMarketplaceFirstPage(
+  country: string,
+  category?: string | null
+): Promise<MarketplaceFirstPage | null> {
+  const canonical = canonicalCountry(country);
+  if (!canonical) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FIRST_PAGE_TIMEOUT_MS);
+
+  try {
+    const page = await fetchCountryListingsPage({
+      country: canonical,
+      category,
+      limitCount: MARKETPLACE_PAGE_SIZE,
+      signal: controller.signal,
+      revalidateSeconds: 60,
+    });
+    return {
+      listings: page.listings,
+      cursor: page.cursor,
+      rawCount: page.rawCount,
+      country: canonical,
+      category: canonicalCategory(category ?? null),
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function fetchListingsByCanonicalCountry(
   country: string,
-  limitCount = 16,
+  limitCount = MARKETPLACE_PAGE_SIZE,
   signal?: AbortSignal
 ): Promise<ListingRecord[]> {
   const page = await fetchCountryListingsPage({

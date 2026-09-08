@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  LayoutGrid,
   MessageCircle,
   Plus,
+  Sparkles,
   User,
 } from "lucide-react";
 import { GuestAuthLink } from "./GuestAuthPrompt";
@@ -33,7 +33,7 @@ export default function MobileBottomNav({
     }`;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 backdrop-blur-xl lg:hidden">
+    <nav className="pw-nav-mobile fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 backdrop-blur-xl lg:hidden">
       <div className="grid h-16 grid-cols-5">
         <Link href={marketplaceHome} className={itemClass(homeActive)}>
           <Home className="h-5 w-5" strokeWidth={1.8} />
@@ -41,11 +41,11 @@ export default function MobileBottomNav({
         </Link>
 
         <Link
-          href="/categories"
-          className={itemClass(pathname.startsWith("/categories"))}
+          href="/vibe"
+          className={itemClass(pathname.startsWith("/vibe"))}
         >
-          <LayoutGrid className="h-5 w-5" strokeWidth={1.8} />
-          {t("nav.categories")}
+          <Sparkles className="h-5 w-5" strokeWidth={1.8} />
+          {t("nav.vibe")}
         </Link>
 
         <GuestAuthLink

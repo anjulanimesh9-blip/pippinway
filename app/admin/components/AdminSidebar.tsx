@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Package,
   Shield,
+  Sparkles,
   Star,
   Users,
 } from "lucide-react";
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { href: "/admin/banners", label: "Banner Ads", icon: ImageIcon },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/pro-users", label: "Pro Requests", icon: Shield },
+  { href: "/admin/vibe", label: "Vibe", icon: Sparkles },
 ] as const;
 
 function isActive(pathname: string, href: string) {

@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 import { getPublicListingsForSitemap } from "@/lib/getPublicListing";
+import { getPublicVibePostsForSitemap } from "@/lib/getPublicVibePost";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
@@ -65,6 +66,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: `${SITE_URL}/vibe`,
+      lastModified,
+      changeFrequency: "hourly",
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/vibe/stars`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/vibe/love-match`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/vibe/lucky`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/vibe/quizzes`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/vibe/trending`,
+      lastModified,
+      changeFrequency: "hourly",
+      priority: 0.7,
+    },
+    {
       url: `${SITE_URL}/guides/buying-safely`,
       lastModified,
       changeFrequency: "monthly",
@@ -79,14 +116,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const listings = await getPublicListingsForSitemap(200);
+    const [listings, vibePosts] = await Promise.all([
+      getPublicListingsForSitemap(200),
+      getPublicVibePostsForSitemap(80),
+    ]);
     const listingRoutes: MetadataRoute.Sitemap = listings.map((listing) => ({
       url: `${SITE_URL}/listings/${encodeURIComponent(listing.id)}`,
       lastModified,
       changeFrequency: "weekly",
       priority: 0.5,
     }));
-    return [...staticRoutes, ...listingRoutes];
+    const vibeRoutes: MetadataRoute.Sitemap = vibePosts.map((post) => ({
+      url: `${SITE_URL}/vibe/post/${encodeURIComponent(post.id)}`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.4,
+    }));
+    return [...staticRoutes, ...listingRoutes, ...vibeRoutes];
   } catch {
     return staticRoutes;
   }

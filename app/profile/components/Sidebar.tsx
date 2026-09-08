@@ -14,6 +14,7 @@ import {
   Package,
   Settings,
   Shield,
+  Sparkles,
   Star,
   User,
 } from "lucide-react";
@@ -116,6 +117,11 @@ export default function Sidebar({
           <Link href="/" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
             <Home size={18} />
             <span>{t("nav.home")}</span>
+          </Link>
+
+          <Link href="/vibe" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
+            <Sparkles size={18} />
+            <span>{t("nav.vibe")}</span>
           </Link>
 
           <Link

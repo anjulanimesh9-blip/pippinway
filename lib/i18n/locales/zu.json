@@ -1,5 +1,5 @@
 {
-  "nav": { "home": "Ikhaya", "categories": "Izigaba", "postAd": "Faka Isikhangiso", "chats": "Ingxoxo", "profile": "Iphrofayela", "login": "Ngena", "register": "Bhalisa", "logout": "Phuma" },
+  "nav": { "home": "Ikhaya", "categories": "Izigaba", "postAd": "Faka Isikhangiso", "chats": "Ingxoxo", "profile": "Iphrofayela", "login": "Ngena", "register": "Bhalisa", "logout": "Phuma", "vibe": "Vibe" },
   "common": { "cancel": "Khansela", "confirm": "Qinisekisa", "all": "Konke", "search": "Sesha", "loading": "Iyalayisha...", "featured": "Okubalulekile", "ads": "Izikhangiso" },
   "language": { "title": "Ulimi", "suggested": "Okuhlongozwa e-{{country}}", "all": "Zonke izilimi", "confirmTitle": "Shintsha ulimi?", "confirmBody": "Shintsha i-interface ye-Pippinway ibe {{language}}?", "switch": "Shintsha" },
   "categories": { "All": "Konke", "Cars": "Izimoto", "Motorbikes": "Izithuthuthu", "Property": "Izindlu", "Electronics": "Ama-elektroniki", "Fashion": "Imfashini", "Jobs": "Imisebenzi", "Services": "Amasevisi", "Animals": "Izilwane", "Furniture": "Ifenisha", "Education": "Imfundo", "Other": "Okunye", "heading": "Izigaba" },

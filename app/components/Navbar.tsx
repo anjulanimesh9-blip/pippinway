@@ -10,17 +10,18 @@ import {
   Mail,
   Plus,
   Shield,
+  Sparkles,
   User,
   X,
 } from "lucide-react";
-import useNotifications from "../hooks/useNotifications";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { GuestAuthLink, useGuestAuthPrompt } from "./GuestAuthPrompt";
 import useCountryNavigation from "../hooks/useCountryNavigation";
+import useNotifications from "../hooks/useNotifications";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
 
@@ -38,6 +39,8 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const vibeActive = pathname.startsWith("/vibe");
   const { requireAuth } = useGuestAuthPrompt();
   const { marketplaceHome, addListingHref } = useCountryNavigation();
   const { t } = useI18n();
@@ -131,9 +134,15 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden items-center gap-0.5 lg:flex">
+        <div className="pw-nav-desktop hidden items-center gap-0.5 lg:flex">
           <Link href={marketplaceHome} className={NAV_LINK}>
             {t("nav.home")}
+          </Link>
+          <Link
+            href="/vibe"
+            className={`${NAV_LINK} ${vibeActive ? "bg-white/10 font-semibold text-[#FBB03B]" : ""}`}
+          >
+            {t("nav.vibe")}
           </Link>
           <Link href="/about" className={NAV_LINK}>
             {t("nav.about")}
@@ -258,7 +267,7 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="flex items-center gap-0.5 lg:hidden">
+        <div className="pw-nav-mobile flex items-center gap-0.5 lg:hidden">
           <LanguageSwitcher compact />
           <button
             type="button"
@@ -321,6 +330,20 @@ export default function Navbar() {
                 <button type="button" className={DRAWER_ROW} onClick={() => go(marketplaceHome)}>
                   <Home className="h-[18px] w-[18px] shrink-0 text-gray-400" />
                   {t("nav.home")}
+                </button>
+                <button
+                  type="button"
+                  className={`${DRAWER_ROW} ${vibeActive ? "font-semibold text-[#FBB03B]" : ""}`}
+                  onClick={() => go("/vibe")}
+                >
+                  <Sparkles className="h-[18px] w-[18px] shrink-0 text-[#FBB03B]" />
+                  {t("nav.vibe")}
+                </button>
+                <button type="button" className={DRAWER_ROW} onClick={() => go("/categories")}>
+                  <span aria-hidden className="w-[18px] text-center text-gray-400">
+                    ▦
+                  </span>
+                  {t("nav.categories")}
                 </button>
                 <button type="button" className={DRAWER_ROW} onClick={() => go("/about")}>
                   <Info className="h-[18px] w-[18px] shrink-0 text-gray-400" />

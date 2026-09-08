@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Gift, MessageSquare, Package, Settings, Star } from "lucide-react";
+import { Gift, MessageSquare, Package, Settings, Sparkles, Star } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 type ProfileQuickActionsProps = {
@@ -16,10 +16,15 @@ export default function ProfileQuickActions({
 }: ProfileQuickActionsProps) {
   const { t } = useI18n();
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-3">
       <Link href="/profile/listings" className={`${CARD} border-sky-500/30`}>
         <Package size={16} className="text-sky-400" />
         <span className="text-sm font-semibold text-white">{t("profile.myListings")}</span>
+      </Link>
+
+      <Link href="/vibe" className={CARD}>
+        <Sparkles size={16} className="text-[#FBB03B]" />
+        <span className="text-sm font-semibold text-white">{t("nav.vibe")}</span>
       </Link>
 
       <Link href="/rewards" className={CARD}>

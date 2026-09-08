@@ -1,5 +1,5 @@
 {
-  "nav": { "home": "होम", "categories": "श्रेणियाँ", "postAd": "विज्ञापन", "chats": "चैट", "profile": "प्रोफ़ाइल", "about": "हमारे बारे में", "safety": "सुरक्षा", "contact": "संपर्क", "addListing": "विज्ञापन लगाएँ", "login": "लॉगिन", "register": "रजिस्टर", "logout": "लॉग आउट", "chat": "चैट" },
+  "nav": { "home": "होम", "categories": "श्रेणियाँ", "postAd": "विज्ञापन", "chats": "चैट", "profile": "प्रोफ़ाइल", "about": "हमारे बारे में", "safety": "सुरक्षा", "contact": "संपर्क", "addListing": "विज्ञापन लगाएँ", "login": "लॉगिन", "register": "रजिस्टर", "logout": "लॉग आउट", "chat": "चैट", "vibe": "Vibe" },
   "common": { "cancel": "रद्द करें", "confirm": "पुष्टि करें", "all": "सभी", "search": "खोजें", "loading": "लोड हो रहा है...", "featured": "विशेष", "ads": "विज्ञापन", "close": "बंद करें", "back": "वापस" },
   "language": { "title": "भाषा", "suggested": "{{country}} के लिए सुझाई गई", "all": "सभी भाषाएँ", "confirmTitle": "भाषा बदलें?", "confirmBody": "Pippinway इंटरफ़ेस को {{language}} में बदलें?", "switch": "बदलें" },
   "categories": { "All": "सभी", "Cars": "कारें", "Motorbikes": "मोटरबाइक", "Property": "संपत्ति", "Electronics": "इलेक्ट्रॉनिक्स", "Fashion": "फ़ैशन", "Jobs": "नौकरियाँ", "Services": "सेवाएँ", "Animals": "जानवर", "Furniture": "फर्नीचर", "Education": "शिक्षा", "Other": "अन्य", "heading": "श्रेणियाँ", "allCategories": "सभी श्रेणियाँ" },

@@ -77,6 +77,17 @@ service firebase.storage {
       allow write: if isAdmin() && canUploadImage();
     }
 
+    match /vibe/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() &&
+        request.auth.uid == userId &&
+        request.resource.size < 8 * 1024 * 1024 &&
+        (
+          request.resource.contentType.matches('image/.*')
+          || request.resource.contentType == 'application/octet-stream'
+        );
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }
