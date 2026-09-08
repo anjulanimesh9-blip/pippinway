@@ -6,7 +6,7 @@ import { VIBE_PATHS } from "./constants";
 export const VIBE_OG_IMAGE_PATH = "/images/vibe-og.jpg";
 
 export const VIBE_OG_IMAGE = {
-  url: VIBE_OG_IMAGE_PATH,
+  url: `${SITE_URL}${VIBE_OG_IMAGE_PATH}`,
   width: 1200,
   height: 630,
   type: "image/jpeg",
