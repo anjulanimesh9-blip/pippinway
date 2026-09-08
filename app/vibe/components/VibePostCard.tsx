@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bookmark, Flag, Heart, MessageCircle, MoreHorizontal } from "lucide-react";
-import ListingPhoto from "@/app/components/ListingPhoto";
+import { listingPhotoSrc } from "@/app/components/ListingPhoto";
 import { useGuestAuthPrompt } from "@/app/components/GuestAuthPrompt";
 import useAuth from "@/app/hooks/useAuth";
 import { trackVibe } from "@/lib/analytics";
@@ -22,6 +22,8 @@ import { zodiacById } from "@/lib/vibe/zodiac";
 import VibeComments from "./VibeComments";
 import VibeReportModal from "./VibeReportModal";
 import VibeShareMenu from "./VibeShareMenu";
+
+const TEXT_PREVIEW_CHARS = 220;
 
 function Avatar({ src, name }: { src: string; name: string }) {
   if (src) {
@@ -56,8 +58,11 @@ export default function VibePostCard({
   const [commentsOpen, setCommentsOpen] = useState(showComments);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [expanded, setExpanded] = useState(showComments);
   const sign = post.zodiacSign ? zodiacById(post.zodiacSign) : undefined;
   const likeCount = Math.max(0, post.likeCount + likeDelta);
+  const isLong =
+    post.text.length > TEXT_PREVIEW_CHARS || post.text.split("\n").length > 4;
 
   useEffect(() => {
     if (!user) return;
@@ -106,68 +111,94 @@ export default function VibePostCard({
 
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A]">
-      <div className="flex items-start gap-3 px-3 py-3 sm:px-4">
+      <div className="flex items-start gap-3 px-3 pt-3 sm:px-4 sm:pt-4">
         <Link href={VIBE_PATHS.profile(post.authorId)} className="shrink-0">
           <Avatar src={post.authorPhoto} name={post.authorName} />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <Link href={VIBE_PATHS.profile(post.authorId)} className="font-semibold text-white">
+            <div className="min-w-0">
+              <Link href={VIBE_PATHS.profile(post.authorId)} className="block truncate font-semibold text-white">
                 {post.authorName}
               </Link>
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[12px] text-gray-500">
                 {vibeTimeAgo(post.createdAt)} · {vibeCategoryLabel(post.category)}
                 {sign ? ` · ${sign.emoji} ${sign.name}` : ""}
               </p>
             </div>
-            <button type="button" onClick={() => setMenuOpen((value) => !value)} aria-label="Post menu">
-              <MoreHorizontal className="h-5 w-5 text-gray-400" />
+            <button
+              type="button"
+              className="-mr-1 rounded-full p-1 text-gray-400 hover:bg-white/5"
+              onClick={() => setMenuOpen((value) => !value)}
+              aria-label="Post menu"
+            >
+              <MoreHorizontal className="h-5 w-5" />
             </button>
           </div>
-          {menuOpen ? (
-            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-              <button
-                type="button"
-                className="rounded-full border border-white/10 px-2 py-1 text-gray-300"
-                onClick={() => {
-                  setReportOpen(true);
-                  setMenuOpen(false);
-                }}
-              >
-                <Flag className="mr-1 inline h-3 w-3" />
-                Report
-              </button>
-              {(user?.uid === post.authorId || isAdmin) && (
-                <button
-                  type="button"
-                  className="rounded-full border border-red-500/30 px-2 py-1 text-red-300"
-                  onClick={async () => {
-                    await removeOwnVibePost(post, isAdmin);
-                    onRemoved?.(post.id);
-                  }}
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          ) : null}
-          <Link href={VIBE_PATHS.post(post.id)} className="mt-2 block whitespace-pre-wrap text-sm leading-6 text-gray-100">
-            {post.text}
-          </Link>
         </div>
       </div>
+      {menuOpen ? (
+        <div className="flex flex-wrap gap-2 px-3 pt-2 sm:px-4">
+          <button
+            type="button"
+            className="rounded-full border border-white/10 px-2 py-1 text-xs text-gray-300"
+            onClick={() => {
+              setReportOpen(true);
+              setMenuOpen(false);
+            }}
+          >
+            <Flag className="mr-1 inline h-3 w-3" />
+            Report
+          </button>
+          {(user?.uid === post.authorId || isAdmin) && (
+            <button
+              type="button"
+              className="rounded-full border border-red-500/30 px-2 py-1 text-xs text-red-300"
+              onClick={async () => {
+                await removeOwnVibePost(post, isAdmin);
+                onRemoved?.(post.id);
+              }}
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      ) : null}
+      <div className="px-3 pt-2.5 sm:px-4">
+        <p
+          className={`text-[15px] leading-6 text-gray-100 ${
+            expanded || !isLong ? "whitespace-pre-wrap" : "line-clamp-4"
+          }`}
+        >
+          {post.text}
+        </p>
+        {isLong && !expanded ? (
+          <button
+            type="button"
+            className="mt-1 text-sm font-medium text-[#FBB03B]"
+            onClick={() => setExpanded(true)}
+          >
+            Read more
+          </button>
+        ) : null}
+      </div>
       {post.imageUrl ? (
-        <Link href={VIBE_PATHS.post(post.id)} className="relative block aspect-[16/10] bg-black/30">
-          <ListingPhoto
-            src={post.imageUrl}
+        <Link
+          href={VIBE_PATHS.post(post.id)}
+          className="mt-3 block bg-black/40"
+        >
+          {/* Native img keeps each photo's aspect ratio instead of a cropped 16:10 or square box. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={listingPhotoSrc(post.imageUrl)}
             alt=""
-            sizes="(max-width: 768px) 100vw, 640px"
-            className="object-cover"
+            loading="lazy"
+            decoding="async"
+            className="mx-auto block h-auto max-h-[min(72vh,820px)] w-full object-contain"
           />
         </Link>
       ) : null}
-      <div className="flex items-center justify-between px-3 py-2 text-[11px] text-gray-500 sm:px-4">
+      <div className="flex items-center justify-between px-3 py-2 text-[12px] text-gray-500 sm:px-4">
         <span>{likeCount} likes</span>
         <span>{post.commentCount} comments</span>
       </div>
@@ -175,30 +206,30 @@ export default function VibePostCard({
         <button
           type="button"
           onClick={onLike}
-          className={`inline-flex items-center justify-center gap-1 py-2 text-xs sm:text-sm ${
+          className={`inline-flex min-w-0 items-center justify-center gap-1 py-2.5 text-xs sm:text-sm ${
             liked ? "text-red-400" : "text-gray-300"
           }`}
         >
-          <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
+          <Heart className={`h-4 w-4 shrink-0 ${liked ? "fill-current" : ""}`} />
           Like
         </button>
         <button
           type="button"
           onClick={() => setCommentsOpen((value) => !value)}
-          className="inline-flex items-center justify-center gap-1 py-2 text-xs text-gray-300 sm:text-sm"
+          className="inline-flex min-w-0 items-center justify-center gap-1 py-2.5 text-xs text-gray-300 sm:text-sm"
         >
-          <MessageCircle className="h-4 w-4" />
+          <MessageCircle className="h-4 w-4 shrink-0" />
           Comment
         </button>
         <VibeShareMenu postId={post.id} text={post.text} category={post.category} />
         <button
           type="button"
           onClick={onSave}
-          className={`inline-flex items-center justify-center gap-1 py-2 text-xs sm:text-sm ${
+          className={`inline-flex min-w-0 items-center justify-center gap-1 py-2.5 text-xs sm:text-sm ${
             saved ? "text-[#FBB03B]" : "text-gray-300"
           }`}
         >
-          <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
+          <Bookmark className={`h-4 w-4 shrink-0 ${saved ? "fill-current" : ""}`} />
           Save
         </button>
       </div>

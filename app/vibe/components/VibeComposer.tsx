@@ -81,7 +81,10 @@ export default function VibeComposer({
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#0F172A] p-3 sm:p-4">
+    <section
+      id="vibe-composer-panel"
+      className="rounded-2xl border border-white/10 bg-[#0F172A] p-3 sm:p-4"
+    >
       <label className="sr-only" htmlFor="vibe-composer">
         What is on your mind?
       </label>

@@ -263,6 +263,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /siteSettings/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && id == 'vibe';
+    }
+
     match /featured_package_purchases/{purchaseId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||

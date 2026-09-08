@@ -202,6 +202,7 @@ export default function VibeFeed({
       ))}
       <div ref={sentinel} className="h-8" />
       {loadingMore ? <p className="pb-4 text-center text-xs text-gray-500">Loading more…</p> : null}
+      <div className="h-4 lg:hidden" aria-hidden />
     </div>
   );
 }

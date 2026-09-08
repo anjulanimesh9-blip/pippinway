@@ -11,6 +11,7 @@ export const VIBE_REPORT_NOTE_MAX = 280;
 
 export const VIBE_PATHS = {
   home: "/vibe",
+  compose: "/vibe?compose=1",
   post: (id: string) => `/vibe/post/${encodeURIComponent(id)}`,
   profile: (uid: string) => `/vibe/u/${encodeURIComponent(uid)}`,
   stars: "/vibe/stars",

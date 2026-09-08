@@ -1,15 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
   MessageCircle,
   Plus,
   Sparkles,
+  Store,
   User,
 } from "lucide-react";
 import { GuestAuthLink } from "./GuestAuthPrompt";
+import PostChooserSheet from "./PostChooserSheet";
 import useCountryNavigation from "../hooks/useCountryNavigation";
 import { useI18n } from "@/lib/i18n";
 
@@ -23,9 +25,8 @@ export default function MobileBottomNav({
   const pathname = usePathname();
   const { marketplaceHome, addListingHref } = useCountryNavigation();
   const { t } = useI18n();
-  const homeActive =
-    pathname === marketplaceHome ||
-    (marketplaceHome !== "/" && pathname === marketplaceHome);
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const marketplaceActive = pathname === marketplaceHome;
 
   const itemClass = (active: boolean) =>
     `flex flex-col items-center justify-center gap-0.5 text-[11px] transition ${
@@ -33,11 +34,12 @@ export default function MobileBottomNav({
     }`;
 
   return (
+    <>
     <nav className="pw-nav-mobile fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 backdrop-blur-xl lg:hidden">
       <div className="grid h-16 grid-cols-5">
-        <Link href={marketplaceHome} className={itemClass(homeActive)}>
-          <Home className="h-5 w-5" strokeWidth={1.8} />
-          {t("nav.home")}
+        <Link href={marketplaceHome} className={itemClass(marketplaceActive)}>
+          <Store className="h-5 w-5" strokeWidth={1.8} />
+          {t("nav.marketplace")}
         </Link>
 
         <Link
@@ -48,14 +50,17 @@ export default function MobileBottomNav({
           {t("nav.vibe")}
         </Link>
 
-        <GuestAuthLink
-          href={addListingHref}
+        <button
+          type="button"
+          aria-label="Create a post"
+          aria-expanded={chooserOpen}
           className="flex items-center justify-center"
+          onClick={() => setChooserOpen(true)}
         >
           <div className="flex h-14 w-14 -mt-8 items-center justify-center rounded-full border-4 border-[#020817] bg-[#FBB03B] text-[#0B1220] shadow-xl">
             <Plus className="h-7 w-7" strokeWidth={2.4} />
           </div>
-        </GuestAuthLink>
+        </button>
 
         <GuestAuthLink
           href="/messages"
@@ -79,5 +84,11 @@ export default function MobileBottomNav({
         </GuestAuthLink>
       </div>
     </nav>
+    <PostChooserSheet
+      open={chooserOpen}
+      onClose={() => setChooserOpen(false)}
+      addListingHref={addListingHref}
+    />
+    </>
   );
 }

@@ -20,10 +20,23 @@ function VibeHomeInner() {
   const raw = searchParams.get("category") || "all";
   const active: VibeCategoryId = isVibeCategoryId(raw) ? raw : "all";
   const [refreshKey, setRefreshKey] = useState(0);
+  const compose = searchParams.get("compose") === "1";
 
   useEffect(() => {
     trackVibe("vibe_page_view", { vibe_category: active });
   }, [active]);
+
+  useEffect(() => {
+    if (!compose) return;
+    document.getElementById("vibe-composer-panel")?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+    const timer = window.setTimeout(() => {
+      document.getElementById("vibe-composer")?.focus();
+    }, 320);
+    return () => window.clearTimeout(timer);
+  }, [compose]);
 
   const onSelect = (id: VibeCategoryId) => {
     trackVibe("vibe_category", { vibe_category: id });
@@ -72,7 +85,7 @@ function VibeHomeInner() {
           <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-4 text-sm text-gray-400">
             <p className="font-semibold text-white">Marketplace stays next door</p>
             <p className="mt-2">
-              Vibe is for conversation. Listings, prices and Post Ad live in the marketplace — the gold plus button is unchanged.
+              Vibe is for conversation. Listings, prices and Post Ad live in the marketplace. The gold plus button lets you choose Marketplace or Vibe.
             </p>
           </div>
         </aside>

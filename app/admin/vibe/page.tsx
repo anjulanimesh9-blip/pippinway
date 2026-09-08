@@ -10,6 +10,7 @@ import {
 } from "@/lib/vibe/client";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
 import type { VibePost } from "@/lib/vibe/types";
+import VibeBannerSettings from "./VibeBannerSettings";
 
 type ReportRow = {
   id: string;
@@ -67,11 +68,15 @@ export default function AdminVibePage() {
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-2xl font-bold">Vibe moderation</h1>
+      <h1 className="text-2xl font-bold">Vibe</h1>
       <p className="mt-1 text-sm text-gray-400">
-        Hide or remove community posts and comments. Reports are listed below.
+        Edit the public Vibe banner, then hide or remove community posts and comments.
       </p>
       {message ? <p className="mt-3 text-sm text-red-300">{message}</p> : null}
+
+      <div className="mt-6">
+        <VibeBannerSettings />
+      </div>
 
       <h2 className="mt-8 text-lg font-semibold">Reports</h2>
       {loading ? (

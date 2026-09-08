@@ -31,13 +31,13 @@ export default function VibeShareMenu({
   };
 
   return (
-    <div className="relative">
+    <div className="relative flex min-w-0">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs text-gray-300 hover:bg-white/5 sm:text-sm"
+        className="inline-flex w-full min-w-0 items-center justify-center gap-1 py-2.5 text-xs text-gray-300 sm:text-sm"
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className="h-4 w-4 shrink-0" />
         Share
       </button>
       {open ? (
