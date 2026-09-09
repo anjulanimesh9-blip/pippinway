@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const AD_KEY = "3911d3739b79fa88dd424ae24ccf3ca8";
 const SCRIPT_SRC = `https://www.highrevenueformat.com/${AD_KEY}/invoke.js`;
 const SCRIPT_ATTR = "data-adsterra-banner";
+const FILL_TIMEOUT_MS = 4000;
 
 declare global {
   interface Window {
@@ -18,14 +19,36 @@ declare global {
   }
 }
 
+function hasAdCreative(container: HTMLElement): boolean {
+  const iframe = container.querySelector("iframe");
+  if (!iframe) return false;
+
+  try {
+    const doc = iframe.contentDocument;
+    if (!doc) return false;
+
+    const img = doc.querySelector("img");
+    if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      return true;
+    }
+  } catch {
+    // Cross-origin iframe — cannot inspect; treat as not yet confirmed.
+  }
+
+  return false;
+}
+
 /**
  * Safe Adsterra 300×250 banner unit.
  * Loads client-side only, sets window.atOptions before the script,
  * and guards against duplicate script injection.
+ * Collapses the reserved slot if no creative appears within ~4s.
  */
 export default function AdsterraBanner() {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
+  const settledRef = useRef(false);
+  const [slot, setSlot] = useState<"pending" | "ready" | "empty">("pending");
 
   useEffect(() => {
     const container = containerRef.current;
@@ -61,10 +84,74 @@ export default function AdsterraBanner() {
     container.appendChild(script);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof window === "undefined") return;
+
+    let pollId = 0;
+    let timeoutId = 0;
+
+    const observer = new MutationObserver(() => {
+      check();
+      const iframe = container.querySelector("iframe");
+      const doc = iframe?.contentDocument;
+      const img = doc?.querySelector("img");
+      if (img && !img.dataset.adsterraFillBound) {
+        img.dataset.adsterraFillBound = "1";
+        if (img.complete) check();
+        else img.addEventListener("load", check, { once: true });
+      }
+    });
+
+    const stopWatching = () => {
+      observer.disconnect();
+      window.clearInterval(pollId);
+      window.clearTimeout(timeoutId);
+    };
+
+    const settleReady = () => {
+      if (settledRef.current) return;
+      settledRef.current = true;
+      stopWatching();
+      setSlot("ready");
+    };
+
+    const settleEmpty = () => {
+      if (settledRef.current) return;
+      settledRef.current = true;
+      stopWatching();
+      setSlot("empty");
+    };
+
+    const check = () => {
+      if (hasAdCreative(container)) settleReady();
+    };
+
+    check();
+    observer.observe(container, { childList: true, subtree: true });
+
+    // Lightweight poll covers iframe document writes that miss MutationObserver.
+    pollId = window.setInterval(check, 400);
+
+    timeoutId = window.setTimeout(() => {
+      if (hasAdCreative(container)) settleReady();
+      else settleEmpty();
+    }, FILL_TIMEOUT_MS);
+
+    return () => {
+      stopWatching();
+    };
+  }, []);
+
+  if (slot === "empty") {
+    return null;
+  }
+
   return (
     <aside
-      className="flex flex-col items-center"
+      className="mb-4 flex flex-col items-center"
       aria-label="Advertisement"
+      data-adsterra-slot={slot}
     >
       <p className="mb-1.5 text-[10px] uppercase tracking-wide text-gray-500">
         Advertisement

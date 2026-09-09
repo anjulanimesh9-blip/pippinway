@@ -81,7 +81,7 @@ export default function HomeContent({
 
           <LatestHeading count={latestListings.length} from={from} to={to} />
 
-          <div className="mb-4 flex justify-center">
+          <div className="flex justify-center">
             <AdsterraBanner />
           </div>
 
