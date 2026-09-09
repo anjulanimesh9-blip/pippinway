@@ -42,7 +42,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const vibeActive = pathname.startsWith("/vibe");
   const { requireAuth } = useGuestAuthPrompt();
-  const { marketplaceHome, addListingHref } = useCountryNavigation();
+  const { addListingHref } = useCountryNavigation();
   const { t } = useI18n();
   const { notifications, unreadCount } = useNotifications();
   const notifyRef = useRef<HTMLDivElement>(null);
@@ -135,7 +135,7 @@ export default function Navbar() {
         </Link>
 
         <div className="pw-nav-desktop hidden items-center gap-0.5 lg:flex">
-          <Link href={marketplaceHome} className={NAV_LINK}>
+          <Link href="/" className={NAV_LINK}>
             {t("nav.home")}
           </Link>
           <Link
@@ -327,7 +327,7 @@ export default function Navbar() {
 
             <div className="flex-1 overflow-y-auto px-2.5 py-2">
               <div className="space-y-0.5">
-                <button type="button" className={DRAWER_ROW} onClick={() => go(marketplaceHome)}>
+                <button type="button" className={DRAWER_ROW} onClick={() => go("/")}>
                   <Home className="h-[18px] w-[18px] shrink-0 text-gray-400" />
                   {t("nav.home")}
                 </button>
