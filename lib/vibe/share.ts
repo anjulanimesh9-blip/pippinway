@@ -6,8 +6,12 @@ export function vibePostUrl(id: string): string {
   return `${SITE_URL}${VIBE_PATHS.post(id)}`;
 }
 
+function clipCodePoints(text: string, max: number): string {
+  return Array.from(text).slice(0, max).join("");
+}
+
 export function vibeShareText(text: string, url: string): string {
-  const snippet = text.replace(/\s+/g, " ").trim().slice(0, 140);
+  const snippet = clipCodePoints(text.replace(/\s+/g, " ").trim(), 140);
   return snippet ? `${snippet} — ${url}` : url;
 }
 
@@ -44,7 +48,7 @@ export async function shareVibePost(input: {
   }
 
   if (input.method === "native" && typeof navigator.share === "function") {
-    await navigator.share({ title: "Pippinway Vibe", text: input.text.slice(0, 120), url });
+    await navigator.share({ title: "Pippinway Vibe", text: clipCodePoints(input.text, 120), url });
     return "shared";
   }
 

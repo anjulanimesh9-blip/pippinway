@@ -317,7 +317,7 @@ export default function VibePostCard({
           detail ? "px-3 py-2 sm:px-5 sm:py-2.5" : "px-4 py-2.5 sm:px-5"
         }`}
       >
-        <span>{likeCount} likes</span>
+        <span>{likeCount === 1 ? "1 Pip" : `${likeCount} Pips`}</span>
         <span>{post.commentCount} comments</span>
       </div>
       <div className="grid grid-cols-4 border-t border-white/10">
@@ -329,7 +329,7 @@ export default function VibePostCard({
           }`}
         >
           <Heart className={`h-4 w-4 shrink-0 ${liked ? "fill-current" : ""}`} />
-          <span className="truncate">Like</span>
+          <span className="truncate">{liked ? "Pipped" : "Pip"}</span>
         </button>
         <button
           type="button"

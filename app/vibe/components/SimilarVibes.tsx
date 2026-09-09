@@ -78,7 +78,7 @@ export default function SimilarVibes({ post }: { post: VibePost }) {
                   <p className="flex items-center gap-3 pt-0.5 text-[11px] text-gray-500">
                     <span className="inline-flex items-center gap-1">
                       <Heart className="h-3 w-3" />
-                      {item.likeCount}
+                      {item.likeCount === 1 ? "1 Pip" : `${item.likeCount} Pips`}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <MessageCircle className="h-3 w-3" />
