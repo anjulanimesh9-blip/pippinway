@@ -12,6 +12,13 @@ import {
 import type { VibePost, VibePostCategory } from "@/lib/vibe/types";
 import VibePostCard from "./VibePostCard";
 
+function mergeFeedPosts(prev: VibePost[], next: VibePost[]): VibePost[] {
+  if (prev.length === 0) return next;
+  const seen = new Set(prev.map((post) => post.id));
+  const extra = next.filter((post) => !seen.has(post.id));
+  return extra.length === 0 ? prev : [...prev, ...extra];
+}
+
 function Skeleton() {
   return (
     <div className="animate-pulse rounded-2xl border border-white/10 bg-[#0F172A] p-4">
@@ -47,6 +54,8 @@ export default function VibeFeed({
   const [isAdmin, setIsAdmin] = useState(false);
   const blockedRef = useRef<string[]>([]);
   const sentinel = useRef<HTMLDivElement>(null);
+  const loadGen = useRef(0);
+  const loadingMoreRef = useRef(false);
 
   const applyFilter = useCallback((list: VibePost[]) => {
     const blocked = new Set(blockedRef.current);
@@ -55,6 +64,7 @@ export default function VibeFeed({
 
   const load = useCallback(
     async (next?: QueryDocumentSnapshot | null) => {
+      const gen = loadGen.current;
       if (savedOnly) {
         if (!user) {
           setPosts([]);
@@ -63,13 +73,15 @@ export default function VibeFeed({
         }
         try {
           const saved = applyFilter(await fetchSavedPosts(user.uid));
+          if (gen !== loadGen.current) return;
           setPosts(saved);
           setCursor(null);
           setError("");
         } catch {
+          if (gen !== loadGen.current) return;
           setError("Saved posts could not load.");
         } finally {
-          setLoading(false);
+          if (gen === loadGen.current) setLoading(false);
         }
         return;
       }
@@ -80,15 +92,20 @@ export default function VibeFeed({
           authorId,
           cursor: next ?? null,
         });
+        if (gen !== loadGen.current) return;
         const filtered = applyFilter(page.posts);
-        setPosts((prev) => (next ? [...prev, ...filtered] : filtered));
+        setPosts((prev) => (next ? mergeFeedPosts(prev, filtered) : filtered));
         setCursor(page.cursor);
         setError("");
       } catch {
+        if (gen !== loadGen.current) return;
         setError("The feed could not load. Try again.");
       } finally {
-        setLoading(false);
-        setLoadingMore(false);
+        if (gen === loadGen.current) {
+          setLoading(false);
+          setLoadingMore(false);
+          loadingMoreRef.current = false;
+        }
       }
     },
     [applyFilter, authorId, category, savedOnly, user]
@@ -96,6 +113,9 @@ export default function VibeFeed({
 
   useEffect(() => {
     let cancelled = false;
+    loadGen.current += 1;
+    const gen = loadGen.current;
+    loadingMoreRef.current = false;
     (async () => {
       try {
         if (savedOnly) {
@@ -107,23 +127,26 @@ export default function VibeFeed({
             return;
           }
           const saved = applyFilter(await fetchSavedPosts(user.uid));
-          if (cancelled) return;
+          if (cancelled || gen !== loadGen.current) return;
           setPosts(saved);
           setCursor(null);
           setError("");
         } else {
           const page = await fetchVibeFeed({ category, authorId });
-          if (cancelled) return;
+          if (cancelled || gen !== loadGen.current) return;
           setPosts(applyFilter(page.posts));
           setCursor(page.cursor);
           setError("");
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelled && gen === loadGen.current) {
           setError(savedOnly ? "Saved posts could not load." : "The feed could not load. Try again.");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && gen === loadGen.current) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     })();
     return () => {
@@ -146,17 +169,21 @@ export default function VibeFeed({
   }, [user]);
 
   useEffect(() => {
-    if (!sentinel.current || !cursor) return;
+    if (!sentinel.current || !cursor || savedOnly) return;
     const node = sentinel.current;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && cursor && !loadingMore) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        if (loadingMoreRef.current || loadingMore) return;
+        loadingMoreRef.current = true;
         setLoadingMore(true);
         void load(cursor);
-      }
-    });
+      },
+      { rootMargin: "240px 0px" }
+    );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [cursor, load, loadingMore]);
+  }, [cursor, load, loadingMore, savedOnly]);
 
   if (loading) {
     return (
@@ -200,8 +227,12 @@ export default function VibeFeed({
           onRemoved={(id) => setPosts((prev) => prev.filter((item) => item.id !== id))}
         />
       ))}
-      <div ref={sentinel} className="h-8" />
-      {loadingMore ? <p className="pb-4 text-center text-xs text-gray-500">Loading more…</p> : null}
+      {cursor && !savedOnly ? <div ref={sentinel} className="h-8" /> : null}
+      {loadingMore ? (
+        <p className="pb-4 text-center text-xs text-gray-500">Loading more…</p>
+      ) : !cursor && !savedOnly ? (
+        <p className="pb-4 text-center text-xs text-gray-500">You’re all caught up</p>
+      ) : null}
       <div className="h-4 lg:hidden" aria-hidden />
     </div>
   );

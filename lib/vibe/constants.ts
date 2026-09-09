@@ -1,4 +1,4 @@
-export const VIBE_FEED_PAGE_SIZE = 8;
+export const VIBE_FEED_PAGE_SIZE = 10;
 export const VIBE_SIMILAR_LIMIT = 4;
 export const VIBE_COMMENT_PAGE_SIZE = 20;
 export const VIBE_TEXT_MAX = 100000;
