@@ -37,7 +37,7 @@ export default function MobileBottomNav({
     <>
     <nav className="pw-nav-mobile fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0B1220]/95 backdrop-blur-xl lg:hidden">
       <div className="grid h-16 grid-cols-5">
-        <Link href={marketplaceHome} className={itemClass(marketplaceActive)}>
+        <Link href="/#choose-country" className={itemClass(marketplaceActive)}>
           <Store className="h-5 w-5" strokeWidth={1.8} />
           {t("nav.marketplace")}
         </Link>
