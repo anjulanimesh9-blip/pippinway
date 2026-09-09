@@ -22,8 +22,8 @@ import {
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import type { User } from "firebase/auth";
 import { auth, db, storage } from "@/app/firebase";
-import { compressListingImage } from "@/lib/compressImage";
 import { isVibePostCategory } from "./categories";
+import { optimizeVibeImage, vibeImageExtension } from "./optimizeImage";
 import {
   VIBE_COMMENT_COOLDOWN_MS,
   VIBE_COMMENT_PAGE_SIZE,
@@ -234,14 +234,19 @@ export async function uploadVibeImage(user: User, file: File): Promise<string> {
   if (!isAllowedVibeImage(file)) {
     throw new Error("Choose a JPG, PNG, WEBP or GIF under 8MB.");
   }
-  const compressed = await compressListingImage(file);
+  const optimized = await optimizeVibeImage(file);
+  if (!optimized.size) {
+    throw new Error("Could not prepare this photo. Please try another image.");
+  }
   const stamp = Date.now();
-  const paths = [`vibe/${user.uid}/${stamp}.jpg`, `listings/vibe-${user.uid}-${stamp}.jpg`];
+  const ext = vibeImageExtension(optimized.type);
+  const contentType = optimized.type || "image/jpeg";
+  const paths = [`vibe/${user.uid}/${stamp}.${ext}`, `listings/vibe-${user.uid}-${stamp}.${ext}`];
   let lastError: unknown;
   for (const path of paths) {
     try {
       const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, compressed, { contentType: "image/jpeg" });
+      await uploadBytes(storageRef, optimized, { contentType });
       return getDownloadURL(storageRef);
     } catch (err) {
       lastError = err;
