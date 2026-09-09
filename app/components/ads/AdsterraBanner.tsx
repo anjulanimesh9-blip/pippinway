@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 const AD_KEY = "3911d3739b79fa88dd424ae24ccf3ca8";
 const SCRIPT_SRC = `https://www.highrevenueformat.com/${AD_KEY}/invoke.js`;
 const SCRIPT_ATTR = "data-adsterra-banner";
 const FILL_TIMEOUT_MS = 4000;
+/** Gap so invoke.js can read window.atOptions before the next slot overwrites it. */
+const INIT_STAGGER_MS = 120;
 
 declare global {
   interface Window {
@@ -17,6 +19,20 @@ declare global {
       params: Record<string, unknown>;
     };
   }
+}
+
+/** Serialize inits across multiple banners sharing one Adsterra key. */
+let initQueue: Promise<void> = Promise.resolve();
+
+function enqueueBannerInit(run: () => void): Promise<void> {
+  const next = initQueue.then(async () => {
+    run();
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, INIT_STAGGER_MS);
+    });
+  });
+  initQueue = next.catch(() => undefined);
+  return next;
 }
 
 function hasAdCreative(container: HTMLElement): boolean {
@@ -38,16 +54,22 @@ function hasAdCreative(container: HTMLElement): boolean {
   return false;
 }
 
+type Props = {
+  /** Optional extra classes on the outer aside (spacing wrappers). */
+  className?: string;
+};
+
 /**
  * Safe Adsterra 300×250 banner unit.
  * Loads client-side only, sets window.atOptions before the script,
- * and guards against duplicate script injection.
- * Collapses the reserved slot if no creative appears within ~4s.
+ * supports multiple instances via a serialized init queue,
+ * and collapses the reserved slot if no creative appears within ~4s.
  */
-export default function AdsterraBanner() {
+export default function AdsterraBanner({ className = "" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
   const settledRef = useRef(false);
+  const reactId = useId();
   const [slot, setSlot] = useState<"pending" | "ready" | "empty">("pending");
 
   useEffect(() => {
@@ -61,28 +83,33 @@ export default function AdsterraBanner() {
       return;
     }
 
-    // Global duplicate guard — only one invoke.js for this key
-    if (document.querySelector(`script[${SCRIPT_ATTR}="${AD_KEY}"]`)) {
-      initializedRef.current = true;
-      return;
-    }
-
     initializedRef.current = true;
+    let cancelled = false;
 
-    window.atOptions = {
-      key: AD_KEY,
-      format: "iframe",
-      height: 250,
-      width: 300,
-      params: {},
+    void enqueueBannerInit(() => {
+      if (cancelled || !container.isConnected) return;
+      if (container.querySelector("iframe, script")) return;
+
+      window.atOptions = {
+        key: AD_KEY,
+        format: "iframe",
+        height: 250,
+        width: 300,
+        params: {},
+      };
+
+      const script = document.createElement("script");
+      script.src = SCRIPT_SRC;
+      script.async = true;
+      script.setAttribute(SCRIPT_ATTR, AD_KEY);
+      script.setAttribute("data-adsterra-instance", reactId);
+      container.appendChild(script);
+    });
+
+    return () => {
+      cancelled = true;
     };
-
-    const script = document.createElement("script");
-    script.src = SCRIPT_SRC;
-    script.async = true;
-    script.setAttribute(SCRIPT_ATTR, AD_KEY);
-    container.appendChild(script);
-  }, []);
+  }, [reactId]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -149,9 +176,10 @@ export default function AdsterraBanner() {
 
   return (
     <aside
-      className="mb-4 flex flex-col items-center"
+      className={`mb-4 flex flex-col items-center ${className}`.trim()}
       aria-label="Advertisement"
       data-adsterra-slot={slot}
+      data-adsterra-instance={reactId}
     >
       <p className="mb-1.5 text-[10px] uppercase tracking-wide text-gray-500">
         Advertisement

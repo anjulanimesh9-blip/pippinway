@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { QueryDocumentSnapshot } from "firebase/firestore";
+import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
 import useAuth from "@/app/hooks/useAuth";
 import {
   fetchBlockedIds,
@@ -39,11 +40,14 @@ export default function VibeFeed({
   authorId,
   savedOnly = false,
   refreshKey = 0,
+  showEndMarketplaceAd = false,
 }: {
   category?: VibePostCategory | "all";
   authorId?: string;
   savedOnly?: boolean;
   refreshKey?: number;
+  /** Mobile marketplace-adjacent Adsterra; skipped when feed already ends on an ad. */
+  showEndMarketplaceAd?: boolean;
 }) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<VibePost[]>([]);
@@ -219,14 +223,30 @@ export default function VibeFeed({
 
   return (
     <div className="space-y-4">
-      {posts.map((post) => (
-        <VibePostCard
-          key={post.id}
-          post={post}
-          isAdmin={isAdmin}
-          onRemoved={(id) => setPosts((prev) => prev.filter((item) => item.id !== id))}
-        />
+      {posts.map((post, index) => (
+        <Fragment key={post.id}>
+          <VibePostCard
+            post={post}
+            isAdmin={isAdmin}
+            onRemoved={(id) => setPosts((prev) => prev.filter((item) => item.id !== id))}
+          />
+          {(index + 1) % 4 === 0 ? (
+            <div className="flex justify-center py-1">
+              <AdsterraBanner />
+            </div>
+          ) : null}
+        </Fragment>
       ))}
+      {showEndMarketplaceAd && posts.length > 0 && posts.length % 4 !== 0 ? (
+        <section
+          className="rounded-2xl border border-dashed border-white/15 bg-[#0F172A]/80 p-4"
+          aria-label="Sponsored advertisement"
+        >
+          <div className="flex justify-center">
+            <AdsterraBanner className="mb-0" />
+          </div>
+        </section>
+      ) : null}
       {cursor && !savedOnly ? <div ref={sentinel} className="h-8" /> : null}
       {loadingMore ? (
         <p className="pb-4 text-center text-xs text-gray-500">Loading more…</p>

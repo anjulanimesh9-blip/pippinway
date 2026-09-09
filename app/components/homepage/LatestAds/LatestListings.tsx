@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ListingCard from "../ListingCard";
 import BannerRotator from "../Banner/BannerRotator";
+import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
 import { useGuestAuthPrompt } from "../../GuestAuthPrompt";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
@@ -29,7 +30,8 @@ type LatestListingsProps = {
 type FeedItem =
   | { type: "listing"; listing: ListingRecord }
   | { type: "featured"; listing: ListingRecord; slot: number }
-  | { type: "banner"; slot: number };
+  | { type: "banner"; slot: number }
+  | { type: "adsterra"; slot: number };
 
 const FEATURED_GAPS = [1, 3, 2];
 const ROTATE_MS = 4500;
@@ -74,6 +76,9 @@ function buildMixedFeed(
     items.push({ type: "listing", listing });
 
     const position = index + 1;
+    if (position % 4 === 0) {
+      items.push({ type: "adsterra", slot: position / 4 - 1 });
+    }
     if (position % 10 === 0) {
       items.push({ type: "banner", slot: position / 10 - 1 });
     }
@@ -184,6 +189,19 @@ export default function LatestListings({
           return (
             <div key={`banner-slot-${entry.slot}`} className="border-b border-white/8 p-3">
               <BannerRotator banners={banners} startOffset={entry.slot} />
+            </div>
+          );
+        }
+
+        if (entry.type === "adsterra") {
+          return (
+            <div
+              key={`adsterra-slot-${entry.slot}`}
+              className="border-b border-white/8 bg-[#0b1220]/60 px-3 py-4"
+            >
+              <div className="flex justify-center">
+                <AdsterraBanner className="mb-0" />
+              </div>
             </div>
           );
         }

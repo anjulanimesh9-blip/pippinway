@@ -6,7 +6,6 @@ import LatestPager from "./LatestAds/LatestPager";
 import CategorySidebar from "./CategorySidebar";
 import CategoryFilter from "./CategoryFilter";
 import RightSidebar from "./RightSidebar";
-import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
 import {
   bannersForHomepageRail,
   bannersForPlacement,
@@ -80,10 +79,6 @@ export default function HomeContent({
           </div>
 
           <LatestHeading count={latestListings.length} from={from} to={to} />
-
-          <div className="flex justify-center">
-            <AdsterraBanner />
-          </div>
 
           <LatestListings
             latestListings={latestListings}
