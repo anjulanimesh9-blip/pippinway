@@ -43,6 +43,7 @@ function parsePost(
   return {
     id,
     text: asString(parsed.fullText) ?? asString(parsed.text) ?? "",
+    title: asString(parsed.title),
     imageUrl: asString(parsed.imageUrl),
     category: asString(parsed.category),
     authorName: asString(parsed.authorName),
