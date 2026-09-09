@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import CountryFlag from "@/app/components/CountryFlag";
 import LandingHeroArt from "@/app/components/homepage/LandingHeroArt";
 import LandingSearch from "@/app/components/homepage/LandingSearch";
+import LandingVibePreview from "@/app/components/homepage/LandingVibePreview";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 
@@ -35,21 +36,38 @@ export default function CountryLanding() {
         />
       </div>
 
-      <h1 className="pw-land-hero mt-5 text-[28px] font-bold leading-tight tracking-tight text-white sm:mt-6 sm:text-center sm:text-5xl lg:text-[3.25rem]">
+      <h1 className="pw-land-hero mt-5 text-[22px] font-bold leading-snug tracking-tight text-white sm:mt-6 sm:text-center sm:text-4xl sm:leading-tight lg:text-[2.75rem]">
         {t("home.buySellNearYou")}
       </h1>
       <p
-        className="pw-mobile-only pw-land-hero mt-2 text-sm text-gray-400 sm:hidden"
+        className="pw-land-hero mx-auto mt-2 max-w-xl text-sm text-gray-400 sm:mt-3 sm:text-center sm:text-lg lg:max-w-2xl"
         style={{ animationDelay: "80ms" }}
-      >
-        {t("home.findGreatDeals")}
-      </p>
-      <p
-        className="pw-desktop-only pw-land-hero mx-auto mt-3 hidden max-w-xl text-center text-lg text-gray-400 sm:block lg:max-w-2xl"
-        style={{ animationDelay: "90ms" }}
       >
         {t("home.chooseCountryExplore")}
       </p>
+
+      <div
+        className="pw-land-hero mt-5 flex flex-col gap-2.5 sm:mx-auto sm:mt-6 sm:max-w-md sm:flex-row sm:justify-center sm:gap-3"
+        style={{ animationDelay: "120ms" }}
+      >
+        <button
+          type="button"
+          onClick={() =>
+            document
+              .getElementById("choose-country")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-[#FBB03B] px-5 text-sm font-semibold text-[#0B1220] transition hover:bg-[#f5a623] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FBB03B]"
+        >
+          {t("home.exploreMarketplace")}
+        </button>
+        <Link
+          href="/vibe"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FBB03B]"
+        >
+          {t("home.exploreVibe")}
+        </Link>
+      </div>
 
       <div className="pw-mobile-only sm:hidden">
         <LandingHeroArt />
@@ -91,6 +109,15 @@ export default function CountryLanding() {
           </Link>
         ))}
       </div>
+
+      <div
+        className="mt-10 flex items-center gap-3 sm:mt-12 lg:mt-14"
+        aria-hidden
+      >
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      </div>
+
+      <LandingVibePreview />
 
       <section className="pw-land-reveal mt-14 rounded-2xl border border-white/10 bg-[#111827] px-5 py-8 sm:px-8 lg:mt-16 lg:grid lg:grid-cols-2 lg:gap-x-12 lg:gap-y-10 lg:px-10 lg:py-10">
         <div className="lg:col-start-1 lg:row-start-1">
