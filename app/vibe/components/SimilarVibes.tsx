@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle } from "lucide-react";
-import { listingPhotoSrc } from "@/app/components/ListingPhoto";
 import { vibeCategoryLabel } from "@/lib/vibe/categories";
 import { fetchSimilarVibePosts } from "@/lib/vibe/client";
 import { VIBE_PATHS, VIBE_SIMILAR_LIMIT } from "@/lib/vibe/constants";
 import { vibePlainPreview } from "@/lib/vibe/richText";
 import type { VibePost } from "@/lib/vibe/types";
+import VibePostImage, { VIBE_SIMILAR_IMAGE_SIZES } from "./VibePostImage";
 
 export default function SimilarVibes({ post }: { post: VibePost }) {
   const [items, setItems] = useState<VibePost[]>([]);
@@ -57,16 +57,11 @@ export default function SimilarVibes({ post }: { post: VibePost }) {
                 }`}
               >
                 {item.imageUrl ? (
-                  <div className="relative aspect-[16/10] w-full bg-black/40">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={listingPhotoSrc(item.imageUrl)}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                  <VibePostImage
+                    src={item.imageUrl}
+                    variant="similar"
+                    sizes={VIBE_SIMILAR_IMAGE_SIZES}
+                  />
                 ) : null}
                 <div className="min-w-0 space-y-1 p-2.5 sm:space-y-1.5 sm:p-3">
                   <p className="truncate text-sm font-semibold text-white">

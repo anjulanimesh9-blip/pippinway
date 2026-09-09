@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Bookmark, Flag, Heart, MessageCircle, MoreHorizontal } from "lucide-react";
-import { listingPhotoSrc } from "@/app/components/ListingPhoto";
 import { useGuestAuthPrompt } from "@/app/components/GuestAuthPrompt";
 import useAuth from "@/app/hooks/useAuth";
 import { trackVibe } from "@/lib/analytics";
@@ -26,6 +25,10 @@ import { vibeTimeAgo } from "@/lib/vibe/time";
 import type { VibePost } from "@/lib/vibe/types";
 import { zodiacById } from "@/lib/vibe/zodiac";
 import VibeComments from "./VibeComments";
+import VibePostImage, {
+  VIBE_DETAIL_IMAGE_SIZES,
+  VIBE_FEED_IMAGE_SIZES,
+} from "./VibePostImage";
 import VibeReportModal from "./VibeReportModal";
 import VibeShareMenu from "./VibeShareMenu";
 
@@ -292,26 +295,19 @@ export default function VibePostCard({
       {post.imageUrl ? (
         detail ? (
           <div className="mt-3 w-full bg-black/40 sm:mt-4">
-            {/* Native img keeps each photo's aspect ratio instead of a cropped 16:10 or square box. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={listingPhotoSrc(post.imageUrl)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="mx-auto block h-auto max-h-[min(62vh,720px)] w-full object-contain sm:max-h-[min(70vh,720px)]"
+            <VibePostImage
+              src={post.imageUrl}
+              variant="detail"
+              sizes={VIBE_DETAIL_IMAGE_SIZES}
+              priority
             />
           </div>
         ) : (
           <Link href={VIBE_PATHS.post(post.id)} className="mt-3 block bg-black/40">
-            {/* Native img keeps each photo's aspect ratio instead of a cropped 16:10 or square box. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={listingPhotoSrc(post.imageUrl)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="mx-auto block h-auto max-h-[min(72vh,820px)] w-full object-contain"
+            <VibePostImage
+              src={post.imageUrl}
+              variant="feed"
+              sizes={VIBE_FEED_IMAGE_SIZES}
             />
           </Link>
         )
