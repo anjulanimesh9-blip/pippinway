@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef } from "react";
 
 const AD_KEY = "3911d3739b79fa88dd424ae24ccf3ca8";
 const SCRIPT_SRC = `https://www.highrevenueformat.com/${AD_KEY}/invoke.js`;
 const SCRIPT_ATTR = "data-adsterra-banner";
-const FILL_TIMEOUT_MS = 4000;
-/** Gap so invoke.js can read window.atOptions before the next slot overwrites it. */
+/** Gap so invoke.js can read window.atOptions before another slot overwrites it. */
 const INIT_STAGGER_MS = 120;
 
 declare global {
@@ -21,7 +20,7 @@ declare global {
   }
 }
 
-/** Serialize inits across multiple banners sharing one Adsterra key. */
+/** Serialize inits across banners sharing one Adsterra key. */
 let initQueue: Promise<void> = Promise.resolve();
 
 function enqueueBannerInit(run: () => void): Promise<void> {
@@ -35,25 +34,6 @@ function enqueueBannerInit(run: () => void): Promise<void> {
   return next;
 }
 
-function hasAdCreative(container: HTMLElement): boolean {
-  const iframe = container.querySelector("iframe");
-  if (!iframe) return false;
-
-  try {
-    const doc = iframe.contentDocument;
-    if (!doc) return false;
-
-    const img = doc.querySelector("img");
-    if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
-      return true;
-    }
-  } catch {
-    // Cross-origin iframe — cannot inspect; treat as not yet confirmed.
-  }
-
-  return false;
-}
-
 type Props = {
   /** Optional extra classes on the outer aside (spacing wrappers). */
   className?: string;
@@ -62,16 +42,12 @@ type Props = {
 /**
  * Safe Adsterra 300×250 banner unit.
  * Loads client-side only, sets window.atOptions before the script,
- * supports multiple instances via a serialized init queue,
- * and collapses only still-unfilled slots after ~4s (never after READY).
+ * and keeps the reserved slot mounted (no auto-hide / no-fill collapse).
  */
 export default function AdsterraBanner({ className = "" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
-  const settledRef = useRef(false);
-  const readyRef = useRef(false);
   const reactId = useId();
-  const [slot, setSlot] = useState<"pending" | "ready" | "empty">("pending");
 
   useEffect(() => {
     const container = containerRef.current;
@@ -112,102 +88,10 @@ export default function AdsterraBanner({ className = "" }: Props) {
     };
   }, [reactId]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || typeof window === "undefined") return;
-
-    // Already filled — never re-arm collapse for this mount.
-    if (readyRef.current || hasAdCreative(container)) {
-      readyRef.current = true;
-      settledRef.current = true;
-      setSlot("ready");
-      return;
-    }
-
-    let pollId = 0;
-    let timeoutId = 0;
-
-    const clearFillTimeout = () => {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-        timeoutId = 0;
-      }
-    };
-
-    const stopWatching = () => {
-      observer.disconnect();
-      window.clearInterval(pollId);
-      clearFillTimeout();
-    };
-
-    const settleReady = () => {
-      if (readyRef.current) return;
-      readyRef.current = true;
-      settledRef.current = true;
-      // Cancel the 4s collapse as soon as a real creative is present.
-      clearFillTimeout();
-      stopWatching();
-      setSlot("ready");
-    };
-
-    const settleEmpty = () => {
-      // Timeout may only collapse still-pending/unfilled slots — never READY.
-      if (readyRef.current || settledRef.current) return;
-      if (hasAdCreative(container)) {
-        settleReady();
-        return;
-      }
-      settledRef.current = true;
-      stopWatching();
-      setSlot("empty");
-    };
-
-    const check = () => {
-      if (readyRef.current) return;
-      if (hasAdCreative(container)) settleReady();
-    };
-
-    const observer = new MutationObserver(() => {
-      check();
-      const iframe = container.querySelector("iframe");
-      const doc = iframe?.contentDocument;
-      const img = doc?.querySelector("img");
-      if (img && !img.dataset.adsterraFillBound) {
-        img.dataset.adsterraFillBound = "1";
-        if (img.complete) check();
-        else img.addEventListener("load", check, { once: true });
-      }
-    });
-
-    check();
-    observer.observe(container, { childList: true, subtree: true });
-
-    // Lightweight poll covers iframe document writes that miss MutationObserver.
-    pollId = window.setInterval(check, 400);
-
-    timeoutId = window.setTimeout(() => {
-      if (readyRef.current || settledRef.current) return;
-      if (hasAdCreative(container)) settleReady();
-      else settleEmpty();
-    }, FILL_TIMEOUT_MS);
-
-    return () => {
-      // Do not clear readyRef — a filled slot must stay READY across effect cleanups.
-      observer.disconnect();
-      window.clearInterval(pollId);
-      clearFillTimeout();
-    };
-  }, []);
-
-  if (slot === "empty") {
-    return null;
-  }
-
   return (
     <aside
       className={`mb-4 flex flex-col items-center ${className}`.trim()}
       aria-label="Advertisement"
-      data-adsterra-slot={slot}
       data-adsterra-instance={reactId}
     >
       <p className="mb-1.5 text-[10px] uppercase tracking-wide text-gray-500">
