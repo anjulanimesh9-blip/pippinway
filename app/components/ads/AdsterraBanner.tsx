@@ -63,12 +63,13 @@ type Props = {
  * Safe Adsterra 300×250 banner unit.
  * Loads client-side only, sets window.atOptions before the script,
  * supports multiple instances via a serialized init queue,
- * and collapses the reserved slot if no creative appears within ~4s.
+ * and collapses only still-unfilled slots after ~4s (never after READY).
  */
 export default function AdsterraBanner({ className = "" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
   const settledRef = useRef(false);
+  const readyRef = useRef(false);
   const reactId = useId();
   const [slot, setSlot] = useState<"pending" | "ready" | "empty">("pending");
 
@@ -115,8 +116,56 @@ export default function AdsterraBanner({ className = "" }: Props) {
     const container = containerRef.current;
     if (!container || typeof window === "undefined") return;
 
+    // Already filled — never re-arm collapse for this mount.
+    if (readyRef.current || hasAdCreative(container)) {
+      readyRef.current = true;
+      settledRef.current = true;
+      setSlot("ready");
+      return;
+    }
+
     let pollId = 0;
     let timeoutId = 0;
+
+    const clearFillTimeout = () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+        timeoutId = 0;
+      }
+    };
+
+    const stopWatching = () => {
+      observer.disconnect();
+      window.clearInterval(pollId);
+      clearFillTimeout();
+    };
+
+    const settleReady = () => {
+      if (readyRef.current) return;
+      readyRef.current = true;
+      settledRef.current = true;
+      // Cancel the 4s collapse as soon as a real creative is present.
+      clearFillTimeout();
+      stopWatching();
+      setSlot("ready");
+    };
+
+    const settleEmpty = () => {
+      // Timeout may only collapse still-pending/unfilled slots — never READY.
+      if (readyRef.current || settledRef.current) return;
+      if (hasAdCreative(container)) {
+        settleReady();
+        return;
+      }
+      settledRef.current = true;
+      stopWatching();
+      setSlot("empty");
+    };
+
+    const check = () => {
+      if (readyRef.current) return;
+      if (hasAdCreative(container)) settleReady();
+    };
 
     const observer = new MutationObserver(() => {
       check();
@@ -130,30 +179,6 @@ export default function AdsterraBanner({ className = "" }: Props) {
       }
     });
 
-    const stopWatching = () => {
-      observer.disconnect();
-      window.clearInterval(pollId);
-      window.clearTimeout(timeoutId);
-    };
-
-    const settleReady = () => {
-      if (settledRef.current) return;
-      settledRef.current = true;
-      stopWatching();
-      setSlot("ready");
-    };
-
-    const settleEmpty = () => {
-      if (settledRef.current) return;
-      settledRef.current = true;
-      stopWatching();
-      setSlot("empty");
-    };
-
-    const check = () => {
-      if (hasAdCreative(container)) settleReady();
-    };
-
     check();
     observer.observe(container, { childList: true, subtree: true });
 
@@ -161,12 +186,16 @@ export default function AdsterraBanner({ className = "" }: Props) {
     pollId = window.setInterval(check, 400);
 
     timeoutId = window.setTimeout(() => {
+      if (readyRef.current || settledRef.current) return;
       if (hasAdCreative(container)) settleReady();
       else settleEmpty();
     }, FILL_TIMEOUT_MS);
 
     return () => {
-      stopWatching();
+      // Do not clear readyRef — a filled slot must stay READY across effect cleanups.
+      observer.disconnect();
+      window.clearInterval(pollId);
+      clearFillTimeout();
     };
   }, []);
 

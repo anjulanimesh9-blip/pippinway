@@ -76,8 +76,8 @@ function buildMixedFeed(
     items.push({ type: "listing", listing });
 
     const position = index + 1;
-    if (position % 4 === 0) {
-      items.push({ type: "adsterra", slot: position / 4 - 1 });
+    if (position === 4) {
+      items.push({ type: "adsterra", slot: 0 });
     }
     if (position % 10 === 0) {
       items.push({ type: "banner", slot: position / 10 - 1 });

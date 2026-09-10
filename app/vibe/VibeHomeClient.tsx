@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
 import { trackVibe } from "@/lib/analytics";
 import { isVibeCategoryId } from "@/lib/vibe/categories";
 import type { VibeCategoryId, VibePostCategory } from "@/lib/vibe/types";
@@ -15,33 +14,6 @@ import VibeHero from "./components/VibeHero";
 import VibeShell from "./components/VibeShell";
 import VibeSidebar from "./components/VibeSidebar";
 
-function useIsLargeScreen() {
-  const [isLarge, setIsLarge] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const sync = () => setIsLarge(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
-  return isLarge;
-}
-
-function VibeMarketplaceAd() {
-  return (
-    <section
-      className="rounded-2xl border border-dashed border-white/15 bg-[#0F172A]/80 p-4"
-      aria-label="Sponsored advertisement"
-    >
-      <div className="flex justify-center">
-        <AdsterraBanner className="mb-0" />
-      </div>
-    </section>
-  );
-}
-
 function VibeHomeInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -49,7 +21,6 @@ function VibeHomeInner() {
   const active: VibeCategoryId = isVibeCategoryId(raw) ? raw : "all";
   const [refreshKey, setRefreshKey] = useState(0);
   const compose = searchParams.get("compose") === "1";
-  const isLargeScreen = useIsLargeScreen();
 
   useEffect(() => {
     trackVibe("vibe_page_view", { vibe_category: active });
@@ -75,7 +46,7 @@ function VibeHomeInner() {
 
   return (
     <VibeShell>
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-5 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:gap-8 lg:py-8">
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-5 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)_260px] lg:gap-8 lg:py-8">
         <aside className="hidden lg:block">
           <VibeSidebar />
         </aside>
@@ -91,7 +62,6 @@ function VibeHomeInner() {
           <VibeFeed
             category={active === "all" ? "all" : active}
             refreshKey={refreshKey}
-            showEndMarketplaceAd={!isLargeScreen}
           />
         </div>
         <aside className="hidden space-y-5 lg:block">
@@ -118,7 +88,6 @@ function VibeHomeInner() {
               Vibe is for conversation. Listings, prices and Post Ad live in the marketplace. The gold plus button lets you choose Marketplace or Vibe.
             </p>
           </div>
-          {isLargeScreen ? <VibeMarketplaceAd /> : null}
         </aside>
       </div>
     </VibeShell>
