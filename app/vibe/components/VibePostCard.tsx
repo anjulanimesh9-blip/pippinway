@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Bookmark, Flag, Heart, MessageCircle, MoreHorizontal } from "lucide-react";
+import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
+import { ADSTERRA_AD_KEY } from "@/app/components/ads/adsterraConfig";
 import { useGuestAuthPrompt } from "@/app/components/GuestAuthPrompt";
 import useAuth from "@/app/hooks/useAuth";
 import { trackVibe } from "@/lib/analytics";
@@ -217,6 +219,11 @@ export default function VibePostCard({
               Remove
             </button>
           )}
+        </div>
+      ) : null}
+      {detail ? (
+        <div className="flex justify-center px-3 py-3 sm:px-5">
+          <AdsterraBanner adKey={ADSTERRA_AD_KEY} className="mb-0" />
         </div>
       ) : null}
       <div className={`${detail ? "px-3 pt-2.5 sm:px-5 sm:pt-4" : "px-4 pt-3 sm:px-5"}`}>

@@ -1,157 +1,131 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { ADSTERRA_AD_KEY, adsterraSrcDoc } from "./adsterraConfig";
 
-const AD_KEY = "3911d3739b79fa88dd424ae24ccf3ca8";
-const SCRIPT_SRC = `https://www.highrevenueformat.com/${AD_KEY}/invoke.js`;
-const SCRIPT_ATTR = "data-adsterra-banner";
-/** Gap so invoke.js can read window.atOptions before another slot overwrites it. */
-const INIT_STAGGER_MS = 120;
 const AD_WIDTH = 300;
 const AD_HEIGHT = 250;
 
-declare global {
-  interface Window {
-    atOptions?: {
-      key: string;
-      format: string;
-      height: number;
-      width: number;
-      params: Record<string, unknown>;
-    };
-  }
-}
+type Props = {
+  /**
+   * Adsterra banner key. Defaults to the approved live key.
+   * Same key may be reused across instances; each mounts in an isolated iframe.
+   */
+  adKey?: string;
+  /** Optional extra classes on the outer aside (spacing wrappers). */
+  className?: string;
+};
 
-/** Serialize inits across banners sharing one Adsterra key. */
-let initQueue: Promise<void> = Promise.resolve();
-
-function enqueueBannerInit(run: () => void): Promise<void> {
-  const next = initQueue.then(async () => {
-    run();
-    await new Promise<void>((resolve) => {
-      window.setTimeout(resolve, INIT_STAGGER_MS);
-    });
-  });
-  initQueue = next.catch(() => undefined);
-  return next;
-}
-
-function hasAdCreative(container: HTMLElement): boolean {
-  const iframe = container.querySelector("iframe");
-  if (!iframe) return false;
-
+function hasCreativeInSandbox(sandbox: HTMLIFrameElement): boolean {
   try {
-    const doc = iframe.contentDocument;
+    const doc = sandbox.contentDocument;
     if (!doc) return false;
 
-    const img = doc.querySelector("img");
-    if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+    const directImg = doc.querySelector("img");
+    if (
+      directImg &&
+      directImg.complete &&
+      directImg.naturalWidth > 0 &&
+      directImg.naturalHeight > 0
+    ) {
       return true;
     }
+
+    const nested = doc.querySelectorAll("iframe");
+    for (const frame of nested) {
+      try {
+        const nestedDoc = frame.contentDocument;
+        const img = nestedDoc?.querySelector("img");
+        if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+          return true;
+        }
+      } catch {
+        // Nested frame may be opaque; ignore.
+      }
+    }
   } catch {
-    // Cross-origin iframe — cannot inspect yet.
+    // Sandbox not ready yet.
   }
 
   return false;
 }
 
-type Props = {
-  /** Optional extra classes on the outer aside (spacing wrappers). */
-  className?: string;
-};
-
 /**
  * Safe Adsterra 300×250 banner unit.
- * Loads client-side only, sets window.atOptions before the script,
- * keeps the slot mounted, and only expands layout height after a real creative fills.
+ * Each instance runs the official snippet inside an isolated iframe (srcDoc)
+ * so the same placement key can appear multiple times without sharing window.atOptions.
+ * Layout height stays collapsed until a real creative is detected, then expands permanently.
  */
-export default function AdsterraBanner({ className = "" }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const initializedRef = useRef(false);
+export default function AdsterraBanner({
+  adKey = ADSTERRA_AD_KEY,
+  className = "",
+}: Props) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const filledRef = useRef(false);
   const reactId = useId();
   const [filled, setFilled] = useState(false);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || initializedRef.current) return;
-    if (typeof window === "undefined") return;
-
-    // Already initialized in this container (e.g. HMR / remount)
-    if (container.querySelector("iframe, script")) {
-      initializedRef.current = true;
-      return;
-    }
-
-    initializedRef.current = true;
-    let cancelled = false;
-
-    void enqueueBannerInit(() => {
-      if (cancelled || !container.isConnected) return;
-      if (container.querySelector("iframe, script")) return;
-
-      window.atOptions = {
-        key: AD_KEY,
-        format: "iframe",
-        height: AD_HEIGHT,
-        width: AD_WIDTH,
-        params: {},
-      };
-
-      const script = document.createElement("script");
-      script.src = SCRIPT_SRC;
-      script.async = true;
-      script.setAttribute(SCRIPT_ATTR, AD_KEY);
-      script.setAttribute("data-adsterra-instance", reactId);
-      container.appendChild(script);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [reactId]);
+  const srcDoc = adsterraSrcDoc(adKey);
 
   // Detect fill only to expand layout — never unmount / never timeout-hide.
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container || typeof window === "undefined") return;
+    const iframe = iframeRef.current;
+    if (!iframe || typeof window === "undefined") return;
     if (filledRef.current) return;
+
+    let pollId = 0;
+    let observer: MutationObserver | null = null;
 
     const markFilled = () => {
       if (filledRef.current) return;
-      if (!hasAdCreative(container)) return;
+      if (!hasCreativeInSandbox(iframe)) return;
       filledRef.current = true;
       setFilled(true);
-      observer.disconnect();
+      observer?.disconnect();
       window.clearInterval(pollId);
     };
 
-    const observer = new MutationObserver(() => {
+    const watchSandboxDoc = () => {
       markFilled();
-      const iframe = container.querySelector("iframe");
-      const img = iframe?.contentDocument?.querySelector("img");
-      if (img && !img.dataset.adsterraFillBound) {
-        img.dataset.adsterraFillBound = "1";
-        if (img.complete) markFilled();
-        else img.addEventListener("load", markFilled, { once: true });
+      try {
+        const doc = iframe.contentDocument;
+        if (!doc) return;
+        observer?.disconnect();
+        observer = new MutationObserver(() => {
+          markFilled();
+          const img = doc.querySelector("img");
+          if (img && !img.dataset.adsterraFillBound) {
+            img.dataset.adsterraFillBound = "1";
+            if (img.complete) markFilled();
+            else img.addEventListener("load", markFilled, { once: true });
+          }
+        });
+        observer.observe(doc.documentElement || doc.body, {
+          childList: true,
+          subtree: true,
+        });
+      } catch {
+        // Ignore until srcDoc is readable.
       }
-    });
+    };
 
-    markFilled();
-    observer.observe(container, { childList: true, subtree: true });
-    const pollId = window.setInterval(markFilled, 400);
+    iframe.addEventListener("load", watchSandboxDoc);
+    watchSandboxDoc();
+    pollId = window.setInterval(markFilled, 400);
 
     return () => {
-      observer.disconnect();
+      iframe.removeEventListener("load", watchSandboxDoc);
+      observer?.disconnect();
       window.clearInterval(pollId);
     };
-  }, []);
+  }, [srcDoc]);
 
   return (
     <aside
       className={`mb-4 flex flex-col items-center ${className}`.trim()}
       aria-label="Advertisement"
       data-adsterra-instance={reactId}
+      data-adsterra-key={adKey}
+      data-adsterra-isolated="srcdoc"
       data-adsterra-filled={filled ? "true" : "false"}
     >
       <p className="mb-1.5 text-[10px] uppercase tracking-wide text-gray-500">
@@ -159,21 +133,29 @@ export default function AdsterraBanner({ className = "" }: Props) {
       </p>
       {/*
         Clip wrapper controls visible layout height only.
-        The Adsterra target below always keeps a real 300×250 box (never display:none)
-        so invoke.js can insert/fill an iframe even while the feed gap stays small.
+        The isolated iframe always keeps a real 300×250 box (never display:none)
+        so Adsterra can render even while the feed gap stays small.
       */}
       <div
         className="w-[300px] overflow-hidden"
         style={{ height: filled ? AD_HEIGHT : 0 }}
       >
-        <div
-          ref={containerRef}
-          className="flex items-center justify-center overflow-hidden bg-transparent"
+        <iframe
+          ref={iframeRef}
+          title="Advertisement"
+          srcDoc={srcDoc}
+          width={AD_WIDTH}
+          height={AD_HEIGHT}
+          scrolling="no"
+          frameBorder={0}
+          // Scripts + same-origin needed for Adsterra invoke.js / creative iframe.
+          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
           style={{
             width: AD_WIDTH,
             height: AD_HEIGHT,
-            minWidth: AD_WIDTH,
-            minHeight: AD_HEIGHT,
+            border: 0,
+            display: "block",
+            background: "transparent",
           }}
         />
       </div>

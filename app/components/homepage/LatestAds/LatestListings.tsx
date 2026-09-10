@@ -5,6 +5,10 @@ import Link from "next/link";
 import ListingCard from "../ListingCard";
 import BannerRotator from "../Banner/BannerRotator";
 import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
+import {
+  ADSTERRA_AD_KEY,
+  ADSTERRA_INTERVAL,
+} from "@/app/components/ads/adsterraConfig";
 import { useGuestAuthPrompt } from "../../GuestAuthPrompt";
 import { isActiveFeaturedListing } from "@/lib/listingFeatured";
 import type { Banner, ListingRecord } from "@/lib/types/featured";
@@ -76,8 +80,11 @@ function buildMixedFeed(
     items.push({ type: "listing", listing });
 
     const position = index + 1;
-    if (position === 4) {
-      items.push({ type: "adsterra", slot: 0 });
+    if (position % ADSTERRA_INTERVAL === 0) {
+      items.push({
+        type: "adsterra",
+        slot: position / ADSTERRA_INTERVAL - 1,
+      });
     }
     if (position % 10 === 0) {
       items.push({ type: "banner", slot: position / 10 - 1 });
@@ -200,7 +207,7 @@ export default function LatestListings({
               className="border-b border-white/8 bg-[#0b1220]/60 px-3 py-4"
             >
               <div className="flex justify-center">
-                <AdsterraBanner className="mb-0" />
+                <AdsterraBanner adKey={ADSTERRA_AD_KEY} className="mb-0" />
               </div>
             </div>
           );

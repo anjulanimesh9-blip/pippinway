@@ -3,6 +3,10 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { QueryDocumentSnapshot } from "firebase/firestore";
 import AdsterraBanner from "@/app/components/ads/AdsterraBanner";
+import {
+  ADSTERRA_AD_KEY,
+  ADSTERRA_INTERVAL,
+} from "@/app/components/ads/adsterraConfig";
 import useAuth from "@/app/hooks/useAuth";
 import {
   fetchBlockedIds,
@@ -220,20 +224,25 @@ export default function VibeFeed({
 
   return (
     <div className="space-y-4">
-      {posts.map((post, index) => (
-        <Fragment key={post.id}>
-          <VibePostCard
-            post={post}
-            isAdmin={isAdmin}
-            onRemoved={(id) => setPosts((prev) => prev.filter((item) => item.id !== id))}
-          />
-          {(index + 1) === 4 ? (
-            <div className="flex justify-center py-1">
-              <AdsterraBanner />
-            </div>
-          ) : null}
-        </Fragment>
-      ))}
+      {posts.map((post, index) => {
+        const position = index + 1;
+        const showAd = position % ADSTERRA_INTERVAL === 0;
+
+        return (
+          <Fragment key={post.id}>
+            <VibePostCard
+              post={post}
+              isAdmin={isAdmin}
+              onRemoved={(id) => setPosts((prev) => prev.filter((item) => item.id !== id))}
+            />
+            {showAd ? (
+              <div className="flex justify-center py-1">
+                <AdsterraBanner adKey={ADSTERRA_AD_KEY} />
+              </div>
+            ) : null}
+          </Fragment>
+        );
+      })}
       {cursor && !savedOnly ? <div ref={sentinel} className="h-8" /> : null}
       {loadingMore ? (
         <p className="pb-4 text-center text-xs text-gray-500">Loading more…</p>
