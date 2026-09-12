@@ -21,7 +21,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     description:
       "Perfect for restaurants, cafes, takeaways, and food businesses.",
     image: null,
-    previewUrl: null,
+    previewUrl: "/pipweb/templates/restaurant-cafe",
   },
   {
     id: "preschool-education",
