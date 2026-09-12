@@ -7,6 +7,7 @@ import CountryFlag from "@/app/components/CountryFlag";
 import LandingHeroArt from "@/app/components/homepage/LandingHeroArt";
 import LandingSearch from "@/app/components/homepage/LandingSearch";
 import LandingVibePreview from "@/app/components/homepage/LandingVibePreview";
+import PipWebPromo from "@/app/components/homepage/PipWebPromo";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 
@@ -115,6 +116,10 @@ export default function CountryLanding() {
         aria-hidden
       >
         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      </div>
+
+      <div className="mt-10 sm:mt-12 lg:mt-14">
+        <PipWebPromo />
       </div>
 
       <LandingVibePreview />

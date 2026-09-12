@@ -8,6 +8,7 @@ import {
   Info,
   LogOut,
   Mail,
+  Monitor,
   Plus,
   Shield,
   Sparkles,
@@ -41,6 +42,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const vibeActive = pathname.startsWith("/vibe");
+  const pipwebActive = pathname.startsWith("/pipweb");
   const { requireAuth } = useGuestAuthPrompt();
   const { addListingHref } = useCountryNavigation();
   const { t } = useI18n();
@@ -143,6 +145,12 @@ export default function Navbar() {
             className={`${NAV_LINK} ${vibeActive ? "bg-white/10 font-semibold text-[#FBB03B]" : ""}`}
           >
             {t("nav.vibe")}
+          </Link>
+          <Link
+            href="/pipweb"
+            className={`${NAV_LINK} ${pipwebActive ? "bg-white/10 font-semibold text-[#7DD3FC]" : ""}`}
+          >
+            PipWeb
           </Link>
           <Link href="/about" className={NAV_LINK}>
             {t("nav.about")}
@@ -338,6 +346,14 @@ export default function Navbar() {
                 >
                   <Sparkles className="h-[18px] w-[18px] shrink-0 text-[#FBB03B]" />
                   {t("nav.vibe")}
+                </button>
+                <button
+                  type="button"
+                  className={`${DRAWER_ROW} ${pipwebActive ? "font-semibold text-[#7DD3FC]" : ""}`}
+                  onClick={() => go("/pipweb")}
+                >
+                  <Monitor className="h-[18px] w-[18px] shrink-0 text-[#7DD3FC]" />
+                  PipWeb
                 </button>
                 <button type="button" className={DRAWER_ROW} onClick={() => go("/categories")}>
                   <span aria-hidden className="w-[18px] text-center text-gray-400">
