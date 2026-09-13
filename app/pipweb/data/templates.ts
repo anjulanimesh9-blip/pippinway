@@ -45,7 +45,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     description:
       "Professional website for car dealers, vehicle sales, and automotive businesses.",
     image: "/pipweb/templates/thumbnails/car-dealer.jpg",
-    previewUrl: null,
+    previewUrl: "/pipweb/templates/car-dealer",
   },
   {
     id: "real-estate",
