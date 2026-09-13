@@ -1,39 +1,30 @@
+import Image from "next/image";
 import PipWebTemplateActions from "@/app/pipweb/components/PipWebTemplateActions";
 import { PIPWEB_TEMPLATES } from "@/app/pipweb/data/templates";
 
-const MOCKUP_ACCENT: Record<string, string> = {
-  "restaurant-cafe": "from-amber-500/25 via-[#0F172A] to-[#0B1220]",
-  "preschool-education": "from-sky-400/25 via-[#0F172A] to-[#0B1220]",
-  "salon-beauty": "from-rose-400/25 via-[#0F172A] to-[#0B1220]",
-  "car-dealer": "from-slate-400/25 via-[#0F172A] to-[#0B1220]",
-  "real-estate": "from-teal-400/25 via-[#0F172A] to-[#0B1220]",
-  "corporate-business": "from-blue-500/30 via-[#0F172A] to-[#0B1220]",
-};
-
-function TemplateMockup({ id, live }: { id: string; live: boolean }) {
-  const accent = MOCKUP_ACCENT[id] ?? "from-[#3B82F6]/20 via-[#0F172A] to-[#0B1220]";
-
+function TemplatePreview({
+  src,
+  alt,
+  live,
+}: {
+  src: string;
+  alt: string;
+  live: boolean;
+}) {
   return (
-    <div
-      className={`relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br ${accent}`}
-      aria-hidden
-    >
-      <div className="flex h-8 items-center gap-1.5 bg-[#07111F]/85 px-3">
-        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-        <span className="ml-2 h-3.5 flex-1 rounded-sm bg-white/10" />
-      </div>
-      <div className="aspect-[16/10] min-h-[11.5rem] p-4 sm:min-h-[12.5rem] sm:p-5">
-        <div className="h-3.5 w-1/3 rounded bg-white/20" />
-        <div className="mt-4 grid grid-cols-3 gap-2.5">
-          <div className="h-[4.75rem] rounded-lg bg-white/10 sm:h-24" />
-          <div className="h-[4.75rem] rounded-lg bg-white/15 sm:h-24" />
-          <div className="h-[4.75rem] rounded-lg bg-white/10 sm:h-24" />
-        </div>
-        <div className="mt-3 h-2.5 w-2/3 rounded bg-white/15" />
-        <div className="mt-2 h-2.5 w-1/2 rounded bg-white/10" />
-      </div>
+    <div className="relative aspect-[16/10] min-h-[11.5rem] overflow-hidden rounded-xl sm:min-h-[12.5rem]">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        quality={65}
+        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 360px"
+        className="object-cover"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-t from-[#020817]/40 via-transparent to-[#020817]/15"
+      />
       {live ? (
         <span className="absolute right-3 top-2 rounded-full bg-[#3B82F6] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
           Live demo
@@ -75,7 +66,11 @@ export default function PipWebTemplates() {
                   : "border-white/10 hover:border-[#3B82F6]/35"
               }`}
             >
-              <TemplateMockup id={template.id} live={live} />
+              <TemplatePreview
+                src={template.image ?? `/pipweb/templates/thumbnails/${template.id}.jpg`}
+                alt={`${template.name} website design preview`}
+                live={live}
+              />
               <h3 className="mt-5 text-[17px] font-semibold leading-snug text-white sm:text-lg">
                 {template.name}
               </h3>

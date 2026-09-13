@@ -20,7 +20,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     name: "Restaurant & Cafe",
     description:
       "Perfect for restaurants, cafes, takeaways, and food businesses.",
-    image: null,
+    image: "/pipweb/templates/thumbnails/restaurant-cafe.jpg",
     previewUrl: "/pipweb/templates/restaurant-cafe",
   },
   {
@@ -28,7 +28,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     name: "Preschool & Education",
     description:
       "A friendly website for preschools, schools, tutors, and education centres.",
-    image: null,
+    image: "/pipweb/templates/thumbnails/preschool-education.jpg",
     previewUrl: null,
   },
   {
@@ -36,7 +36,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     name: "Salon & Beauty",
     description:
       "Modern design for salons, beauty studios, spas, and personal care businesses.",
-    image: null,
+    image: "/pipweb/templates/thumbnails/salon-beauty.jpg",
     previewUrl: null,
   },
   {
@@ -44,7 +44,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     name: "Car Dealer",
     description:
       "Professional website for car dealers, vehicle sales, and automotive businesses.",
-    image: null,
+    image: "/pipweb/templates/thumbnails/car-dealer.jpg",
     previewUrl: null,
   },
   {
@@ -52,7 +52,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     name: "Real Estate",
     description:
       "Clean property-focused design for agents, landlords, and real estate companies.",
-    image: null,
+    image: "/pipweb/templates/thumbnails/real-estate.jpg",
     previewUrl: null,
   },
   {
@@ -60,7 +60,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     name: "Corporate & Business",
     description:
       "Professional business website for companies, consultants, and service providers.",
-    image: null,
+    image: "/pipweb/templates/thumbnails/corporate-business.jpg",
     previewUrl: null,
   },
 ];
