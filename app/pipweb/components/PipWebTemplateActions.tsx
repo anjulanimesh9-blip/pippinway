@@ -7,10 +7,10 @@ import {
 } from "@/app/pipweb/data/templates";
 
 const PREVIEW_BTN =
-  "inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 text-sm font-semibold text-white transition hover:border-[#60A5FA]/40 hover:bg-[#3B82F6]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]";
+  "inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-center text-sm font-semibold leading-tight text-white transition hover:border-[#60A5FA]/40 hover:bg-[#3B82F6]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]";
 
 const CHOOSE_BTN =
-  "inline-flex h-10 items-center justify-center rounded-xl bg-[#3B82F6] px-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(59,130,246,0.22)] transition hover:bg-[#2563EB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]";
+  "inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#3B82F6] px-3 py-2.5 text-center text-sm font-semibold leading-tight text-white shadow-[0_0_18px_rgba(59,130,246,0.20)] transition hover:bg-[#2563EB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]";
 
 export default function PipWebTemplateActions({
   id,
@@ -24,8 +24,8 @@ export default function PipWebTemplateActions({
   const [comingSoon, setComingSoon] = useState(false);
 
   return (
-    <div className="mt-5">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div className="mt-6">
+      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
         {previewUrl ? (
           <a
             href={previewUrl}

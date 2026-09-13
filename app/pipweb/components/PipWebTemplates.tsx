@@ -10,7 +10,7 @@ const MOCKUP_ACCENT: Record<string, string> = {
   "corporate-business": "from-blue-500/30 via-[#0F172A] to-[#0B1220]",
 };
 
-function TemplateMockup({ id }: { id: string }) {
+function TemplateMockup({ id, live }: { id: string; live: boolean }) {
   const accent = MOCKUP_ACCENT[id] ?? "from-[#3B82F6]/20 via-[#0F172A] to-[#0B1220]";
 
   return (
@@ -18,22 +18,27 @@ function TemplateMockup({ id }: { id: string }) {
       className={`relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br ${accent}`}
       aria-hidden
     >
-      <div className="flex h-7 items-center gap-1.5 bg-[#07111F]/80 px-3">
+      <div className="flex h-8 items-center gap-1.5 bg-[#07111F]/85 px-3">
         <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
         <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
         <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-        <span className="ml-2 h-3 flex-1 rounded-sm bg-white/10" />
+        <span className="ml-2 h-3.5 flex-1 rounded-sm bg-white/10" />
       </div>
-      <div className="aspect-[16/10] p-3 sm:p-4">
-        <div className="h-3 w-1/3 rounded bg-white/20" />
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <div className="h-16 rounded-lg bg-white/10 sm:h-[4.5rem]" />
-          <div className="h-16 rounded-lg bg-white/15 sm:h-[4.5rem]" />
-          <div className="h-16 rounded-lg bg-white/10 sm:h-[4.5rem]" />
+      <div className="aspect-[16/10] min-h-[11.5rem] p-4 sm:min-h-[12.5rem] sm:p-5">
+        <div className="h-3.5 w-1/3 rounded bg-white/20" />
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          <div className="h-[4.75rem] rounded-lg bg-white/10 sm:h-24" />
+          <div className="h-[4.75rem] rounded-lg bg-white/15 sm:h-24" />
+          <div className="h-[4.75rem] rounded-lg bg-white/10 sm:h-24" />
         </div>
-        <div className="mt-2 h-2 w-2/3 rounded bg-white/15" />
-        <div className="mt-1.5 h-2 w-1/2 rounded bg-white/10" />
+        <div className="mt-3 h-2.5 w-2/3 rounded bg-white/15" />
+        <div className="mt-2 h-2.5 w-1/2 rounded bg-white/10" />
       </div>
+      {live ? (
+        <span className="absolute right-3 top-2 rounded-full bg-[#3B82F6] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+          Live demo
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -43,7 +48,7 @@ export default function PipWebTemplates() {
     <section
       id="templates"
       aria-labelledby="pipweb-templates-heading"
-      className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative mx-auto max-w-6xl scroll-mt-24 overflow-x-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto max-w-2xl text-center">
         <h2
@@ -57,26 +62,34 @@ export default function PipWebTemplates() {
         </p>
       </div>
 
-      <ul className="mt-10 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-        {PIPWEB_TEMPLATES.map((template) => (
-          <li
-            key={template.id}
-            className="flex flex-col rounded-2xl border border-white/10 bg-[#0F172A] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#3B82F6]/40 hover:bg-[#132038] sm:p-6"
-          >
-            <TemplateMockup id={template.id} />
-            <h3 className="mt-4 text-base font-semibold text-white sm:text-[17px]">
-              {template.name}
-            </h3>
-            <p className="mt-2 flex-1 text-sm leading-6 text-slate-400">
-              {template.description}
-            </p>
-            <PipWebTemplateActions
-              id={template.id}
-              name={template.name}
-              previewUrl={template.previewUrl}
-            />
-          </li>
-        ))}
+      <ul className="mt-10 grid grid-cols-1 gap-5 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        {PIPWEB_TEMPLATES.map((template) => {
+          const live = Boolean(template.previewUrl);
+
+          return (
+            <li
+              key={template.id}
+              className={`flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-[#0F172A] p-4 transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(2,8,23,0.45)] sm:p-5 ${
+                live
+                  ? "border-[#3B82F6]/35 hover:border-[#60A5FA]/50"
+                  : "border-white/10 hover:border-[#3B82F6]/35"
+              }`}
+            >
+              <TemplateMockup id={template.id} live={live} />
+              <h3 className="mt-5 text-[17px] font-semibold leading-snug text-white sm:text-lg">
+                {template.name}
+              </h3>
+              <p className="mt-2.5 flex-1 text-sm leading-6 text-slate-400">
+                {template.description}
+              </p>
+              <PipWebTemplateActions
+                id={template.id}
+                name={template.name}
+                previewUrl={template.previewUrl}
+              />
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
