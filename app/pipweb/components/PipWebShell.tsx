@@ -8,7 +8,7 @@ export default function PipWebShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#020817] pb-20 text-white lg:pb-8">
+    <main className="min-h-screen overflow-x-hidden bg-[#020817] pb-[calc(6rem+env(safe-area-inset-bottom))] text-white lg:pb-8">
       <Navbar />
       {children}
       <Footer />

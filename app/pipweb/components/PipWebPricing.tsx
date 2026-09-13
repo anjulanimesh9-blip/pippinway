@@ -21,12 +21,12 @@ export default function PipWebPricing() {
   return (
     <section
       aria-labelledby="pipweb-pricing-heading"
-      className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="pipweb-pricing-heading"
-          className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          className="text-[1.7rem] font-bold leading-tight tracking-tight text-white sm:text-4xl"
         >
           Start Your Business Website for Just $69
         </h2>
@@ -36,7 +36,7 @@ export default function PipWebPricing() {
         </p>
       </div>
 
-      <article className="relative mx-auto mt-10 max-w-xl overflow-hidden rounded-3xl border border-[#3B82F6]/30 bg-[#0F172A] p-5 shadow-[0_0_48px_rgba(59,130,246,0.16)] sm:mt-12 sm:p-8">
+      <article className="relative mx-auto mt-8 w-full max-w-xl overflow-hidden rounded-3xl border border-[#3B82F6]/30 bg-[#0F172A] p-4 shadow-[0_0_48px_rgba(59,130,246,0.16)] sm:mt-12 sm:p-8">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,_rgba(59,130,246,0.18),_transparent_70%)]"
@@ -57,13 +57,13 @@ export default function PipWebPricing() {
               </p>
             </div>
             <p className="mt-3 flex items-baseline gap-1 sm:mt-0">
-              <span className="text-5xl font-bold tracking-tight text-white sm:text-6xl">
+              <span className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
                 $69
               </span>
             </p>
           </div>
 
-          <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-3">
+          <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:mt-8 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-3">
             {FEATURES.map((feature) => (
               <li
                 key={feature}

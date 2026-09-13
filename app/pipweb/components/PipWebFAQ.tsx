@@ -82,12 +82,12 @@ export default function PipWebFAQ() {
   return (
     <section
       aria-labelledby="pipweb-faq-heading"
-      className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="pipweb-faq-heading"
-          className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          className="text-[1.7rem] font-bold leading-tight tracking-tight text-white sm:text-4xl"
         >
           Frequently Asked Questions
         </h2>
@@ -96,7 +96,7 @@ export default function PipWebFAQ() {
         </p>
       </div>
 
-      <div className="mx-auto mt-10 max-w-3xl space-y-3 sm:mt-12">
+      <div className="mx-auto mt-8 max-w-3xl space-y-3 sm:mt-12">
         {FAQS.map((item, index) => {
           const open = openIndex === index;
           const buttonId = `${baseId}-q-${index}`;
@@ -114,7 +114,7 @@ export default function PipWebFAQ() {
                   aria-controls={panelId}
                   onClick={() => toggle(index)}
                   onKeyDown={(event) => onKeyDown(event, index)}
-                  className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left text-white transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:-outline-offset-2 focus-visible:outline-[#60A5FA] sm:px-5"
+                  className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-white transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:-outline-offset-2 focus-visible:outline-[#60A5FA] sm:px-5 sm:py-4 sm:gap-4"
                 >
                   <span className="text-sm leading-6 sm:text-[15px]">
                     {item.question}

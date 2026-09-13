@@ -59,12 +59,12 @@ export default function PipWebServices() {
   return (
     <section
       aria-labelledby="pipweb-services-heading"
-      className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="pipweb-services-heading"
-          className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          className="text-[1.7rem] font-bold leading-tight tracking-tight text-white sm:text-4xl"
         >
           Everything Your Business Needs Online
         </h2>
@@ -74,11 +74,11 @@ export default function PipWebServices() {
         </p>
       </div>
 
-      <ul className="mt-10 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+      <ul className="mt-8 grid grid-cols-1 gap-3 sm:mt-12 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
         {SERVICES.map((service) => (
           <li
             key={service.title}
-            className="rounded-2xl border border-white/10 bg-[#0F172A] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#3B82F6]/40 hover:bg-[#132038] sm:p-6"
+            className="rounded-2xl border border-white/10 bg-[#0F172A] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[#3B82F6]/40 hover:bg-[#132038] sm:p-6"
           >
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#3B82F6]/15 text-[#7DD3FC]">
               <service.icon className="h-5 w-5" strokeWidth={1.9} aria-hidden />

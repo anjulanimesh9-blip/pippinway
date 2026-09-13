@@ -12,7 +12,7 @@ function TemplatePreview({
   live: boolean;
 }) {
   return (
-    <div className="relative aspect-[16/10] min-h-[11.5rem] overflow-hidden rounded-xl sm:min-h-[12.5rem]">
+    <div className="relative aspect-[16/10] overflow-hidden rounded-xl sm:min-h-[12.5rem]">
       <Image
         src={src}
         alt={alt}
@@ -39,12 +39,12 @@ export default function PipWebTemplates() {
     <section
       id="templates"
       aria-labelledby="pipweb-templates-heading"
-      className="relative mx-auto max-w-6xl scroll-mt-24 overflow-x-hidden px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative mx-auto max-w-6xl scroll-mt-24 overflow-x-hidden px-5 py-10 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="pipweb-templates-heading"
-          className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          className="text-[1.7rem] font-bold leading-tight tracking-tight text-white sm:text-4xl"
         >
           Choose Your Website Design
         </h2>
@@ -53,7 +53,7 @@ export default function PipWebTemplates() {
         </p>
       </div>
 
-      <ul className="mt-10 grid grid-cols-1 gap-5 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+      <ul className="mt-8 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6">
         {PIPWEB_TEMPLATES.map((template) => {
           const live = Boolean(template.previewUrl);
 

@@ -38,9 +38,9 @@ export default function PipWebHero() {
         className="pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-[#0EA5E9]/15 blur-3xl"
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+      <div className="relative z-10 mx-auto max-w-6xl px-5 py-8 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mx-auto mb-6 w-[200px] sm:mb-8 sm:w-[240px] lg:w-[280px]">
+          <div className="mx-auto mb-4 w-[148px] sm:mb-8 sm:w-[240px] lg:w-[280px]">
             <Image
               src="/pipweb/pipweb-logo.png"
               alt="PipWeb Studio"
@@ -48,38 +48,38 @@ export default function PipWebHero() {
               height={1024}
               priority
               quality={75}
-              sizes="(max-width: 640px) 200px, (max-width: 1024px) 240px, 280px"
+              sizes="(max-width: 640px) 148px, (max-width: 1024px) 240px, 280px"
               className="h-auto w-full rounded-2xl bg-white object-contain"
             />
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
+          <h1 className="text-[1.85rem] font-bold tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
             PipWeb Studio
           </h1>
 
-          <p className="mt-4 text-2xl font-semibold leading-snug tracking-tight text-slate-100 sm:text-3xl sm:leading-tight lg:text-[2.15rem]">
+          <p className="mt-3 text-xl font-semibold leading-snug tracking-tight text-slate-100 sm:mt-4 sm:text-3xl sm:leading-tight lg:text-[2.15rem]">
             Build Your Business Today,
             <br className="hidden sm:block" /> Ready for Tomorrow.
           </p>
 
-          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-300 sm:text-lg">
+          <p className="mx-auto mt-3 max-w-xl text-[15px] leading-6 text-slate-300 sm:mt-5 sm:text-lg sm:leading-7">
             Professional websites designed to help your business grow online —
             without the high cost.
           </p>
 
-          <p className="mt-8 inline-flex flex-wrap items-baseline justify-center gap-x-2 rounded-2xl border border-[#3B82F6]/25 bg-[#0B1B3A] px-5 py-3 text-base text-slate-200 sm:text-lg">
+          <p className="mx-auto mt-6 inline-flex w-full max-w-sm flex-wrap items-baseline justify-center gap-x-2 rounded-2xl border border-[#3B82F6]/25 bg-[#0B1B3A] px-4 py-3 text-sm text-slate-200 sm:mt-8 sm:max-w-none sm:px-5 sm:text-lg">
             Complete Business Website from just
-            <span className="text-3xl font-bold tracking-tight text-[#7DD3FC] sm:text-4xl">
+            <span className="text-[1.75rem] font-bold tracking-tight text-[#7DD3FC] sm:text-4xl">
               $69
             </span>
           </p>
         </div>
 
-        <ul className="mx-auto mt-10 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <ul className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-4">
           {BENEFITS.map((benefit) => (
             <li
               key={benefit.title}
-              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0F172A] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#3B82F6]/40 hover:bg-[#132038] sm:flex-col sm:items-center sm:px-5 sm:py-6 sm:text-center"
+              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0F172A] p-3.5 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#3B82F6]/40 hover:bg-[#132038] sm:flex-col sm:items-center sm:px-5 sm:py-6 sm:text-center"
             >
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3B82F6]/15 text-[#7DD3FC]">
                 <benefit.icon className="h-5 w-5" strokeWidth={1.9} aria-hidden />
@@ -91,7 +91,7 @@ export default function PipWebHero() {
           ))}
         </ul>
 
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+        <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
           <a href="#contact" className={PRIMARY_BTN}>
             Get Started
           </a>

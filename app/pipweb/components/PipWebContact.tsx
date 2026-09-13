@@ -23,13 +23,13 @@ export default function PipWebContact() {
     <section
       id="contact"
       aria-labelledby="pipweb-contact-heading"
-      className="relative mx-auto max-w-6xl scroll-mt-24 px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-10 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
-      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14">
+      <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14">
         <div>
           <h2
             id="pipweb-contact-heading"
-            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            className="text-[1.7rem] font-bold leading-tight tracking-tight text-white sm:text-4xl"
           >
             Ready to Take Your Business Online?
           </h2>

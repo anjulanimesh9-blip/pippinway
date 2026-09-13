@@ -24,7 +24,7 @@ import {
 const NOT_SELECTED = "";
 
 const FIELD =
-  "mt-1.5 w-full rounded-xl border border-white/10 bg-[#07111F] px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-[#60A5FA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]";
+  "mt-1.5 min-h-11 w-full rounded-xl border border-white/10 bg-[#07111F] px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-[#60A5FA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]";
 
 const FIELD_ERROR = "border-red-400/70 focus:border-red-400";
 
@@ -199,7 +199,7 @@ export default function PipWebOrderForm() {
     <form
       onSubmit={onSubmit}
       noValidate
-      className="rounded-3xl border border-white/10 bg-[#0F172A] p-5 sm:p-7"
+      className="min-w-0 rounded-3xl border border-white/10 bg-[#0F172A] p-4 sm:p-7"
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
@@ -276,8 +276,8 @@ export default function PipWebOrderForm() {
           <legend className="text-sm font-medium text-slate-200">
             Do You Already Have a Domain?
           </legend>
-          <div className="mt-2 flex flex-wrap gap-3">
-            <label className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#07111F] px-4 py-2.5 text-sm text-white">
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <label className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#07111F] px-3 py-2.5 text-sm text-white">
               <input
                 id={`${ids.domain}-yes`}
                 type="radio"
@@ -289,7 +289,7 @@ export default function PipWebOrderForm() {
               />
               Yes
             </label>
-            <label className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#07111F] px-4 py-2.5 text-sm text-white">
+            <label className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#07111F] px-3 py-2.5 text-sm text-white">
               <input
                 id={`${ids.domain}-no`}
                 type="radio"
