@@ -53,7 +53,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     description:
       "Clean property-focused design for agents, landlords, and real estate companies.",
     image: "/pipweb/templates/thumbnails/real-estate.jpg",
-    previewUrl: null,
+    previewUrl: "/pipweb/templates/real-estate",
   },
   {
     id: "corporate-business",
