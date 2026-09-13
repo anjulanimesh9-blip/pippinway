@@ -18,33 +18,54 @@ export default function SavannaKitchen() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(201,162,39,0.16),_transparent_55%)]"
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#e8c36a]">
-            {RESTAURANT_DEMO.location}
-          </p>
-          <h1 className="mt-4 font-serif text-5xl leading-tight tracking-tight text-[#f4ead8] sm:text-6xl lg:text-7xl">
-            {RESTAURANT_DEMO.name}
-          </h1>
-          <p className="mt-4 max-w-xl text-xl text-[#efe4d0] sm:text-2xl">
-            {RESTAURANT_DEMO.tagline}
-          </p>
-          <p className="mt-5 max-w-lg text-sm leading-7 text-[#d9c7a2]/80 sm:text-base">
-            Contemporary dining in Harare — wood-fired flavour, seasonal plates,
-            and a room made for unhurried evenings.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="#menu"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-[#c9a227] px-6 text-sm font-semibold text-[#1a1612] transition hover:bg-[#e8c36a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
-            >
-              View the Menu
-            </a>
-            <a
-              href="#reserve"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-[#f4ead8]/20 px-6 text-sm font-semibold text-[#f4ead8] transition hover:border-[#e8c36a]/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
-            >
-              Reserve a Table
-            </a>
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-14 lg:py-24">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#e8c36a]">
+              {RESTAURANT_DEMO.location}
+            </p>
+            <h1 className="mt-4 font-serif text-5xl leading-tight tracking-tight text-[#f4ead8] sm:text-6xl lg:text-7xl">
+              {RESTAURANT_DEMO.name}
+            </h1>
+            <p className="mt-4 max-w-xl text-xl text-[#efe4d0] sm:text-2xl">
+              {RESTAURANT_DEMO.tagline}
+            </p>
+            <p className="mt-5 max-w-lg text-sm leading-7 text-[#d9c7a2]/80 sm:text-base">
+              Contemporary dining in Harare — wood-fired flavour, seasonal plates,
+              and a room made for unhurried evenings.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="#menu"
+                className="inline-flex h-12 items-center justify-center rounded-lg bg-[#c9a227] px-6 text-sm font-semibold text-[#1a1612] transition hover:bg-[#e8c36a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
+              >
+                View the Menu
+              </a>
+              <a
+                href="#reserve"
+                className="inline-flex h-12 items-center justify-center rounded-lg border border-[#f4ead8]/20 px-6 text-sm font-semibold text-[#f4ead8] transition hover:border-[#e8c36a]/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
+              >
+                Reserve a Table
+              </a>
+            </div>
+          </div>
+
+          <div className="relative min-h-[300px] overflow-hidden rounded-3xl ring-1 ring-[#e8c36a]/20 sm:min-h-[380px] lg:min-h-[520px]">
+            <Image
+              src="/pipweb/templates/restaurant-cafe/hero.jpg"
+              alt="Savanna Kitchen dining room with set tables and warm gold screens"
+              fill
+              priority
+              quality={75}
+              sizes="(max-width: 1023px) 100vw, 560px"
+              className="object-cover"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-[#12100e]/75 via-[#c9a227]/12 to-[#12100e]/20"
+            />
+            <span className="absolute bottom-5 left-5 rounded-full border border-[#e8c36a]/35 bg-[#12100e]/70 px-4 py-1.5 text-xs font-semibold tracking-[0.12em] text-[#e8c36a] backdrop-blur-sm">
+              Harare • Fresh Daily
+            </span>
           </div>
         </div>
       </section>
