@@ -29,7 +29,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     description:
       "A friendly website for preschools, schools, tutors, and education centres.",
     image: "/pipweb/templates/thumbnails/preschool-education.jpg",
-    previewUrl: null,
+    previewUrl: "/pipweb/templates/preschool-education",
   },
   {
     id: "salon-beauty",
