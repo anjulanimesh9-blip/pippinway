@@ -1,3 +1,4 @@
+import Image from "next/image";
 import RestaurantNav from "./RestaurantNav";
 import {
   RESTAURANT_DEMO,
@@ -137,15 +138,26 @@ export default function SavannaKitchen() {
       <section id="gallery" className="scroll-mt-36 sm:scroll-mt-28">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
           <h2 className="font-serif text-3xl text-[#f4ead8] sm:text-4xl">Gallery</h2>
-          <ul className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {RESTAURANT_GALLERY.map((item) => (
-              <li
-                key={item.title}
-                className={`flex aspect-[4/3] items-end rounded-2xl bg-gradient-to-br p-4 ${item.tone}`}
-              >
-                <span className="text-sm font-medium text-[#f4ead8]">
-                  {item.title}
-                </span>
+              <li key={item.title} className="group">
+                <figure className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                  <Image
+                    src={item.src}
+                    alt={item.alt}
+                    fill
+                    quality={65}
+                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 360px"
+                    className="object-cover transition duration-500 ease-out group-hover:scale-105"
+                  />
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 bg-gradient-to-t from-[#12100e]/80 via-[#12100e]/15 to-transparent"
+                  />
+                  <figcaption className="absolute inset-x-0 bottom-0 p-4 text-sm font-medium text-[#f4ead8]">
+                    {item.title}
+                  </figcaption>
+                </figure>
               </li>
             ))}
           </ul>

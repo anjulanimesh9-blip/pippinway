@@ -77,12 +77,36 @@ export const RESTAURANT_REASONS = [
 ] as const;
 
 export const RESTAURANT_GALLERY = [
-  { title: "Open Kitchen", tone: "from-[#3a2f24] to-[#1c1814]" },
-  { title: "Flame Grill", tone: "from-[#5a3a1c] to-[#24180f]" },
-  { title: "Shared Table", tone: "from-[#2f3a32] to-[#151814]" },
-  { title: "Garden Plates", tone: "from-[#3a4030] to-[#18160f]" },
-  { title: "Evening Light", tone: "from-[#4a3420] to-[#1a1410]" },
-  { title: "Dessert Hour", tone: "from-[#4a2e28] to-[#1a1210]" },
+  {
+    title: "Open Kitchen",
+    src: "/pipweb/templates/restaurant-cafe/open-kitchen.jpg",
+    alt: "Chef plating dishes in the open kitchen",
+  },
+  {
+    title: "Flame Grill",
+    src: "/pipweb/templates/restaurant-cafe/flame-grill.jpg",
+    alt: "Flame-grilled food served with sides",
+  },
+  {
+    title: "Shared Table",
+    src: "/pipweb/templates/restaurant-cafe/shared-table.jpg",
+    alt: "Guests sharing a restaurant table",
+  },
+  {
+    title: "Plated Food",
+    src: "/pipweb/templates/restaurant-cafe/plated-food.jpg",
+    alt: "Fresh plated food ready to serve",
+  },
+  {
+    title: "Evening Atmosphere",
+    src: "/pipweb/templates/restaurant-cafe/evening.jpg",
+    alt: "Evening restaurant dining room with set tables",
+  },
+  {
+    title: "Dessert",
+    src: "/pipweb/templates/restaurant-cafe/dessert.jpg",
+    alt: "Dessert with ice cream and caramel",
+  },
 ] as const;
 
 export const RESTAURANT_TESTIMONIALS = [
