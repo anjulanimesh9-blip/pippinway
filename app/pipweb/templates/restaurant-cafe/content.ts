@@ -10,12 +10,24 @@ export const RESTAURANT_DEMO = {
   address: "Borrowdale, Harare, Zimbabwe",
   phone: "+263 77 000 0000",
   email: "hello@savannakitchen.demo",
-  hours: "Tuesday – Sunday, 11:00 – 22:00",
+  hours: "Open daily, 11:00 – 22:00",
+  phoneTel: "tel:+263770000000",
+  whatsappHref: `https://wa.me/263770000000?text=${encodeURIComponent(
+    "Hello Savanna Kitchen, I'd like to reserve a table.",
+  )}`,
+  mapsHref:
+    "https://www.google.com/maps/search/?api=1&query=Borrowdale%2C+Harare%2C+Zimbabwe",
   about:
     "Savanna Kitchen is a contemporary restaurant in Harare, built around slow evenings, generous plates, and the warmth of gathering. We cook with seasonal produce, wood-fired flavour, and a simple idea: good food should feel like home, even when you are out.",
   aboutNote:
     "This is a PipWeb Studio demo website, showing how a restaurant or cafe can look online.",
 } as const;
+
+export const RESTAURANT_TRUST = [
+  "Fresh Daily",
+  "Family Friendly",
+  "Open 7 Days",
+] as const;
 
 export const RESTAURANT_NAV = [
   { href: "#about", label: "About" },
@@ -28,31 +40,43 @@ export const RESTAURANT_MENU = [
   {
     name: "Flame-Grilled Chicken",
     price: "$12",
+    category: "Grill",
+    highlight: "Guest favourite",
     description: "Charred to order with herb butter, lemon, and roasted potatoes.",
   },
   {
     name: "Creamy Garlic Pasta",
     price: "$10",
+    category: "Pasta",
+    highlight: null,
     description: "Silky cream sauce, garlic, parmesan, and fresh parsley.",
   },
   {
     name: "Savanna Beef Burger",
     price: "$9",
+    category: "Grill",
+    highlight: null,
     description: "House-ground beef, toasted bun, pickles, and smoked sauce.",
   },
   {
     name: "Grilled Tilapia",
     price: "$14",
+    category: "Catch",
+    highlight: "Chef’s pick",
     description: "Lightly seasoned, served with garden greens and citrus dressing.",
   },
   {
     name: "Garden Fresh Salad",
     price: "$7",
+    category: "Garden",
+    highlight: null,
     description: "Crisp greens, tomato, cucumber, avocado, and house vinaigrette.",
   },
   {
     name: "Chocolate Dream",
     price: "$6",
+    category: "Dessert",
+    highlight: null,
     description: "Warm chocolate pudding with cream and a hint of espresso.",
   },
 ] as const;
@@ -114,17 +138,20 @@ export const RESTAURANT_TESTIMONIALS = [
     quote:
       "The grilled tilapia was exceptional — light, fresh, and beautifully presented.",
     name: "Tendai M.",
+    initials: "TM",
     detail: "Regular guest",
   },
   {
     quote:
       "Warm service and a beautiful evening. Savanna Kitchen feels special without being fussy.",
     name: "Chipo R.",
+    initials: "CR",
     detail: "Birthday dinner",
   },
   {
     quote: "Best burger in Harare, and the kind of room you want to linger in.",
     name: "David K.",
+    initials: "DK",
     detail: "Weekend lunch",
   },
 ] as const;

@@ -35,7 +35,7 @@ export default function RestaurantNav() {
         </nav>
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#f4ead8] md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#f4ead8] md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
           aria-expanded={open}
           aria-controls="restaurant-mobile-nav"
           onClick={() => setOpen((value) => !value)}
@@ -55,7 +55,7 @@ export default function RestaurantNav() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm text-[#efe4d0] hover:bg-white/5"
+                className="flex min-h-11 items-center rounded-lg px-3 py-3 text-sm text-[#efe4d0] hover:bg-white/5"
               >
                 {item.label}
               </a>
@@ -63,7 +63,7 @@ export default function RestaurantNav() {
             <a
               href="#reserve"
               onClick={() => setOpen(false)}
-              className="mt-1 inline-flex h-10 items-center justify-center rounded-lg bg-[#c9a227] text-sm font-semibold text-[#1a1612]"
+              className="mt-1 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#c9a227] text-sm font-semibold text-[#1a1612]"
             >
               Reserve
             </a>
