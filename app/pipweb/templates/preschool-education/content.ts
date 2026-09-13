@@ -6,7 +6,7 @@ export const PRESCHOOL_DEMO = {
   backHref: "/pipweb#templates",
   name: "Little Sprouts Academy",
   shortName: "Little Sprouts",
-  tagline: "Where curious little minds begin to grow.",
+  tagline: "Little Minds, Bright Futures",
   location: "Harare, Zimbabwe",
   address: "Mount Pleasant, Harare, Zimbabwe",
   phone: "++1-555-0014",
@@ -26,6 +26,7 @@ export const PRESCHOOL_DEMO = {
 } as const;
 
 export const PRESCHOOL_NAV = [
+  { href: "#top", label: "Home" },
   { href: "#about", label: "About" },
   { href: "#programs", label: "Programs" },
   { href: "#activities", label: "Activities" },
@@ -34,9 +35,16 @@ export const PRESCHOOL_NAV = [
 ] as const;
 
 export const PRESCHOOL_TRUST = [
-  { label: "Safe Campus", hint: "Gated & cared for" },
-  { label: "Small Classes", hint: "Known by name" },
-  { label: "Play-Based", hint: "Joyful learning" },
+  { label: "Safe & Secure", hint: "Campus", tone: "sky" },
+  { label: "Caring & Qualified", hint: "Teachers", tone: "pink" },
+  { label: "Small Classes", hint: "Big Attention", tone: "green" },
+] as const;
+
+export const PRESCHOOL_STATS = [
+  { value: "12", label: "Children per class", tone: "sky" },
+  { value: "18m – 6y", label: "Age groups", tone: "green" },
+  { value: "Harare", label: "Zimbabwe", tone: "gold" },
+  { value: "100%", label: "Care & Support", tone: "pink" },
 ] as const;
 
 export const PRESCHOOL_PROGRAMS = [
@@ -44,29 +52,37 @@ export const PRESCHOOL_PROGRAMS = [
     name: "Tiny Sprouts",
     ages: "18 months – 2 years",
     accent: "sky",
+    src: "/pipweb/templates/preschool-education/tiny.jpg",
+    alt: "Toddler playing with colourful balls at preschool",
     description:
-      "Gentle routines, sensory play, and first words in a calm, nurturing room.",
+      "Gentle routines, sensory play, and first words in a calm, nurturing environment.",
   },
   {
     name: "Little Explorers",
     ages: "3 – 4 years",
-    accent: "yellow",
+    accent: "gold",
+    src: "/pipweb/templates/preschool-education/explorers.jpg",
+    alt: "Preschool boy smiling in the classroom",
     description:
       "Friendship, curiosity, and early literacy through stories, art, and outdoor play.",
   },
   {
-    name: "School Ready",
-    ages: "5 – 6 years",
+    name: "Bright Learners",
+    ages: "4 – 5 years",
     accent: "green",
+    src: "/pipweb/templates/preschool-education/bright.jpg",
+    alt: "Preschool girl drawing with crayons",
     description:
-      "Confidence for Grade 1 — numbers, letters, listening skills, and independent habits.",
+      "Building confidence with structured learning, creativity and social skills.",
   },
   {
-    name: "Aftercare",
-    ages: "Until 16:30",
-    accent: "cream",
+    name: "Ready for More",
+    ages: "5 – 6 years",
+    accent: "teal",
+    src: "/pipweb/templates/preschool-education/ready.jpg",
+    alt: "Confident preschool child ready for Grade 1",
     description:
-      "A quiet, supervised afternoon with snacks, rest, and unhurried play.",
+      "Preparing for primary school with strong foundations and independence.",
   },
 ] as const;
 
@@ -169,6 +185,6 @@ export const PRESCHOOL_TESTIMONIALS = [
       "Little Sprouts prepared our child for Grade 1 without rushing childhood. Playful, organised, and genuinely caring.",
     name: "Sarah M.",
     initials: "SM",
-    detail: "Parent of a School Ready child",
+    detail: "Parent of a Ready for More child",
   },
 ] as const;

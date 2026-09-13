@@ -6,7 +6,7 @@ import { PRESCHOOL_DEMO } from "./content";
 
 export default function PreschoolDemoBar() {
   return (
-    <div className="border-b border-[#2E86AB]/15 bg-[#2E86AB] text-white">
+    <div className="border-b border-[#2EB5D6]/20 bg-[#1E9BC0] text-white">
       <div className="mx-auto flex h-11 max-w-6xl items-center justify-between gap-2 px-3 md:h-auto md:gap-3 md:px-6 md:py-2.5">
         <p className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 md:text-[11px] md:tracking-[0.16em]">
           <span className="md:hidden">Website Demo</span>
