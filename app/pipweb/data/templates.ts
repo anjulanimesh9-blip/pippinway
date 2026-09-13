@@ -37,7 +37,7 @@ export const PIPWEB_TEMPLATES: PipWebTemplate[] = [
     description:
       "Modern design for salons, beauty studios, spas, and personal care businesses.",
     image: "/pipweb/templates/thumbnails/salon-beauty.jpg",
-    previewUrl: null,
+    previewUrl: "/pipweb/templates/salon-beauty",
   },
   {
     id: "car-dealer",
