@@ -35,7 +35,7 @@ export default function SavannaKitchen() {
     <div id="top" className="bg-[#12100e] pb-[5.75rem] text-[#efe4d0] md:pb-0">
       <RestaurantNav />
 
-      <section className="relative isolate min-h-[34rem] overflow-hidden sm:min-h-[40rem] lg:min-h-[calc(100svh-7.25rem)]">
+      <section className="relative isolate min-h-[calc(100svh-7.25rem)] overflow-hidden lg:min-h-[calc(100svh-7.25rem)]">
         <Image
           src="/pipweb/templates/restaurant-cafe/hero.jpg"
           alt="Savanna Kitchen dining room with set tables and warm gold screens"
@@ -47,30 +47,30 @@ export default function SavannaKitchen() {
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-[#12100e]/88 via-[#12100e]/78 to-[#12100e]/92 lg:bg-gradient-to-r lg:from-[#12100e] lg:via-[#12100e]/82 lg:to-[#12100e]/15"
+          className="absolute inset-0 bg-gradient-to-b from-[#12100e]/45 via-[#12100e]/78 to-[#12100e]/94 lg:bg-gradient-to-r lg:from-[#12100e] lg:via-[#12100e]/82 lg:to-[#12100e]/15"
         />
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#12100e] to-transparent"
+          className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#12100e] to-transparent lg:h-16"
         />
 
-        <div className="relative mx-auto flex min-h-[34rem] max-w-6xl flex-col justify-start px-4 py-12 sm:min-h-[40rem] sm:px-6 sm:py-16 lg:min-h-[calc(100svh-7.25rem)] lg:justify-center lg:py-24">
-          <span className="mb-6 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#12100e]/70 px-3 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] lg:absolute lg:bottom-8 lg:right-6 lg:mb-0">
-            <MapPin className="h-3.5 w-3.5" aria-hidden />
+        <div className="relative mx-auto flex min-h-[calc(100svh-7.25rem)] max-w-6xl flex-col justify-start px-5 py-8 sm:px-6 sm:py-16 lg:min-h-[calc(100svh-7.25rem)] lg:justify-center lg:py-24">
+          <span className="mb-7 inline-flex w-fit max-w-full items-center gap-1.5 rounded-full border border-[#e8c36a]/30 bg-[#12100e]/65 px-3.5 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] lg:absolute lg:bottom-8 lg:right-6 lg:mb-0 lg:border-0 lg:bg-[#12100e]/70">
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
             Harare • Fresh Daily
           </span>
 
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8c36a] sm:text-xs">
+          <p className="hidden text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8c36a] sm:text-xs lg:block">
             {RESTAURANT_DEMO.location}
           </p>
-          <h1 className="mt-3 max-w-xl font-serif text-[2.75rem] leading-[1.05] tracking-tight sm:mt-4 sm:text-6xl lg:text-7xl">
+          <h1 className="max-w-full font-serif text-[3.15rem] leading-[0.98] tracking-tight sm:mt-4 sm:text-6xl lg:mt-3 lg:text-7xl">
             <span className="block text-[#f4ead8]">Savanna</span>
             <span className="block text-[#e8c36a]">Kitchen</span>
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-[#efe4d0] sm:text-2xl">
+          <p className="mt-4 max-w-xl text-[1.2rem] leading-snug text-[#efe4d0] sm:text-2xl">
             {RESTAURANT_DEMO.tagline}
           </p>
-          <p className="mt-4 max-w-lg text-sm leading-7 text-[#d9c7a2]/85 sm:mt-5 sm:text-base">
+          <p className="mt-3 max-w-lg text-[15px] leading-6 text-[#d9c7a2]/85 sm:mt-5 sm:text-base sm:leading-7">
             Contemporary dining in Harare — wood-fired flavour, seasonal plates,
             and a room made for unhurried evenings.
           </p>
@@ -79,15 +79,15 @@ export default function SavannaKitchen() {
             {RESTAURANT_TRUST.map((item, index) => {
               const Icon = TRUST_ICONS[index];
               return (
-                <li key={item.label} className="flex flex-col items-center text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e8c36a]/35 text-[#e8c36a]">
+                <li key={item.label} className="flex min-w-0 flex-col items-center text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e8c36a]/35 text-[#e8c36a] sm:h-9 sm:w-9">
                     <Icon className="h-4 w-4" aria-hidden />
                   </span>
-                  <span className="mt-1.5 sm:mt-0">
-                    <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-[#e8c36a] sm:text-[11px]">
+                  <span className="mt-1.5 min-w-0 sm:mt-0">
+                    <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-[#e8c36a] sm:text-[11px] sm:tracking-[0.12em]">
                       {item.label}
                     </span>
-                    <span className="mt-0.5 block text-[9px] uppercase tracking-[0.12em] text-[#d9c7a2]/70 sm:text-[10px]">
+                    <span className="mt-0.5 block text-[9px] uppercase tracking-[0.1em] text-[#d9c7a2]/70 sm:text-[10px] sm:tracking-[0.12em]">
                       {item.hint}
                     </span>
                   </span>
@@ -96,12 +96,18 @@ export default function SavannaKitchen() {
             })}
           </ul>
 
-          <div className="order-1 mt-7 flex w-full flex-col gap-3 sm:mt-8 sm:flex-row lg:order-none lg:mt-10">
-            <a href="#menu" className={PRIMARY}>
+          <div className="order-1 mt-8 flex w-full flex-col gap-3 sm:mt-8 sm:flex-row lg:order-none lg:mt-10">
+            <a
+              href="#menu"
+              className={`inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#c9a227] px-5 text-[15px] font-semibold text-[#1a1612] transition hover:bg-[#e8c36a] sm:min-h-12 sm:w-auto sm:rounded-lg sm:text-sm ${FOCUS}`}
+            >
               <Utensils className="h-4 w-4" aria-hidden />
               View the Menu
             </a>
-            <a href="#reserve" className={SECONDARY}>
+            <a
+              href="#reserve"
+              className={`inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-[#f4ead8]/25 px-5 text-[15px] font-semibold text-[#f4ead8] transition hover:border-[#e8c36a]/50 sm:min-h-12 sm:w-auto sm:rounded-lg sm:text-sm ${FOCUS}`}
+            >
               <CalendarDays className="h-4 w-4" aria-hidden />
               Reserve a Table
             </a>
