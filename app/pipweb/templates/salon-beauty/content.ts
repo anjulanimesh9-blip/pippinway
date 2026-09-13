@@ -18,10 +18,18 @@ export const SALON_DEMO = {
   )}`,
   mapsHref:
     "https://www.google.com/maps/search/?api=1&query=Avondale%2C+Harare%2C+Zimbabwe",
+  bookingWhatsapp: "263772220000",
   about:
     "Velvet Glow is a private beauty studio in Harare for clients who want unhurried care, precise styling, and a room that feels as considered as the finish. We work with hair, skin, nails, and makeup — always with a light, luxurious hand.",
   aboutNote:
     "This is a PipWeb Studio demo website, showing how a salon or beauty studio can look online.",
+} as const;
+
+export const SALON_BOOKING = {
+  minMinutes: 9 * 60,
+  maxMinutes: 19 * 60,
+  interval: 15,
+  closedWeekdays: [1] as readonly number[],
 } as const;
 
 export const SALON_NAV = [

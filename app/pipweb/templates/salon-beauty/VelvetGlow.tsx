@@ -12,6 +12,7 @@ import {
   Star,
   Flower2,
 } from "lucide-react";
+import SalonBooking from "./SalonBooking";
 import SalonMobileCta from "./SalonMobileCta";
 import {
   SALON_DEMO,
@@ -318,23 +319,10 @@ export default function VelvetGlow() {
             Reserve your chair
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#E8DCC8]/75 sm:text-base">
-            Book a quiet hour with us. This demo shows how clients can request
-            an appointment from your website.
+            Book a quiet hour with us. Choose a service, date, and time — then
+            send the request on WhatsApp.
           </p>
-          <div className="mx-auto mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-            <a href="#contact" className={PRIMARY}>
-              Book Now
-            </a>
-            <a
-              href={SALON_DEMO.whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={SECONDARY}
-            >
-              <MessageCircle className="h-4 w-4" aria-hidden />
-              WhatsApp Us
-            </a>
-          </div>
+          <SalonBooking />
         </div>
       </section>
 
