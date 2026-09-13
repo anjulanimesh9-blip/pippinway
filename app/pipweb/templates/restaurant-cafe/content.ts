@@ -24,9 +24,9 @@ export const RESTAURANT_DEMO = {
 } as const;
 
 export const RESTAURANT_TRUST = [
-  "Fresh Daily",
-  "Family Friendly",
-  "Open 7 Days",
+  { label: "Fresh Daily", hint: "Local ingredients" },
+  { label: "Family Friendly", hint: "All are welcome" },
+  { label: "Open 7 Days", hint: "Lunch & dinner" },
 ] as const;
 
 export const RESTAURANT_NAV = [

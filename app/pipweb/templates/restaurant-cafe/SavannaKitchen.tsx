@@ -1,5 +1,15 @@
 import Image from "next/image";
-import { MapPin, MessageCircle, Phone, Star } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Leaf,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Star,
+  Utensils,
+  Users,
+} from "lucide-react";
 import RestaurantMobileCta from "./RestaurantMobileCta";
 import RestaurantNav from "./RestaurantNav";
 import {
@@ -18,71 +28,83 @@ const TAP =
   `inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold transition sm:w-auto ${FOCUS}`;
 const PRIMARY = `${TAP} bg-[#c9a227] text-[#1a1612] hover:bg-[#e8c36a]`;
 const SECONDARY = `${TAP} border border-[#f4ead8]/20 text-[#f4ead8] hover:border-[#e8c36a]/50`;
+const TRUST_ICONS = [Leaf, Users, Clock] as const;
 
 export default function SavannaKitchen() {
   return (
     <div id="top" className="bg-[#12100e] pb-[5.75rem] text-[#efe4d0] md:pb-0">
       <RestaurantNav />
 
-      <section className="relative overflow-hidden">
+      <section className="relative isolate min-h-[34rem] overflow-hidden sm:min-h-[40rem] lg:min-h-[calc(100svh-7.25rem)]">
+        <Image
+          src="/pipweb/templates/restaurant-cafe/hero.jpg"
+          alt="Savanna Kitchen dining room with set tables and warm gold screens"
+          fill
+          priority
+          quality={75}
+          sizes="100vw"
+          className="object-cover object-[center_35%]"
+        />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(201,162,39,0.16),_transparent_55%)]"
+          className="absolute inset-0 bg-gradient-to-b from-[#12100e]/88 via-[#12100e]/78 to-[#12100e]/92 lg:bg-gradient-to-r lg:from-[#12100e] lg:via-[#12100e]/82 lg:to-[#12100e]/15"
         />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-8 py-10 sm:gap-10 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-10 lg:px-6 lg:py-20">
-          <div className="px-4 sm:px-6 lg:px-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8c36a] sm:text-xs">
-              {RESTAURANT_DEMO.location}
-            </p>
-            <h1 className="mt-3 font-serif text-[2.35rem] leading-[1.12] tracking-tight text-[#f4ead8] sm:mt-4 sm:text-6xl lg:text-7xl">
-              {RESTAURANT_DEMO.name}
-            </h1>
-            <p className="mt-3 max-w-xl text-lg text-[#efe4d0] sm:mt-4 sm:text-2xl">
-              {RESTAURANT_DEMO.tagline}
-            </p>
-            <p className="mt-4 max-w-lg text-sm leading-7 text-[#d9c7a2]/80 sm:mt-5 sm:text-base">
-              Contemporary dining in Harare — wood-fired flavour, seasonal plates,
-              and a room made for unhurried evenings.
-            </p>
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-              <a href="#menu" className={PRIMARY}>
-                View the Menu
-              </a>
-              <a href="#reserve" className={SECONDARY}>
-                Reserve a Table
-              </a>
-            </div>
-            <ul className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d9c7a2]/80 sm:mt-8 sm:text-xs">
-              {RESTAURANT_TRUST.map((item, index) => (
-                <li key={item} className="flex items-center gap-3">
-                  {index > 0 ? (
-                    <span aria-hidden className="text-[#e8c36a]">
-                      •
-                    </span>
-                  ) : null}
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#12100e] to-transparent"
+        />
 
-          <div className="relative h-[260px] overflow-hidden sm:h-[400px] lg:h-[560px] lg:rounded-md">
-            <Image
-              src="/pipweb/templates/restaurant-cafe/hero.jpg"
-              alt="Savanna Kitchen dining room with set tables and warm gold screens"
-              fill
-              priority
-              quality={75}
-              sizes="(max-width: 1023px) 100vw, 640px"
-              className="object-cover"
-            />
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-[#12100e]/45 via-transparent to-transparent"
-            />
-            <span className="absolute bottom-4 left-4 rounded-full bg-[#12100e]/70 px-3 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] sm:bottom-5 sm:left-5 sm:px-4 sm:text-xs">
-              Harare • Fresh Daily
-            </span>
+        <div className="relative mx-auto flex min-h-[34rem] max-w-6xl flex-col justify-start px-4 py-12 sm:min-h-[40rem] sm:px-6 sm:py-16 lg:min-h-[calc(100svh-7.25rem)] lg:justify-center lg:py-24">
+          <span className="mb-6 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#12100e]/70 px-3 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] lg:absolute lg:bottom-8 lg:right-6 lg:mb-0">
+            <MapPin className="h-3.5 w-3.5" aria-hidden />
+            Harare • Fresh Daily
+          </span>
+
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8c36a] sm:text-xs">
+            {RESTAURANT_DEMO.location}
+          </p>
+          <h1 className="mt-3 max-w-xl font-serif text-[2.75rem] leading-[1.05] tracking-tight sm:mt-4 sm:text-6xl lg:text-7xl">
+            <span className="block text-[#f4ead8]">Savanna</span>
+            <span className="block text-[#e8c36a]">Kitchen</span>
+          </h1>
+          <p className="mt-4 max-w-xl text-lg text-[#efe4d0] sm:text-2xl">
+            {RESTAURANT_DEMO.tagline}
+          </p>
+          <p className="mt-4 max-w-lg text-sm leading-7 text-[#d9c7a2]/85 sm:mt-5 sm:text-base">
+            Contemporary dining in Harare — wood-fired flavour, seasonal plates,
+            and a room made for unhurried evenings.
+          </p>
+
+          <ul className="order-2 mt-8 grid grid-cols-3 gap-2 sm:mt-10 sm:flex sm:flex-wrap sm:gap-6 lg:order-none">
+            {RESTAURANT_TRUST.map((item, index) => {
+              const Icon = TRUST_ICONS[index];
+              return (
+                <li key={item.label} className="flex flex-col items-center text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e8c36a]/35 text-[#e8c36a]">
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <span className="mt-1.5 sm:mt-0">
+                    <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-[#e8c36a] sm:text-[11px]">
+                      {item.label}
+                    </span>
+                    <span className="mt-0.5 block text-[9px] uppercase tracking-[0.12em] text-[#d9c7a2]/70 sm:text-[10px]">
+                      {item.hint}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="order-1 mt-7 flex w-full flex-col gap-3 sm:mt-8 sm:flex-row lg:order-none lg:mt-10">
+            <a href="#menu" className={PRIMARY}>
+              <Utensils className="h-4 w-4" aria-hidden />
+              View the Menu
+            </a>
+            <a href="#reserve" className={SECONDARY}>
+              <CalendarDays className="h-4 w-4" aria-hidden />
+              Reserve a Table
+            </a>
           </div>
         </div>
       </section>
