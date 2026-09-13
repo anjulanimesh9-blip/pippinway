@@ -8,8 +8,8 @@ export default function RestaurantNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-[52px] z-40 border-b border-[#d9c7a2]/10 bg-[#1a1612]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header className="border-b border-[#d9c7a2]/10 bg-[#1a1612]/95 backdrop-blur-md">
+      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6 md:h-16">
         <a
           href="#top"
           className="font-serif text-lg tracking-tight text-[#f4ead8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
@@ -35,7 +35,7 @@ export default function RestaurantNav() {
         </nav>
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#f4ead8] md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#f4ead8] md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]"
           aria-expanded={open}
           aria-controls="restaurant-mobile-nav"
           onClick={() => setOpen((value) => !value)}

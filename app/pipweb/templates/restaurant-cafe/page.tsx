@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import RestaurantDemoBar from "./RestaurantDemoBar";
+import RestaurantNav from "./RestaurantNav";
 import SavannaKitchen from "./SavannaKitchen";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ export const metadata: Metadata = {
 export default function RestaurantCafeDemoPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#12100e]">
-      <RestaurantDemoBar />
+      <div id="top" className="sticky top-0 z-50">
+        <RestaurantDemoBar />
+        <RestaurantNav />
+      </div>
       <SavannaKitchen />
     </main>
   );

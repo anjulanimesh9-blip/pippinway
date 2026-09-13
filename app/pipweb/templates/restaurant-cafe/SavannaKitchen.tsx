@@ -11,7 +11,6 @@ import {
   Users,
 } from "lucide-react";
 import RestaurantMobileCta from "./RestaurantMobileCta";
-import RestaurantNav from "./RestaurantNav";
 import {
   RESTAURANT_DEMO,
   RESTAURANT_GALLERY,
@@ -32,10 +31,8 @@ const TRUST_ICONS = [Leaf, Users, Clock] as const;
 
 export default function SavannaKitchen() {
   return (
-    <div id="top" className="overflow-x-hidden bg-[#12100e] pb-[calc(6.75rem+env(safe-area-inset-bottom))] text-[#efe4d0] md:pb-0">
-      <RestaurantNav />
-
-      <section className="relative isolate min-h-[calc(100svh-7.25rem)] overflow-hidden lg:min-h-[calc(100svh-7.25rem)]">
+    <div className="overflow-x-hidden bg-[#12100e] pb-[calc(6.75rem+env(safe-area-inset-bottom))] text-[#efe4d0] md:pb-0">
+      <section className="relative isolate min-h-[calc(100svh-5.75rem)] overflow-hidden md:min-h-[calc(100svh-7.25rem)]">
         <Image
           src="/pipweb/templates/restaurant-cafe/hero.jpg"
           alt="Savanna Kitchen dining room with set tables and warm gold screens"
@@ -54,7 +51,7 @@ export default function SavannaKitchen() {
           className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#12100e] to-transparent lg:h-16"
         />
 
-        <div className="relative mx-auto flex min-h-[calc(100svh-7.25rem)] max-w-6xl flex-col justify-start px-5 py-8 sm:px-6 sm:py-16 lg:min-h-[calc(100svh-7.25rem)] lg:justify-center lg:py-24">
+        <div className="relative mx-auto flex min-h-[calc(100svh-5.75rem)] max-w-6xl flex-col justify-start px-5 py-6 sm:px-6 sm:py-16 md:min-h-[calc(100svh-7.25rem)] lg:justify-center lg:py-24">
           <span className="mb-7 inline-flex w-fit max-w-full items-center gap-1.5 rounded-full border border-[#e8c36a]/30 bg-[#12100e]/65 px-3.5 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] lg:absolute lg:bottom-8 lg:right-6 lg:mb-0 lg:border-0 lg:bg-[#12100e]/70">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
             Harare • Fresh Daily
