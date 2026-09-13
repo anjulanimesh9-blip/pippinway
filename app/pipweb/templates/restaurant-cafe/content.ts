@@ -81,6 +81,27 @@ export const RESTAURANT_MENU = [
   },
 ] as const;
 
+export const RESTAURANT_OFFERS = [
+  {
+    badge: "15% OFF",
+    title: "Lunch Special",
+    subtitle: "Weekday midday table",
+    detail: "Monday–Friday • 12PM–3PM",
+  },
+  {
+    badge: "From $25",
+    title: "Date Night",
+    subtitle: "Dinner for Two",
+    detail: "A shared evening, unhurried and close.",
+  },
+  {
+    badge: "From $30",
+    title: "Family Sunday",
+    subtitle: "Family Platter",
+    detail: "A generous table made for gathering.",
+  },
+] as const;
+
 export const RESTAURANT_REASONS = [
   {
     title: "Locally Inspired",

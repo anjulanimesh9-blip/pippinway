@@ -6,6 +6,7 @@ import {
   RESTAURANT_DEMO,
   RESTAURANT_GALLERY,
   RESTAURANT_MENU,
+  RESTAURANT_OFFERS,
   RESTAURANT_REASONS,
   RESTAURANT_TESTIMONIALS,
   RESTAURANT_TRUST,
@@ -151,6 +152,60 @@ export default function SavannaKitchen() {
                 <p className="mt-4 text-sm leading-6 text-[#d9c7a2]/75">
                   {item.description}
                 </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section
+        id="offers"
+        className="scroll-mt-40 bg-[#1a1612] sm:scroll-mt-28"
+      >
+        <div className="mx-auto max-w-6xl py-12 sm:py-16 lg:py-20">
+          <div className="px-4 sm:px-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#e8c36a] sm:text-xs">
+              Limited offers
+            </p>
+            <h2 className="mt-3 font-serif text-[1.85rem] leading-tight text-[#f4ead8] sm:text-4xl">
+              Special Offers
+            </h2>
+          </div>
+          <ul className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mt-10 sm:px-6 [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-3 lg:overflow-visible">
+            {RESTAURANT_OFFERS.map((offer) => (
+              <li
+                key={offer.title}
+                className="flex w-[min(19rem,82vw)] shrink-0 snap-start flex-col rounded-2xl border border-[#d9c7a2]/12 bg-[#12100e] p-5 transition hover:border-[#e8c36a]/30 sm:p-6 lg:w-auto lg:min-w-0"
+              >
+                <span className="inline-flex w-fit rounded-full border border-[#e8c36a]/40 bg-[#c9a227]/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#e8c36a]">
+                  {offer.badge}
+                </span>
+                <h3 className="mt-4 font-serif text-[1.45rem] leading-tight text-[#f4ead8] sm:text-2xl">
+                  {offer.title}
+                </h3>
+                <p className="mt-1 text-sm font-medium text-[#efe4d0]/90">
+                  {offer.subtitle}
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[#d9c7a2]/75">
+                  {offer.detail}
+                </p>
+                <div className="mt-6 flex flex-col gap-3">
+                  <a
+                    href="#reserve"
+                    className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#c9a227] px-5 text-sm font-semibold text-[#1a1612] transition hover:bg-[#e8c36a] ${FOCUS}`}
+                  >
+                    Reserve Now
+                  </a>
+                  <a
+                    href={RESTAURANT_DEMO.whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-[#f4ead8]/20 px-5 text-sm font-semibold text-[#f4ead8] transition hover:border-[#e8c36a]/50 ${FOCUS}`}
+                  >
+                    <MessageCircle className="h-4 w-4" aria-hidden />
+                    WhatsApp Us
+                  </a>
+                </div>
               </li>
             ))}
           </ul>
