@@ -29,8 +29,8 @@ export default function SavannaKitchen() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(201,162,39,0.16),_transparent_55%)]"
         />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16 lg:grid-cols-2 lg:gap-14 lg:py-24">
-          <div>
+        <div className="relative mx-auto grid max-w-6xl items-center gap-8 py-10 sm:gap-10 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-10 lg:px-6 lg:py-20">
+          <div className="px-4 sm:px-6 lg:px-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8c36a] sm:text-xs">
               {RESTAURANT_DEMO.location}
             </p>
@@ -66,21 +66,21 @@ export default function SavannaKitchen() {
             </ul>
           </div>
 
-          <div className="relative min-h-[220px] overflow-hidden rounded-2xl ring-1 ring-[#e8c36a]/20 sm:min-h-[340px] sm:rounded-3xl lg:min-h-[520px]">
+          <div className="relative h-[260px] overflow-hidden sm:h-[400px] lg:h-[560px] lg:rounded-md">
             <Image
               src="/pipweb/templates/restaurant-cafe/hero.jpg"
               alt="Savanna Kitchen dining room with set tables and warm gold screens"
               fill
               priority
               quality={75}
-              sizes="(max-width: 1023px) 100vw, 560px"
+              sizes="(max-width: 1023px) 100vw, 640px"
               className="object-cover"
             />
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-[#12100e]/75 via-[#c9a227]/12 to-[#12100e]/20"
+              className="absolute inset-0 bg-gradient-to-t from-[#12100e]/45 via-transparent to-transparent"
             />
-            <span className="absolute bottom-4 left-4 rounded-full border border-[#e8c36a]/35 bg-[#12100e]/70 px-3 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] backdrop-blur-sm sm:bottom-5 sm:left-5 sm:px-4 sm:text-xs">
+            <span className="absolute bottom-4 left-4 rounded-full bg-[#12100e]/70 px-3 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-[#e8c36a] sm:bottom-5 sm:left-5 sm:px-4 sm:text-xs">
               Harare • Fresh Daily
             </span>
           </div>
