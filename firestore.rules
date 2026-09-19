@@ -217,6 +217,14 @@ service cloud.firestore {
         );
         allow write: if false;
       }
+
+      match /storyRewards/{storySlug} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == userId ||
+          isAdmin()
+        );
+        allow write: if false;
+      }
     }
 
     match /listings/{listingId} {
@@ -556,6 +564,26 @@ service cloud.firestore {
         request.resource.data.followingId.size() > 0;
       allow delete: if isSignedIn() && request.auth.uid == resource.data.followerId;
       allow update: if false;
+    }
+
+    match /vibeStories/{storyId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /vibeStoryStats/{storySlug} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /storyRewardRate/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /storyRewardAbuseLogs/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     match /vibeReports/{reportId} {

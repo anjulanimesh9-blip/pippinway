@@ -23,5 +23,13 @@ export const VIBE_PATHS = {
   quizzes: "/vibe/quizzes",
   quiz: (slug: string) => `/vibe/quizzes/${encodeURIComponent(slug)}`,
   trending: "/vibe/trending",
+  interactiveStories: "/vibe/interactive-stories",
+  story: (slug: string) => `/vibe/interactive-stories/${encodeURIComponent(slug)}`,
+  storyReward: (slug: string, endingId?: string, welcome = false) => {
+    const params = new URLSearchParams({ reward: "1" });
+    if (endingId) params.set("scene", endingId);
+    if (welcome) params.set("welcome", "1");
+    return `/vibe/interactive-stories/${encodeURIComponent(slug)}?${params.toString()}`;
+  },
   saved: "/vibe/saved",
 } as const;

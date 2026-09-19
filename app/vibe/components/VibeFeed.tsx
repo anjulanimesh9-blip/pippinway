@@ -14,13 +14,27 @@ import {
   fetchVibeFeed,
   isCurrentUserAdmin,
 } from "@/lib/vibe/client";
+import { fetchPublishedStories, type InteractiveStory } from "@/lib/vibe/stories";
 import type { VibePost, VibePostCategory } from "@/lib/vibe/types";
 import VibePostCard from "./VibePostCard";
+import VibeStoryFeedCard from "./VibeStoryFeedCard";
 
-function mergeFeedPosts(prev: VibePost[], next: VibePost[]): VibePost[] {
+type FeedEntry =
+  | { type: "post"; id: string; post: VibePost }
+  | { type: "story"; id: string; story: InteractiveStory };
+
+function storyEntry(story: InteractiveStory): FeedEntry {
+  return { type: "story", id: `story:${story.slug}`, story };
+}
+
+function postEntry(post: VibePost): FeedEntry {
+  return { type: "post", id: post.id, post };
+}
+
+function mergeFeedEntries(prev: FeedEntry[], next: FeedEntry[]): FeedEntry[] {
   if (prev.length === 0) return next;
-  const seen = new Set(prev.map((post) => post.id));
-  const extra = next.filter((post) => !seen.has(post.id));
+  const seen = new Set(prev.map((item) => item.id));
+  const extra = next.filter((item) => !seen.has(item.id));
   return extra.length === 0 ? prev : [...prev, ...extra];
 }
 
@@ -51,7 +65,7 @@ export default function VibeFeed({
   refreshKey?: number;
 }) {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<VibePost[]>([]);
+  const [items, setItems] = useState<FeedEntry[]>([]);
   const [cursor, setCursor] = useState<QueryDocumentSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -61,25 +75,35 @@ export default function VibeFeed({
   const sentinel = useRef<HTMLDivElement>(null);
   const loadGen = useRef(0);
   const loadingMoreRef = useRef(false);
+  const includeStories = category === "all" && !authorId && !savedOnly;
 
   const applyFilter = useCallback((list: VibePost[]) => {
     const blocked = new Set(blockedRef.current);
     return list.filter((post) => !blocked.has(post.authorId));
   }, []);
 
+  const loadStories = useCallback(async () => {
+    if (!includeStories) return [];
+    try {
+      return (await fetchPublishedStories()).filter((story) => story.published);
+    } catch {
+      return [];
+    }
+  }, [includeStories]);
+
   const load = useCallback(
     async (next?: QueryDocumentSnapshot | null) => {
       const gen = loadGen.current;
       if (savedOnly) {
         if (!user) {
-          setPosts([]);
+          setItems([]);
           setLoading(false);
           return;
         }
         try {
-          const saved = applyFilter(await fetchSavedPosts(user.uid));
+          const saved = applyFilter(await fetchSavedPosts(user.uid)).map(postEntry);
           if (gen !== loadGen.current) return;
-          setPosts(saved);
+          setItems(saved);
           setCursor(null);
           setError("");
         } catch {
@@ -92,14 +116,18 @@ export default function VibeFeed({
       }
 
       try {
-        const page = await fetchVibeFeed({
-          category,
-          authorId,
-          cursor: next ?? null,
-        });
+        const [page, stories] = await Promise.all([
+          fetchVibeFeed({
+            category,
+            authorId,
+            cursor: next ?? null,
+          }),
+          next ? Promise.resolve([]) : loadStories(),
+        ]);
         if (gen !== loadGen.current) return;
-        const filtered = applyFilter(page.posts);
-        setPosts((prev) => (next ? mergeFeedPosts(prev, filtered) : filtered));
+        const posts = applyFilter(page.posts).map(postEntry);
+        const storyItems = stories.map(storyEntry);
+        setItems((prev) => (next ? mergeFeedEntries(prev, posts) : [...storyItems, ...posts]));
         setCursor(page.cursor);
         setError("");
       } catch {
@@ -113,7 +141,7 @@ export default function VibeFeed({
         }
       }
     },
-    [applyFilter, authorId, category, savedOnly, user]
+    [applyFilter, authorId, category, loadStories, savedOnly, user]
   );
 
   useEffect(() => {
@@ -121,25 +149,29 @@ export default function VibeFeed({
     loadGen.current += 1;
     const gen = loadGen.current;
     loadingMoreRef.current = false;
+    setLoading(true);
     (async () => {
       try {
         if (savedOnly) {
           if (!user) {
             if (!cancelled) {
-              setPosts([]);
+              setItems([]);
               setLoading(false);
             }
             return;
           }
-          const saved = applyFilter(await fetchSavedPosts(user.uid));
+          const saved = applyFilter(await fetchSavedPosts(user.uid)).map(postEntry);
           if (cancelled || gen !== loadGen.current) return;
-          setPosts(saved);
+          setItems(saved);
           setCursor(null);
           setError("");
         } else {
-          const page = await fetchVibeFeed({ category, authorId });
+          const [page, stories] = await Promise.all([
+            fetchVibeFeed({ category, authorId }),
+            loadStories(),
+          ]);
           if (cancelled || gen !== loadGen.current) return;
-          setPosts(applyFilter(page.posts));
+          setItems([...stories.map(storyEntry), ...applyFilter(page.posts).map(postEntry)]);
           setCursor(page.cursor);
           setError("");
         }
@@ -157,7 +189,7 @@ export default function VibeFeed({
     return () => {
       cancelled = true;
     };
-  }, [applyFilter, authorId, category, refreshKey, savedOnly, user]);
+  }, [applyFilter, authorId, category, loadStories, refreshKey, savedOnly, user]);
 
   useEffect(() => {
     void isCurrentUserAdmin().then(setIsAdmin);
@@ -211,7 +243,7 @@ export default function VibeFeed({
     );
   }
 
-  if (posts.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-white/10 bg-[#0F172A] p-8 text-center">
         <p className="text-lg font-semibold">No vibes here yet</p>
@@ -224,17 +256,23 @@ export default function VibeFeed({
 
   return (
     <div className="space-y-4">
-      {posts.map((post, index) => {
+      {items.map((item, index) => {
         const position = index + 1;
         const showAd = position % ADSTERRA_INTERVAL === 0;
 
         return (
-          <Fragment key={post.id}>
-            <VibePostCard
-              post={post}
-              isAdmin={isAdmin}
-              onRemoved={(id) => setPosts((prev) => prev.filter((item) => item.id !== id))}
-            />
+          <Fragment key={item.id}>
+            {item.type === "story" ? (
+              <VibeStoryFeedCard story={item.story} />
+            ) : (
+              <VibePostCard
+                post={item.post}
+                isAdmin={isAdmin}
+                onRemoved={(id) =>
+                  setItems((prev) => prev.filter((entry) => entry.id !== id))
+                }
+              />
+            )}
             {showAd ? (
               <div className="flex justify-center py-1">
                 <AdsterraBanner adKey={ADSTERRA_AD_KEY} />

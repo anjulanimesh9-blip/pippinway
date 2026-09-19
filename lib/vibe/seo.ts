@@ -25,7 +25,7 @@ function clip(text: string, max: number): string {
 }
 
 export const VIBE_HOME_DESCRIPTION =
-  "Pippinway Vibe is the community side of Pippinway: share thoughts, Your Stars, Love Match, quizzes and local conversation. Share. Read. Connect. Discover.";
+  "Pippinway Vibe is the community side of Pippinway: share thoughts, Your Stars, Love Match, quizzes, interactive stories and local conversation. Share. Read. Connect. Discover.";
 
 export function vibeHomeMetadata(): Metadata {
   const canonical = vibeUrl();

@@ -9,7 +9,7 @@ import { auth } from "../firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
-import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
+import { authRegisterHref, safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 import { useI18n } from "@/lib/i18n";
 import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 
@@ -155,12 +155,12 @@ const handleResetPassword =
   {t("auth.login")}
 </button>
 
-  <Link href="/" className="w-full">
+  <Link href={authRegisterHref(returnUrl)} className="w-full">
     <button
       type="button"
       className="border border-gray-700 bg-[#111827] hover:bg-[#1f2937] transition text-white py-4 rounded-2xl w-full"
     >
-      🏠 {t("auth.backHome")}
+      {t("auth.createAccountBtn")}
     </button>
   </Link>
 </div>

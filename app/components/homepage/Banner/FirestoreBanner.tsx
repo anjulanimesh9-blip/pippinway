@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { BANNER_INFEED_SIZES } from "@/app/components/ListingPhoto";
-import type { Banner } from "@/lib/types/featured";
+import type { Banner, BannerFitMode } from "@/lib/types/featured";
 import { isUsableBannerSrc } from "@/lib/bannerImages";
+import { safeBannerHref } from "@/lib/bannerFit";
 import BannerFitImage from "./BannerFitImage";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
   framed?: boolean;
   eager?: boolean;
   sizes?: string;
+  backdrop?: "blur" | "dark";
+  forceFitMode?: BannerFitMode;
   onImageError?: () => void;
 };
 
@@ -19,6 +22,8 @@ export default function FirestoreBanner({
   framed = true,
   eager = false,
   sizes = BANNER_INFEED_SIZES,
+  backdrop,
+  forceFitMode,
   onImageError,
 }: Props) {
   if (!banner || !isUsableBannerSrc(banner.imageUrl)) return null;
@@ -35,18 +40,24 @@ export default function FirestoreBanner({
       <BannerFitImage
         src={banner.imageUrl.trim()}
         alt="Advertisement"
-        fitMode={banner.fitMode}
+        fitMode={forceFitMode ?? banner.fitMode}
         sizes={sizes}
         eager={eager}
+        backdrop={backdrop}
         onError={onImageError}
       />
     </div>
   );
 
-  if (banner.linkType === "external" && banner.externalUrl) {
+  const externalHref =
+    banner.linkType === "external" && banner.externalUrl
+      ? safeBannerHref(banner.externalUrl)
+      : "";
+
+  if (externalHref) {
     return (
       <a
-        href={banner.externalUrl}
+        href={externalHref}
         target="_blank"
         rel="noopener noreferrer"
         className="absolute inset-0 block h-full w-full"

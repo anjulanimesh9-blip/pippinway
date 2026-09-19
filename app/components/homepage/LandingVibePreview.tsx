@@ -5,8 +5,8 @@ const VIBE_CARDS = [
   {
     emoji: "📖",
     title: "Stories",
-    blurb: "Real stories & series",
-    href: VIBE_PATHS.home,
+    blurb: "Choose your path",
+    href: VIBE_PATHS.interactiveStories,
   },
   {
     emoji: "⭐",

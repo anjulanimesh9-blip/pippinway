@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import { isPermissionDenied } from "@/lib/firestoreErrors";
 import { resolveBannerImageUrl } from "@/lib/bannerImages";
@@ -10,29 +10,33 @@ import type { Banner, BannerPlacement } from "@/lib/types/featured";
 const ELIGIBILITY_RECHECK_MS = 30000;
 export const BANNER_ROTATION_MS = 5000;
 
+const KNOWN_PLACEMENTS: BannerPlacement[] = [
+  "infeed",
+  "sidebar",
+  "profile",
+  "story-before-choices",
+  "unassigned",
+];
+
 export function getBannerPlacement(banner: Banner): BannerPlacement {
-  if (banner.placement === "sidebar" || banner.placement === "profile") {
+  if (banner.placement && KNOWN_PLACEMENTS.includes(banner.placement)) {
     return banner.placement;
   }
   return "infeed";
 }
 
 /**
- * In-feed: infeed or missing placement (excludes sidebar + profile).
- * Profile: only explicit profile banners (no fallback to other types).
- * Sidebar: only explicit sidebar banners (homepage right rail).
+ * In-feed: infeed or missing placement (excludes other explicit slots).
+ * Profile / sidebar / story: only banners assigned to that placement.
  */
 export function bannersForPlacement(
   banners: Banner[],
   placement: BannerPlacement
 ): Banner[] {
-  if (placement === "profile") {
-    return banners.filter((b) => b.placement === "profile");
+  if (placement === "infeed") {
+    return banners.filter((b) => getBannerPlacement(b) === "infeed");
   }
-  if (placement === "sidebar") {
-    return banners.filter((b) => b.placement === "sidebar");
-  }
-  return banners.filter((b) => getBannerPlacement(b) === "infeed");
+  return banners.filter((b) => b.placement === placement);
 }
 
 /** Homepage right rail: sidebar banners, else the same in-feed set. */
@@ -62,8 +66,9 @@ export default function useBanners(selectedCountry: string | null) {
   useEffect(() => {
     let cancelled = false;
 
-    getDocs(collection(db, "banners"))
-      .then((snapshot) => {
+    const unsub = onSnapshot(
+      collection(db, "banners"),
+      (snapshot) => {
         if (cancelled) return;
         setBanners(
           snapshot.docs.map((d) => {
@@ -76,8 +81,8 @@ export default function useBanners(selectedCountry: string | null) {
           })
         );
         setLoading(false);
-      })
-      .catch((err) => {
+      },
+      (err) => {
         if (cancelled) return;
         if (isPermissionDenied(err)) {
           setBanners([]);
@@ -86,10 +91,12 @@ export default function useBanners(selectedCountry: string | null) {
         }
         console.error("useBanners error:", err);
         setLoading(false);
-      });
+      }
+    );
 
     return () => {
       cancelled = true;
+      unsub();
     };
   }, []);
 
@@ -99,7 +106,7 @@ export default function useBanners(selectedCountry: string | null) {
   }, []);
 
   const eligible = useMemo(() => {
-    const now = Date.now();
+    const now = nowTick;
     return banners
       .filter((b) => {
         if (!b.active) return false;

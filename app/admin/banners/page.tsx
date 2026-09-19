@@ -25,6 +25,8 @@ import {
   INFEED_BANNER_CLASS,
   PROFILE_BANNER_CLASS,
   SIDEBAR_BANNER_CLASS,
+  STORY_BANNER_DESKTOP_CLASS,
+  STORY_BANNER_MOBILE_CLASS,
 } from "@/app/components/homepage/Banner/BannerRotator";
 import {
   BANNER_CROP_ASPECT,
@@ -34,12 +36,19 @@ import {
   isValidHttpImageUrl,
   preloadBannerImage,
   resolveBannerFitMode,
+  safeBannerHref,
 } from "@/lib/bannerFit";
 
 const BANNER_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
   { value: "infeed", label: "List banner (in ads)" },
   { value: "sidebar", label: "Homepage sidebar" },
   { value: "profile", label: "Profile banner" },
+  { value: "story-before-choices", label: "Interactive Story — Before Choices" },
+];
+
+const LIBRARY_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
+  ...BANNER_TYPE_OPTIONS,
+  { value: "unassigned", label: "Unassigned (library only)" },
 ];
 
 const PLACEMENT_HINT: Record<BannerPlacement, string> = {
@@ -47,6 +56,9 @@ const PLACEMENT_HINT: Record<BannerPlacement, string> = {
   sidebar:
     "Homepage right column. Same Auto Fit row as list banners (~1.5× listing height).",
   profile: "16:5 banner at the top of the profile page.",
+  "story-before-choices":
+    "Compact strip between the scene text and “What do I do next?” (90px desktop / 65px mobile). Change Type to Unassigned to take it off the story without deleting the advertisement.",
+  unassigned: "Kept in Banner Ads only. Assign a type to show it on the site.",
 };
 
 const FIT_MODE_OPTIONS: { value: BannerFitMode; label: string; hint: string }[] = [
@@ -243,7 +255,8 @@ export default function AdminBannersPage() {
           ? new Date(form.endDate)
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         linkType: form.linkType ?? "none",
-        externalUrl: form.linkType === "external" ? form.externalUrl : null,
+        externalUrl:
+          form.linkType === "external" ? safeBannerHref(form.externalUrl) : null,
         listingId: form.linkType === "listing" ? form.listingId : null,
         active: true,
         views: 0,
@@ -273,6 +286,44 @@ export default function AdminBannersPage() {
 
   const updateFitMode = async (banner: Banner, fitMode: BannerFitMode) => {
     await updateDoc(doc(db, "banners", banner.id), { fitMode });
+  };
+
+  const updateLinkType = async (banner: Banner, linkType: Banner["linkType"]) => {
+    await updateDoc(doc(db, "banners", banner.id), {
+      linkType: linkType ?? "none",
+      externalUrl: linkType === "external" ? banner.externalUrl ?? "" : null,
+      listingId: linkType === "listing" ? banner.listingId ?? "" : null,
+    });
+  };
+
+  const updateExternalUrl = async (banner: Banner, raw: string) => {
+    await updateDoc(doc(db, "banners", banner.id), {
+      linkType: "external",
+      externalUrl: safeBannerHref(raw),
+    });
+  };
+
+  const replaceBannerImage = async (banner: Banner, file: File) => {
+    try {
+      const imageRef = ref(storage, `banners/${Date.now()}-${file.name}`);
+      await uploadBytes(imageRef, file);
+      const imageUrl = await getDownloadURL(imageRef);
+      await updateDoc(doc(db, "banners", banner.id), { imageUrl });
+    } catch (error) {
+      console.error(error);
+      alert("Failed to replace banner image.");
+    }
+  };
+
+  const removeFromPlacement = async (banner: Banner) => {
+    if (
+      !confirm(
+        "Remove this banner from Interactive Story — Before Choices? The advertisement will stay in Banner Ads and can be assigned to another type."
+      )
+    ) {
+      return;
+    }
+    await updatePlacement(banner, "unassigned");
   };
 
   const removeBanner = async (id: string) => {
@@ -401,22 +452,59 @@ export default function AdminBannersPage() {
               )}
               {(filePreview || urlStatus === "ok") && (
                 <div className="space-y-2">
-                  <div
-                    className={`relative mt-2 overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${
-                      form.placement === "profile"
-                        ? PROFILE_BANNER_CLASS
-                        : form.placement === "sidebar"
-                          ? SIDEBAR_BANNER_CLASS
-                          : INFEED_BANNER_CLASS
-                    }`}
-                  >
-                    <BannerFitImage
-                      src={filePreview || form.imageUrl.trim()}
-                      alt="Banner preview"
-                      fitMode={form.fitMode}
-                      eager
-                    />
-                  </div>
+                  {form.placement === "story-before-choices" ? (
+                    <div className="mt-2 space-y-3">
+                      <div>
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Desktop preview · 90px
+                        </p>
+                        <div
+                          className={`relative overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${STORY_BANNER_DESKTOP_CLASS}`}
+                        >
+                          <BannerFitImage
+                            src={filePreview || form.imageUrl.trim()}
+                            alt="Banner preview desktop"
+                            fitMode="auto"
+                            backdrop="dark"
+                            eager
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Mobile preview · 65px
+                        </p>
+                        <div
+                          className={`relative max-w-[390px] overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${STORY_BANNER_MOBILE_CLASS}`}
+                        >
+                          <BannerFitImage
+                            src={filePreview || form.imageUrl.trim()}
+                            alt="Banner preview mobile"
+                            fitMode="auto"
+                            backdrop="dark"
+                            eager
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={`relative mt-2 overflow-hidden ${BANNER_CROP_FRAME_CLASS} ${
+                        form.placement === "profile"
+                          ? PROFILE_BANNER_CLASS
+                          : form.placement === "sidebar"
+                            ? SIDEBAR_BANNER_CLASS
+                            : INFEED_BANNER_CLASS
+                      }`}
+                    >
+                      <BannerFitImage
+                        src={filePreview || form.imageUrl.trim()}
+                        alt="Banner preview"
+                        fitMode={form.fitMode}
+                        eager
+                      />
+                    </div>
+                  )}
                   {sourceFile && form.fitMode === "cover" && (
                     <button
                       type="button"
@@ -553,7 +641,7 @@ export default function AdminBannersPage() {
                           }
                           className="rounded-lg bg-black/30 px-2 py-1 text-white"
                         >
-                          {BANNER_TYPE_OPTIONS.map((opt) => (
+                          {LIBRARY_TYPE_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>
@@ -576,6 +664,65 @@ export default function AdminBannersPage() {
                           <option value="cover">Crop to Fill</option>
                         </select>
                       </label>
+                      <label className="mt-2 flex items-center gap-2 text-sm text-gray-300">
+                        <span className="text-gray-400">Link</span>
+                        <select
+                          value={banner.linkType ?? "none"}
+                          onChange={(e) =>
+                            updateLinkType(
+                              banner,
+                              e.target.value as Banner["linkType"]
+                            )
+                          }
+                          className="rounded-lg bg-black/30 px-2 py-1 text-white"
+                        >
+                          <option value="none">No link</option>
+                          <option value="external">External URL</option>
+                          <option value="listing">Listing</option>
+                          <option value="category">Category</option>
+                        </select>
+                      </label>
+                      {banner.linkType === "external" ? (
+                        <input
+                          key={`${banner.id}-url-${banner.externalUrl ?? ""}`}
+                          defaultValue={banner.externalUrl ?? ""}
+                          placeholder="https://advertiser.example"
+                          onBlur={(e) => {
+                            const next = e.target.value.trim();
+                            if (next === (banner.externalUrl ?? "").trim()) return;
+                            void updateExternalUrl(banner, next);
+                          }}
+                          className="mt-2 w-full max-w-md rounded-lg bg-black/30 px-2 py-1 text-sm text-white"
+                        />
+                      ) : null}
+                      {banner.linkType === "listing" ? (
+                        <input
+                          key={`${banner.id}-listing-${banner.listingId ?? ""}`}
+                          defaultValue={banner.listingId ?? ""}
+                          placeholder="Listing ID"
+                          onBlur={(e) => {
+                            const next = e.target.value.trim();
+                            if (next === (banner.listingId ?? "").trim()) return;
+                            void updateDoc(doc(db, "banners", banner.id), {
+                              listingId: next,
+                            });
+                          }}
+                          className="mt-2 w-full max-w-md rounded-lg bg-black/30 px-2 py-1 text-sm text-white"
+                        />
+                      ) : null}
+                      <label className="mt-2 block text-sm text-gray-400">
+                        Replace image
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="mt-1 block w-full text-xs text-gray-300 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1 file:text-sm file:font-semibold file:text-white"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = "";
+                            if (file) void replaceBannerImage(banner, file);
+                          }}
+                        />
+                      </label>
                     </div>
                     <label className="flex items-center gap-2 text-sm text-gray-300">
                       <input
@@ -586,13 +733,24 @@ export default function AdminBannersPage() {
                       Active
                     </label>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeBanner(banner.id)}
-                    className="mt-3 text-sm text-red-400 hover:text-red-300"
-                  >
-                    Delete
-                  </button>
+                  <div className="mt-3 flex flex-wrap gap-4">
+                    {getBannerPlacement(banner) === "story-before-choices" ? (
+                      <button
+                        type="button"
+                        onClick={() => removeFromPlacement(banner)}
+                        className="text-sm text-gray-400 hover:text-white"
+                      >
+                        Remove from this placement
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => removeBanner(banner.id)}
+                      className="text-sm text-red-400 hover:text-red-300"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

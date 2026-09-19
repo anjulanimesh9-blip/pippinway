@@ -10,7 +10,9 @@ import {
 } from "@/lib/vibe/client";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
 import type { VibePost } from "@/lib/vibe/types";
+import StoryRewardsAnalytics from "./StoryRewardsAnalytics";
 import VibeBannerSettings from "./VibeBannerSettings";
+import VibeStoriesAdmin from "./VibeStoriesAdmin";
 
 type ReportRow = {
   id: string;
@@ -77,6 +79,10 @@ export default function AdminVibePage() {
       <div className="mt-6">
         <VibeBannerSettings />
       </div>
+
+      <StoryRewardsAnalytics />
+
+      <VibeStoriesAdmin />
 
       <h2 className="mt-8 text-lg font-semibold">Reports</h2>
       {loading ? (

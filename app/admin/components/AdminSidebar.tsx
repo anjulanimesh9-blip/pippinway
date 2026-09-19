@@ -18,6 +18,7 @@ import {
   Sparkles,
   Star,
   Users,
+  BookOpen,
 } from "lucide-react";
 
 const LINK_CLASS =
@@ -40,10 +41,14 @@ const NAV_ITEMS = [
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/pro-users", label: "Pro Requests", icon: Shield },
   { href: "/admin/vibe", label: "Vibe", icon: Sparkles },
+  { href: "/admin/vibe/analytics", label: "Story Rewards", icon: BookOpen },
 ] as const;
 
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
+  if (href === "/admin/vibe") {
+    return pathname === href || pathname.startsWith("/admin/vibe/stories");
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

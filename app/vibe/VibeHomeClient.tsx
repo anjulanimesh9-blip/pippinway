@@ -4,7 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trackVibe } from "@/lib/analytics";
-import { isVibeCategoryId } from "@/lib/vibe/categories";
+import { isVibeCategoryId, isVibeExperienceCategory } from "@/lib/vibe/categories";
+import { VIBE_PATHS } from "@/lib/vibe/constants";
 import type { VibeCategoryId, VibePostCategory } from "@/lib/vibe/types";
 import VibeCategoryNav from "./components/VibeCategoryNav";
 import VibeComposer from "./components/VibeComposer";
@@ -21,6 +22,14 @@ function VibeHomeInner() {
   const active: VibeCategoryId = isVibeCategoryId(raw) ? raw : "all";
   const [refreshKey, setRefreshKey] = useState(0);
   const compose = searchParams.get("compose") === "1";
+  const composerCategory: VibePostCategory =
+    active === "all" || isVibeExperienceCategory(active) ? "lifestyle" : active;
+
+  useEffect(() => {
+    if (isVibeExperienceCategory(raw)) {
+      router.replace(VIBE_PATHS.interactiveStories);
+    }
+  }, [raw, router]);
 
   useEffect(() => {
     trackVibe("vibe_page_view", { vibe_category: active });
@@ -41,6 +50,7 @@ function VibeHomeInner() {
   const onSelect = (id: VibeCategoryId) => {
     trackVibe("vibe_category", { vibe_category: id });
     if (id === "all") router.push("/vibe");
+    else if (isVibeExperienceCategory(id)) router.push(VIBE_PATHS.interactiveStories);
     else router.push(`/vibe?category=${id}`);
   };
 
@@ -55,12 +65,12 @@ function VibeHomeInner() {
           <VibeExperienceGrid />
           <VibeComposer
             key={active}
-            defaultCategory={active === "all" ? "lifestyle" : (active as VibePostCategory)}
+            defaultCategory={composerCategory}
             onCreated={() => setRefreshKey((value) => value + 1)}
           />
           <VibeCategoryNav active={active} onSelect={onSelect} />
           <VibeFeed
-            category={active === "all" ? "all" : active}
+            category={active === "all" || isVibeExperienceCategory(active) ? "all" : active}
             refreshKey={refreshKey}
           />
         </div>
@@ -79,6 +89,9 @@ function VibeHomeInner() {
               </Link>
               <Link href="/vibe/quizzes" className="block rounded-xl bg-[#020817] px-3 py-2 hover:text-[#FBB03B]">
                 🧠 Quizzes
+              </Link>
+              <Link href={VIBE_PATHS.interactiveStories} className="block rounded-xl bg-[#020817] px-3 py-2 hover:text-[#FBB03B]">
+                📖 Interactive Stories
               </Link>
             </div>
           </div>

@@ -58,7 +58,12 @@ export interface FeaturedPackagePurchase {
   rejectedBy?: string;
 }
 
-export type BannerPlacement = "infeed" | "sidebar" | "profile";
+export type BannerPlacement =
+  | "infeed"
+  | "sidebar"
+  | "profile"
+  | "story-before-choices"
+  | "unassigned";
 
 /** Auto Fit contains the full image; Crop to Fill covers the slot. */
 export type BannerFitMode = "auto" | "cover";

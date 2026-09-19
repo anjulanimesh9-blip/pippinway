@@ -8,6 +8,7 @@ const EXPERIENCES = [
   { href: VIBE_PATHS.loveMatch, emoji: "❤️", title: "Love Match", blurb: "Two signs, one score" },
   { href: VIBE_PATHS.lucky, emoji: "🍀", title: "Lucky Today", blurb: "A number and colour" },
   { href: VIBE_PATHS.quizzes, emoji: "🧠", title: "Quizzes", blurb: "Personality and trivia" },
+  { href: VIBE_PATHS.interactiveStories, emoji: "📖", title: "Stories", blurb: "Choose your path" },
   { href: "/vibe?category=fun-memes", emoji: "😂", title: "Fun & Memes", blurb: "Light community jokes" },
   { href: VIBE_PATHS.trending, emoji: "🔥", title: "Trending in Zim", blurb: "Local conversation" },
 ];

@@ -13,6 +13,12 @@ import { track } from "@/lib/analytics";
 import { safeAuthReturnUrl } from "../components/GuestAuthPrompt";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
+import { readStoryCompletedLocally } from "@/lib/vibe/stories";
+import {
+  recordStoryRewardEvent,
+  storyEndingFromReturnUrl,
+  storySlugFromReturnUrl,
+} from "@/lib/vibe/stories/rewards";
 import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 
 function RegisterPage() {
@@ -34,6 +40,7 @@ const [errors, setErrors] = useState({
   const returnUrl = safeAuthReturnUrl(
     searchParams.get("returnUrl") || searchParams.get("redirect")
   );
+  const storySlug = storySlugFromReturnUrl(returnUrl);
 
   const handleRegister = async (
   e: React.FormEvent
@@ -102,10 +109,31 @@ await setDoc(
 
     membershipStart:
       new Date(),
+    ...(storySlug
+      ? {
+          signupSource: "interactive-story",
+          signupStorySlug: storySlug,
+        }
+      : {}),
   }
 );
 
   track("sign_up");
+  if (storySlug) {
+    try {
+      await recordStoryRewardEvent({
+        storySlug,
+        event: "signup",
+        endingId:
+          readStoryCompletedLocally(storySlug) ||
+          storyEndingFromReturnUrl(returnUrl) ||
+          undefined,
+      });
+    } catch {
+      // Account is ready; analytics can catch up from the story page.
+    }
+  }
+
   router.push(returnUrl);
     } catch (error: any) {
       setSuccessMessage(
@@ -151,6 +179,14 @@ await setDoc(
           {t("auth.checkFolders")}
         </p>
       )}
+      {successMessage !== t("auth.authGeneric") && storySlug ? (
+        <Link
+          href={returnUrl}
+          className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-[#FBB03B] px-4 text-sm font-semibold text-[#0B1220]"
+        >
+          Return to your story
+        </Link>
+      ) : null}
     </div>
   </div>
 )}

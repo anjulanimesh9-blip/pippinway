@@ -65,12 +65,9 @@ export function bannerObjectPosition(position: VibeBannerPosition): string {
   return "center";
 }
 
-export function safeBannerHref(href: string): string {
-  const trimmed = href.trim();
-  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return trimmed;
-  if (trimmed.startsWith("https://") || trimmed.startsWith("http://")) return trimmed;
-  return "";
-}
+import { safeBannerHref } from "@/lib/bannerFit";
+
+export { safeBannerHref };
 
 export function parseVibeBanner(data: Record<string, unknown> | undefined): VibeBannerSettings {
   if (!data) return { ...DEFAULT_VIBE_BANNER };

@@ -1,4 +1,4 @@
-import type { VibeCategoryId, VibePostCategory } from "./types";
+import type { VibeCategoryId, VibeExperienceCategory, VibePostCategory } from "./types";
 
 export type VibeCategory = {
   id: VibeCategoryId;
@@ -58,18 +58,32 @@ export const VIBE_CATEGORY_LIST: VibeCategory[] = [
     href: "/vibe/trending",
     description: "Community talk from Zimbabwe",
   },
+  {
+    id: "interactive-stories",
+    label: "Interactive Stories",
+    emoji: "📖",
+    href: "/vibe/interactive-stories",
+    description: "Choose-your-path stories you can read scene by scene",
+  },
 ];
 
+export const VIBE_EXPERIENCE_CATEGORY_IDS = ["interactive-stories"] as const;
+
 export const VIBE_POST_CATEGORIES = VIBE_CATEGORY_LIST.filter(
-  (item): item is VibeCategory & { id: VibePostCategory } => item.id !== "all"
+  (item): item is VibeCategory & { id: VibePostCategory } =>
+    item.id !== "all" && item.id !== "interactive-stories"
 );
 
 export function isVibeCategoryId(value: string): value is VibeCategoryId {
   return VIBE_CATEGORY_LIST.some((item) => item.id === value);
 }
 
+export function isVibeExperienceCategory(value: string): value is VibeExperienceCategory {
+  return (VIBE_EXPERIENCE_CATEGORY_IDS as readonly string[]).includes(value);
+}
+
 export function isVibePostCategory(value: string): value is VibePostCategory {
-  return value !== "all" && isVibeCategoryId(value);
+  return value !== "all" && !isVibeExperienceCategory(value) && isVibeCategoryId(value);
 }
 
 export function vibeCategoryById(id: string): VibeCategory | undefined {

@@ -40,6 +40,8 @@ import {
 import { compressListingImage } from "@/lib/compressImage";
 import { applyCountryCallingCode } from "@/lib/countryCallingCodes";
 import { trackPostAd } from "@/lib/analytics";
+import { recordStoryRewardEvent } from "@/lib/vibe/stories/rewards";
+import { VIBE_PATHS } from "@/lib/vibe/constants";
 import { parseListingPrice } from "@/lib/formatPrice";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
@@ -117,7 +119,11 @@ const [checkingAuth, setCheckingAuth] =
       (currentUser) => {
   if (!currentUser) {
     const country = searchParams.get("country");
-    const returnUrl = country
+    const story = searchParams.get("story");
+    const fromStory = searchParams.get("from") === "story" && story;
+    const returnUrl = fromStory
+      ? `/add-listing?from=story&story=${encodeURIComponent(story)}`
+      : country
       ? `/add-listing?country=${encodeURIComponent(country)}`
       : "/add-listing";
     router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
@@ -347,6 +353,9 @@ const created = await addDoc(
     expiryDate: expiresAt,
 
     imagesCompressed: true,
+    ...(searchParams.get("from") === "story" && searchParams.get("story")
+      ? { createdFromStorySlug: searchParams.get("story") }
+      : {}),
   }
 );
 
@@ -355,6 +364,21 @@ const created = await addDoc(
     category,
     country,
   });
+  const storySlug = searchParams.get("story") || "";
+  if (searchParams.get("from") === "story" && storySlug) {
+    try {
+      await recordStoryRewardEvent({
+        storySlug,
+        event: "listing_created",
+        listingId: created.id,
+      });
+    } catch {
+      // Listing is live; analytics can be confirmed later.
+    }
+    alert(t("post.publishedBody"));
+    router.push(VIBE_PATHS.storyReward(storySlug));
+    return;
+  }
   alert(t("post.publishedBody"));
   router.push(
     "/profile"

@@ -9,6 +9,8 @@ export const BANNER_SLOT_PX: Record<BannerPlacement, { width: number; height: nu
   infeed: { width: 1600, height: 500 },
   profile: { width: 1600, height: 500 },
   sidebar: { width: 1600, height: 500 },
+  "story-before-choices": { width: 1600, height: 200 },
+  unassigned: { width: 1600, height: 500 },
 };
 
 /** Locked crop aspect per banner slot (width / height). */
@@ -16,6 +18,8 @@ export const BANNER_CROP_ASPECT: Record<BannerPlacement, number> = {
   infeed: 16 / 5,
   profile: 16 / 5,
   sidebar: 16 / 5,
+  "story-before-choices": 8,
+  unassigned: 16 / 5,
 };
 
 /** JPEG export matching the design size. */
@@ -26,12 +30,17 @@ export const BANNER_CROP_OUTPUT: Record<
   infeed: { width: 1600, height: 500 },
   profile: { width: 1600, height: 500 },
   sidebar: { width: 1600, height: 500 },
+  "story-before-choices": { width: 1600, height: 200 },
+  unassigned: { width: 1600, height: 500 },
 };
 
 export const BANNER_CROP_HINT: Record<BannerPlacement, string> = {
   infeed: "Crop to 16:5 — list banner size you were given (export 1600×500).",
   profile: "Crop to 16:5 — profile banner size you were given (export 1600×500).",
   sidebar: "Crop to 16:5 — homepage right rail uses the same Auto Fit row as list banners.",
+  "story-before-choices":
+    "Wide compact strip before story choices (export 1600×200). Live height is 90px desktop / 65px mobile.",
+  unassigned: "Saved in Banner Ads only — not shown on the site until you assign a type.",
 };
 
 /** Same frame language as live `BannerRotator`. */

@@ -16,6 +16,7 @@ type Props = {
   fitMode?: BannerFitMode | string | null;
   sizes?: string;
   eager?: boolean;
+  backdrop?: "blur" | "dark";
   onError?: () => void;
   onLoad?: () => void;
 };
@@ -113,6 +114,7 @@ export default function BannerFitImage({
   fitMode,
   sizes = BANNER_INFEED_SIZES,
   eager = false,
+  backdrop = "blur",
   onError,
   onLoad,
 }: Props) {
@@ -121,10 +123,17 @@ export default function BannerFitImage({
   const url = src.trim();
   const mode = resolveBannerFitMode(fitMode);
   const isCover = mode === "cover";
+  const showBlurFill = !isCover && backdrop !== "dark";
 
   return (
-    <div className="banner-fit-frame" style={FRAME_STYLE}>
-      {!isCover && (
+    <div
+      className="banner-fit-frame"
+      style={{
+        ...FRAME_STYLE,
+        backgroundColor: backdrop === "dark" ? "#020817" : undefined,
+      }}
+    >
+      {showBlurFill && (
         <>
           <div className="banner-fit-bg" style={BLUR_LAYER_STYLE} aria-hidden>
             <SlotImage

@@ -1078,3 +1078,589 @@ exports.compressExistingListingImagesNow = onCall(
     return runListingImageCompressBatch();
   }
 );
+
+const STORY_REWARD_STATS_ALL = "_all";
+const STORY_SIGNUP_WINDOW_MS = 30 * 60 * 1000;
+const SEED_STORY_SLUG = "the-last-witness";
+const STORY_EVENTS = [
+  "read",
+  "complete",
+  "signup",
+  "verified",
+  "listing_created",
+  "featured_redeemed",
+];
+
+function clipStorySlug(value) {
+  const slug = clipString(value, 80).toLowerCase();
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    throw new HttpsError("invalid-argument", "Invalid story.");
+  }
+  return slug;
+}
+
+async function assertPublishedStory(slug) {
+  const snap = await getDb().collection("vibeStories").doc(slug).get();
+  if (snap.exists) {
+    if (snap.data().published !== true) {
+      throw new HttpsError("failed-precondition", "This story is not published.");
+    }
+    return {
+      slug,
+      title: clipString(snap.data().title || slug, 120),
+    };
+  }
+  if (slug === SEED_STORY_SLUG) {
+    return { slug, title: "The Last Witness" };
+  }
+  throw new HttpsError("not-found", "Story not found.");
+}
+
+function storyRewardRef(uid, slug) {
+  return getDb().collection("users").doc(uid).collection("storyRewards").doc(slug);
+}
+
+function storyStatsRef(slug) {
+  return getDb().collection("vibeStoryStats").doc(slug);
+}
+
+function bumpStoryStat(transaction, slug, field) {
+  const payload = {
+    storySlug: slug,
+    [field]: FieldValue.increment(1),
+    updatedAt: FieldValue.serverTimestamp(),
+  };
+  transaction.set(storyStatsRef(slug), payload, { merge: true });
+  transaction.set(
+    storyStatsRef(STORY_REWARD_STATS_ALL),
+    {
+      [field]: FieldValue.increment(1),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+function emptyStoryReward(slug) {
+  return {
+    storySlug: slug,
+    source: "interactive-story",
+  };
+}
+
+function accountAgeMs(userRecord) {
+  const created = userRecord?.metadata?.creationTime
+    ? new Date(userRecord.metadata.creationTime).getTime()
+    : 0;
+  return created ? Date.now() - created : Number.POSITIVE_INFINITY;
+}
+
+function applyExistingWheelPrize({
+  transaction,
+  user,
+  userRef,
+  historyRef,
+  prize,
+  type,
+  requestId,
+  extraHistory,
+  extraLot,
+}) {
+  let availableSpins = Number(user.availableSpins ?? 0);
+  let availableMegaSpins = Number(user.availableMegaSpins ?? 0);
+  const featuredCreditsAwarded = prize.featuredCredits;
+  const cashAmount = prize.cashAmount;
+  const bonusSpin = prize.bonusSpin === true;
+  if (bonusSpin) availableSpins += 1;
+
+  const updates = {
+    availableSpins,
+    availableMegaSpins,
+  };
+
+  if (featuredCreditsAwarded > 0) {
+    const currentCredits = Number(user.featuredCredits ?? 0);
+    const lots = Array.isArray(user.featuredCreditLots)
+      ? user.featuredCreditLots.map((lot) => ({ ...lot }))
+      : [];
+    lots.push({
+      purchaseId: `reward-${historyRef.id}`,
+      packageId: "pippinway-rewards",
+      durationDays: FEATURED_CREDIT_DAYS,
+      remaining: featuredCreditsAwarded,
+      total: featuredCreditsAwarded,
+      createdAt: Timestamp.now(),
+      ...(extraLot || {}),
+    });
+    updates.featuredCredits = currentCredits + featuredCreditsAwarded;
+    updates.featuredCreditLots = lots;
+  }
+
+  const historyDoc = {
+    userId: userRef.id,
+    userEmail: clipString(user.email || "", 120),
+    userName: userDisplayName(user),
+    type,
+    prizeKey: prize.key,
+    prizeLabel: prize.label,
+    rewardType: rewardTypeForPrize(prize),
+    rewardValue: rewardValueForPrize(prize),
+    status: historyStatusForPrize(prize),
+    featuredCreditsAwarded,
+    cashAmount,
+    bonusSpin,
+    requestId: requestId || null,
+    createdAt: FieldValue.serverTimestamp(),
+    ...(extraHistory || {}),
+  };
+
+  if (cashAmount > 0) {
+    historyDoc.paymentDetails = null;
+    historyDoc.paymentStatus = STATUS_PAYMENT_DETAILS_REQUIRED;
+    historyDoc.paidAt = null;
+    historyDoc.paymentReference = null;
+  }
+
+  transaction.update(userRef, updates);
+  transaction.set(historyRef, historyDoc);
+
+  return {
+    type,
+    prizeKey: prize.key,
+    prizeLabel: prize.label,
+    status: historyDoc.status,
+    featuredCreditsAwarded,
+    cashAmount,
+    bonusSpin,
+    historyId: historyRef.id,
+    availableSpins,
+    availableMegaSpins,
+  };
+}
+
+/**
+ * Server-confirmed story funnel events. Each UID+story field is written once
+ * so refreshes and repeat endings cannot inflate analytics.
+ */
+exports.recordStoryRewardEvent = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Sign in to continue.");
+  }
+
+  const uid = request.auth.uid;
+  const event = clipString(request.data?.event, 40);
+  const slug = clipStorySlug(request.data?.storySlug);
+  const endingId = clipString(request.data?.endingId, 20);
+  const listingId = clipString(request.data?.listingId, 80);
+
+  if (!STORY_EVENTS.includes(event)) {
+    throw new HttpsError("invalid-argument", "Unknown story event.");
+  }
+
+  await assertPublishedStory(slug);
+
+  let listingSnap = null;
+  if (event === "listing_created" || event === "featured_redeemed") {
+    if (!listingId) {
+      throw new HttpsError("invalid-argument", "Listing id is required.");
+    }
+    listingSnap = await getDb().collection("listings").doc(listingId).get();
+    if (!listingSnap.exists) {
+      throw new HttpsError("not-found", "Listing not found.");
+    }
+    const listing = listingSnap.data();
+    if (listing.ownerId !== uid) {
+      throw new HttpsError("permission-denied", "This listing is not yours.");
+    }
+  }
+
+  let userRecord = null;
+  if (event === "signup" || event === "verified") {
+    const { getAuth } = require("firebase-admin/auth");
+    userRecord = await getAuth().getUser(uid);
+  }
+
+  const rewardRef = storyRewardRef(uid, slug);
+  const result = await getDb().runTransaction(async (transaction) => {
+    const snap = await transaction.get(rewardRef);
+    const current = snap.exists ? snap.data() : emptyStoryReward(slug);
+    const updates = { ...current, storySlug: slug, source: "interactive-story" };
+    const counted = [];
+
+    if (event === "read" && !current.firstReadAt) {
+      updates.firstReadAt = FieldValue.serverTimestamp();
+      counted.push("readers");
+    }
+
+    if (event === "complete") {
+      if (!current.firstReadAt) {
+        updates.firstReadAt = FieldValue.serverTimestamp();
+        counted.push("readers");
+      }
+      if (!current.completedAt) {
+        updates.completedAt = FieldValue.serverTimestamp();
+        if (endingId) updates.completedEndingId = endingId;
+        counted.push("completions");
+      }
+    }
+
+    if (event === "signup") {
+      const freshAccount = accountAgeMs(userRecord) <= STORY_SIGNUP_WINDOW_MS;
+      if (freshAccount && !current.registeredFromStory) {
+        updates.registeredFromStory = true;
+        updates.registeredAt = FieldValue.serverTimestamp();
+        counted.push("registrationConversions");
+      }
+      if (!current.firstReadAt) {
+        updates.firstReadAt = FieldValue.serverTimestamp();
+        counted.push("readers");
+      }
+      if (endingId && !current.completedAt) {
+        updates.completedAt = FieldValue.serverTimestamp();
+        updates.completedEndingId = endingId;
+        counted.push("completions");
+      }
+    }
+
+    if (event === "verified") {
+      if (current.registeredFromStory && !current.verifiedAt) {
+        updates.verifiedAt = FieldValue.serverTimestamp();
+        counted.push("verifiedRegistrations");
+      }
+      if (!current.completedAt) {
+        updates.completedAt = FieldValue.serverTimestamp();
+        if (endingId) updates.completedEndingId = endingId;
+        counted.push("completions");
+      }
+      if (!current.firstReadAt) {
+        updates.firstReadAt = FieldValue.serverTimestamp();
+        counted.push("readers");
+      }
+    }
+
+    if (event === "listing_created" && !current.listingId) {
+      updates.listingId = listingId;
+      updates.listingCreatedAt = FieldValue.serverTimestamp();
+      counted.push("listingsCreated");
+    }
+
+    if (event === "featured_redeemed") {
+      if (Number(current.featuredCreditsAwarded || 0) < 1) {
+        throw new HttpsError("failed-precondition", "No Featured Ad reward to redeem.");
+      }
+      if (!current.featuredRedeemedAt) {
+        updates.featuredRedeemedAt = FieldValue.serverTimestamp();
+        updates.featuredListingId = listingId;
+        counted.push("featuredRedeemed");
+      }
+    }
+
+    transaction.set(rewardRef, updates, { merge: true });
+    counted.forEach((field) => bumpStoryStat(transaction, slug, field));
+    return {
+      storySlug: slug,
+      completed: Boolean(updates.completedAt || current.completedAt),
+      registeredFromStory: Boolean(updates.registeredFromStory || current.registeredFromStory),
+      verified: Boolean(updates.verifiedAt || current.verifiedAt),
+      attemptUsed: Boolean(current.attemptUsedAt),
+      featuredCreditsAwarded: Number(current.featuredCreditsAwarded || 0),
+      featuredRedeemed: Boolean(updates.featuredRedeemedAt || current.featuredRedeemedAt),
+      prizeKey: current.prizeKey || null,
+      prizeLabel: current.prizeLabel || null,
+      historyId: current.historyId || null,
+      counted,
+    };
+  });
+
+  return result;
+});
+
+function clientIp(request) {
+  const raw = request.rawRequest;
+  const forwarded = raw?.headers?.["x-forwarded-for"] || raw?.headers?.["x-appengine-user-ip"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim().slice(0, 80);
+  }
+  return typeof raw?.ip === "string" ? raw.ip : "unknown";
+}
+
+function hashIp(ip) {
+  return crypto.createHash("sha256").update(`story-reward:${ip}`).digest("hex").slice(0, 32);
+}
+
+function replayStorySpin(current, slug) {
+  return {
+    type: "normal",
+    prizeKey: current.prizeKey || "try_again",
+    prizeLabel: current.prizeLabel || "Try Again",
+    status: Number(current.cashAmount || 0) > 0 ? STATUS_PAYMENT_DETAILS_REQUIRED : STATUS_COMPLETED,
+    featuredCreditsAwarded: Number(current.featuredCreditsAwarded || 0),
+    cashAmount: Number(current.cashAmount || 0),
+    bonusSpin: current.bonusSpin === true,
+    historyId: current.historyId || "",
+    availableSpins: 0,
+    availableMegaSpins: 0,
+    storySlug: slug,
+    source: "interactive-story",
+    alreadyCommitted: true,
+  };
+}
+
+async function noteStoryRewardAbuse(uid, ipHash, reason) {
+  await getDb().collection("storyRewardAbuseLogs").add({
+    uid,
+    ipHash,
+    reason,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * One existing Pippinway Rewards wheel spin per authenticated user per story.
+ * Uses the same prize table as a normal listing-earned spin.
+ * Email verification is not required. Duplicate attempts replay the committed result.
+ */
+exports.spinStoryReward = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Sign in to claim your reward.");
+  }
+
+  const uid = request.auth.uid;
+  const slug = clipStorySlug(request.data?.storySlug);
+  const requestId =
+    typeof request.data?.requestId === "string" ? request.data.requestId.trim() : "";
+  const endingId = clipString(request.data?.endingId, 20);
+  const ip = clientIp(request);
+  const ipHash = hashIp(ip);
+
+  if (!requestId || requestId.length < 8 || requestId.length > 80) {
+    throw new HttpsError("invalid-argument", "Invalid spin request id.");
+  }
+
+  await assertPublishedStory(slug);
+
+  const userRef = getDb().collection("users").doc(uid);
+  const historyRef = userRef.collection("rewardHistory").doc();
+  const requestRef = userRef.collection("rewardSpinRequests").doc(requestId);
+  const rewardRef = storyRewardRef(uid, slug);
+  const uidRateRef = getDb().collection("storyRewardRate").doc(`uid_${uid}`);
+  const ipRateRef = getDb().collection("storyRewardRate").doc(`ip_${ipHash}`);
+  const hourStart = Date.now() - 60 * 60 * 1000;
+
+  let userRecord = null;
+  try {
+    const { getAuth } = require("firebase-admin/auth");
+    userRecord = await getAuth().getUser(uid);
+  } catch {
+    userRecord = null;
+  }
+  const newAccount = accountAgeMs(userRecord) < 24 * 60 * 60 * 1000;
+  const uidMax = newAccount ? 4 : 12;
+  const ipMax = 10;
+
+  const result = await getDb().runTransaction(async (transaction) => {
+    const [userSnap, requestSnap, rewardSnap, uidRateSnap, ipRateSnap] = await Promise.all([
+      transaction.get(userRef),
+      transaction.get(requestRef),
+      transaction.get(rewardRef),
+      transaction.get(uidRateRef),
+      transaction.get(ipRateRef),
+    ]);
+
+    if (requestSnap.exists) {
+      return { ...requestSnap.data().result, alreadyCommitted: true };
+    }
+
+    if (!userSnap.exists) {
+      throw new HttpsError("not-found", "User profile not found.");
+    }
+
+    const current = rewardSnap.exists ? rewardSnap.data() : emptyStoryReward(slug);
+    if (current.attemptUsedAt) {
+      return replayStorySpin(current, slug);
+    }
+    if (!current.completedAt) {
+      throw new HttpsError("failed-precondition", "STORY_NOT_COMPLETE");
+    }
+
+    const uidSpins = (uidRateSnap.data()?.spins || []).filter((time) => Number(time) > hourStart);
+    const ipSpins = (ipRateSnap.data()?.spins || []).filter((time) => Number(time) > hourStart);
+    if (uidSpins.length >= uidMax || ipSpins.length >= ipMax) {
+      throw new HttpsError("resource-exhausted", "Too many reward attempts. Try again later.");
+    }
+    const now = Date.now();
+    uidSpins.push(now);
+    ipSpins.push(now);
+    transaction.set(
+      uidRateRef,
+      { spins: uidSpins, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+    transaction.set(
+      ipRateRef,
+      { spins: ipSpins, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+
+    const user = userSnap.data();
+    const prize = pickPrize(NORMAL_PRIZES);
+    const payload = applyExistingWheelPrize({
+      transaction,
+      user,
+      userRef,
+      historyRef,
+      prize,
+      type: "normal",
+      requestId,
+      extraHistory: {
+        source: "interactive-story",
+        storySlug: slug,
+      },
+      extraLot: {
+        source: "interactive-story",
+        storySlug: slug,
+      },
+    });
+
+    const rewardUpdates = {
+      ...current,
+      storySlug: slug,
+      source: "interactive-story",
+      attemptUsedAt: FieldValue.serverTimestamp(),
+      requestId,
+      historyId: payload.historyId,
+      prizeKey: payload.prizeKey,
+      prizeLabel: payload.prizeLabel,
+      rewardType: rewardTypeForPrize(prize),
+      featuredCreditsAwarded: payload.featuredCreditsAwarded,
+      cashAmount: payload.cashAmount,
+      bonusSpin: payload.bonusSpin,
+    };
+    if (!current.completedAt) {
+      rewardUpdates.completedAt = FieldValue.serverTimestamp();
+      if (endingId) rewardUpdates.completedEndingId = endingId;
+    }
+
+    transaction.set(rewardRef, rewardUpdates, { merge: true });
+    transaction.set(requestRef, {
+      type: "normal",
+      source: "interactive-story",
+      storySlug: slug,
+      createdAt: FieldValue.serverTimestamp(),
+      result: { ...payload, storySlug: slug, source: "interactive-story" },
+    });
+    bumpStoryStat(transaction, slug, "rewardAttempts");
+    if (payload.featuredCreditsAwarded > 0) {
+      bumpStoryStat(transaction, slug, "featuredIssued");
+    }
+
+    return { ...payload, storySlug: slug, source: "interactive-story" };
+  }).catch(async (err) => {
+    if (err instanceof HttpsError && err.code === "resource-exhausted") {
+      await noteStoryRewardAbuse(uid, ipHash, "rate_limit").catch(() => undefined);
+    }
+    throw err;
+  });
+
+  return result;
+});
+
+exports.getStoryRewardStatus = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Sign in to continue.");
+  }
+  const uid = request.auth.uid;
+  const slug = clipStorySlug(request.data?.storySlug);
+  const snap = await storyRewardRef(uid, slug).get();
+  const data = snap.exists ? snap.data() : {};
+  return {
+    storySlug: slug,
+    completed: Boolean(data.completedAt),
+    registeredFromStory: data.registeredFromStory === true,
+    verified: Boolean(data.verifiedAt) || request.auth.token.email_verified === true,
+    attemptUsed: Boolean(data.attemptUsedAt),
+    prizeKey: data.prizeKey || null,
+    prizeLabel: data.prizeLabel || null,
+    featuredCreditsAwarded: Number(data.featuredCreditsAwarded || 0),
+    cashAmount: Number(data.cashAmount || 0),
+    bonusSpin: data.bonusSpin === true,
+    featuredRedeemed: Boolean(data.featuredRedeemedAt),
+    historyId: data.historyId || null,
+    listingId: data.listingId || null,
+  };
+});
+
+exports.getStoryRewardAnalytics = onCall(async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Sign in as admin.");
+  }
+  await assertAdmin(request.auth.uid);
+
+  const [statsSnap, storiesSnap] = await Promise.all([
+    getDb().collection("vibeStoryStats").get(),
+    getDb().collection("vibeStories").get(),
+  ]);
+
+  const titles = {};
+  storiesSnap.docs.forEach((item) => {
+    const data = item.data() || {};
+    const slug = clipString(data.slug || item.id, 80);
+    titles[slug] = clipString(data.title || slug, 120);
+    titles[item.id] = titles[slug];
+  });
+  titles[SEED_STORY_SLUG] = titles[SEED_STORY_SLUG] || "The Last Witness";
+
+  const empty = {
+    readers: 0,
+    completions: 0,
+    registrationConversions: 0,
+    verifiedRegistrations: 0,
+    rewardAttempts: 0,
+    featuredIssued: 0,
+    featuredRedeemed: 0,
+    listingsCreated: 0,
+  };
+
+  let totals = { ...empty };
+  const stories = [];
+  statsSnap.docs.forEach((item) => {
+    const data = item.data() || {};
+    const row = {
+      storySlug: item.id,
+      title: item.id === STORY_REWARD_STATS_ALL ? "All stories" : titles[item.id] || item.id,
+      readers: Number(data.readers || 0),
+      completions: Number(data.completions || 0),
+      registrationConversions: Number(data.registrationConversions || 0),
+      verifiedRegistrations: Number(data.verifiedRegistrations || 0),
+      rewardAttempts: Number(data.rewardAttempts || 0),
+      featuredIssued: Number(data.featuredIssued || 0),
+      featuredRedeemed: Number(data.featuredRedeemed || 0),
+      listingsCreated: Number(data.listingsCreated || 0),
+    };
+    if (item.id === STORY_REWARD_STATS_ALL) {
+      totals = row;
+      return;
+    }
+    stories.push(row);
+  });
+
+  if (totals.storySlug !== STORY_REWARD_STATS_ALL) {
+    totals = stories.reduce(
+      (acc, row) => ({
+        ...acc,
+        readers: acc.readers + row.readers,
+        completions: acc.completions + row.completions,
+        registrationConversions: acc.registrationConversions + row.registrationConversions,
+        verifiedRegistrations: acc.verifiedRegistrations + row.verifiedRegistrations,
+        rewardAttempts: acc.rewardAttempts + row.rewardAttempts,
+        featuredIssued: acc.featuredIssued + row.featuredIssued,
+        featuredRedeemed: acc.featuredRedeemed + row.featuredRedeemed,
+        listingsCreated: acc.listingsCreated + row.listingsCreated,
+      }),
+      { ...empty, storySlug: STORY_REWARD_STATS_ALL, title: "All stories" }
+    );
+  }
+
+  stories.sort((a, b) => b.rewardAttempts - a.rewardAttempts || a.title.localeCompare(b.title));
+  return { totals, stories };
+});

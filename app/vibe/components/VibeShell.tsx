@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 
 export default function VibeShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-[#020817] pb-24 text-white lg:pb-8">
+    <main className="min-h-screen w-full min-w-0 bg-[#020817] pb-24 text-white lg:pb-8">
       <Navbar />
       {children}
       <Footer />

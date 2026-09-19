@@ -7,6 +7,14 @@ export function resolveBannerFitMode(
   return fitMode === "cover" ? "cover" : "auto";
 }
 
+/** Allow same-origin paths and http(s) advertiser links only. */
+export function safeBannerHref(href: string): string {
+  const trimmed = href.trim();
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return trimmed;
+  if (trimmed.startsWith("https://") || trimmed.startsWith("http://")) return trimmed;
+  return "";
+}
+
 export function isValidHttpImageUrl(value: string): boolean {
   const url = value.trim();
   if (!url) return false;

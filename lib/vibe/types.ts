@@ -6,10 +6,12 @@ export const VIBE_CATEGORIES = [
   "fun-memes",
   "lifestyle",
   "trending-zim",
+  "interactive-stories",
 ] as const;
 
 export type VibeCategoryId = (typeof VIBE_CATEGORIES)[number];
-export type VibePostCategory = Exclude<VibeCategoryId, "all">;
+export type VibeExperienceCategory = "interactive-stories";
+export type VibePostCategory = Exclude<VibeCategoryId, "all" | VibeExperienceCategory>;
 
 export const VIBE_POST_TYPES = ["text", "image", "poll"] as const;
 export type VibePostType = (typeof VIBE_POST_TYPES)[number];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Banner } from "@/lib/types/featured";
+import type { Banner, BannerFitMode } from "@/lib/types/featured";
 import bannerImages, { isUsableBannerSrc } from "@/lib/bannerImages";
 import { BANNER_ROTATION_MS } from "@/app/hooks/useBanners";
 import FirestoreBanner from "./FirestoreBanner";
@@ -24,6 +24,16 @@ export const SIDEBAR_BANNER_CLASS =
 export const PROFILE_BANNER_CLASS =
   `relative w-full shrink-0 overflow-hidden ${BANNER_ROW_HEIGHT_CLASS}`;
 
+/** Interactive story strip: 65px mobile / 90px desktop, dark unused space. */
+export const STORY_BANNER_HEIGHT_CLASS =
+  "h-[65px] max-h-[65px] sm:h-[90px] sm:max-h-[90px]";
+export const STORY_BANNER_CLASS =
+  `relative w-full overflow-hidden bg-[#020817] ${STORY_BANNER_HEIGHT_CLASS}`;
+export const STORY_BANNER_DESKTOP_CLASS =
+  "relative w-full overflow-hidden bg-[#020817] h-[90px] max-h-[90px]";
+export const STORY_BANNER_MOBILE_CLASS =
+  "relative w-full overflow-hidden bg-[#020817] h-[65px] max-h-[65px]";
+
 type Props = {
   banners: Banner[];
   fallbackImages?: string[];
@@ -31,6 +41,10 @@ type Props = {
   className?: string;
   eager?: boolean;
   sizes?: string;
+  variant?: "default" | "strip";
+  backdrop?: "blur" | "dark";
+  forceFitMode?: BannerFitMode;
+  showAdLabel?: boolean;
 };
 
 function toFirestoreSlides(banners: Banner[]): Banner[] {
@@ -57,6 +71,10 @@ export default function BannerRotator({
   className = "",
   eager = true,
   sizes,
+  variant = "default",
+  backdrop,
+  forceFitMode,
+  showAdLabel = false,
 }: Props) {
   const firestoreSlides = useMemo(() => toFirestoreSlides(banners), [banners]);
   const fallbackSlides = useMemo(
@@ -96,10 +114,14 @@ export default function BannerRotator({
   if (slides.length === 0) return null;
 
   const activeIndex = index % slides.length;
+  const frameClass =
+    variant === "strip"
+      ? `relative overflow-hidden rounded-lg border border-white/10 bg-[#020817] ${className || STORY_BANNER_CLASS}`
+      : `relative overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] ${className || INFEED_BANNER_CLASS}`;
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border-2 border-yellow-500/50 shadow-[0_0_30px_rgba(250,204,21,0.12)] ${className || INFEED_BANNER_CLASS}`}
+      className={frameClass}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -111,6 +133,11 @@ export default function BannerRotator({
       aria-roledescription="carousel"
       aria-label="Advertisement"
     >
+      {showAdLabel ? (
+        <span className="pointer-events-none absolute left-2 top-1.5 z-30 rounded bg-black/75 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/85">
+          Ad
+        </span>
+      ) : null}
       {slides.map((slide, slideIndex) => {
         const isActive = slideIndex === activeIndex;
         const isNext = slideIndex === (activeIndex + 1) % slides.length;
@@ -140,6 +167,8 @@ export default function BannerRotator({
             framed={false}
             eager={eager && isActive}
             sizes={sizes}
+            backdrop={backdrop}
+            forceFitMode={forceFitMode}
             onImageError={() =>
               setFailedIds((current) => {
                 if (current.has(slide.id)) return current;
@@ -153,7 +182,7 @@ export default function BannerRotator({
         );
       })}
 
-      {slides.length > 1 && (
+      {slides.length > 1 && variant !== "strip" && (
         <div className="absolute bottom-2 left-0 right-0 z-20 flex justify-center gap-1.5 sm:bottom-3">
           {slides.map((slide, slideIndex) => (
             <button
