@@ -160,7 +160,9 @@ export default function FeaturedAdsPage() {
         <div className="mb-6 rounded-2xl border border-yellow-500/20 bg-[#111827] p-5">
           <p className="text-sm text-gray-400">★ Featured Credits</p>
           <p className="text-3xl font-bold text-yellow-300">
-            {creditsLoading ? "..." : credits} Remaining
+            {creditsLoading
+              ? "..."
+              : `Available Featured Ads: ${credits} ${credits === 1 ? "Credit" : "Credits"}`}
           </p>
         </div>
 

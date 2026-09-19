@@ -337,6 +337,7 @@ export default function StoryReader({ story }: { story: InteractiveStory }) {
                   endingId={scene.id}
                   focus={focusReward}
                   welcome={welcomeBack}
+                  onTryAnotherPath={restart}
                 />
               </div>
             ) : (

@@ -9,6 +9,7 @@ import { NORMAL_WHEEL_SEGMENTS, type PrizeKey } from "@/lib/rewards";
 import { fetchPublishedStories, type InteractiveStory } from "@/lib/vibe/stories";
 import { writeStoryRewardIntent } from "@/lib/vibe/stories/progress";
 import {
+  STORY_FEATURED_CLAIM_HREF,
   fetchStoryRewardStatus,
   recordStoryRewardEvent,
   requestStoryRewardSpin,
@@ -16,7 +17,6 @@ import {
   type StoryRewardSpinResult,
   type StoryRewardStatus,
 } from "@/lib/vibe/stories/rewards";
-import StoryFeaturedRedeem from "./StoryFeaturedRedeem";
 
 function landingRotation(segmentIndex: number, count: number, previous: number) {
   const slice = 360 / count;
@@ -56,11 +56,13 @@ export default function StoryRewardPanel({
   endingId,
   focus = false,
   welcome = false,
+  onTryAnotherPath,
 }: {
   story: InteractiveStory;
   endingId: string;
   focus?: boolean;
   welcome?: boolean;
+  onTryAnotherPath?: () => void;
 }) {
   const { user, loading: authLoading } = useAuth();
   const { requireAuth } = useGuestAuthPrompt();
@@ -71,12 +73,10 @@ export default function StoryRewardPanel({
   const [result, setResult] = useState<StoryRewardSpinResult | null>(null);
   const [error, setError] = useState("");
   const [otherStories, setOtherStories] = useState<InteractiveStory[]>([]);
-  const [showRedeem, setShowRedeem] = useState(false);
   const spinningLock = useRef(false);
   const spinTimer = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const returnPath = storyRewardReturnPath(story.slug, endingId, true);
-  const postAdHref = `/add-listing?from=story&story=${encodeURIComponent(story.slug)}`;
 
   useEffect(() => {
     if (focus || welcome) {
@@ -202,7 +202,6 @@ export default function StoryRewardPanel({
             : prev
         );
         setSpinning(false);
-        if (spinResult.featuredCreditsAwarded > 0) setShowRedeem(true);
       }, spinResult.alreadyCommitted ? 400 : 4800);
     } catch (err) {
       spinningLock.current = false;
@@ -236,38 +235,43 @@ export default function StoryRewardPanel({
       ) : attemptUsed ? (
         <div className="mt-5 space-y-4">
           <PrizeWheel segments={NORMAL_WHEEL_SEGMENTS} rotation={rotation} spinning={false} />
-          <p className="text-lg font-semibold text-white">
-            {shownPrize?.prizeLabel || "Attempt used"}
-          </p>
-          <p className="text-sm leading-6 text-gray-300">{prizeCopy(shownPrize || {})}</p>
-
           {featuredWin ? (
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowRedeem(true)}
+            <div className="space-y-3">
+              <p className="text-lg font-semibold text-white">
+                Congratulations! You&apos;ve won a Free Featured Ad!
+              </p>
+              <p className="text-sm leading-6 text-gray-300">
+                Your reward has been added to your account.
+              </p>
+              <Link
+                href={STORY_FEATURED_CLAIM_HREF}
                 className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FBB03B] px-5 text-sm font-semibold text-[#0B1220]"
               >
-                Use Your Free Featured Ad
-              </button>
-              {showRedeem && user ? (
-                <StoryFeaturedRedeem
-                  user={user}
-                  storySlug={story.slug}
-                  postAdHref={postAdHref}
-                  onRedeemed={() =>
-                    setStatus((prev) => (prev ? { ...prev, featuredRedeemed: true } : prev))
-                  }
-                />
+                Claim Reward
+              </Link>
+              {onTryAnotherPath ? (
+                <button
+                  type="button"
+                  onClick={onTryAnotherPath}
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white"
+                >
+                  Try Another Path
+                </button>
               ) : null}
             </div>
           ) : (
-            <Link
-              href="/"
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white"
-            >
-              Explore Marketplace
-            </Link>
+            <>
+              <p className="text-lg font-semibold text-white">
+                {shownPrize?.prizeLabel || "Attempt used"}
+              </p>
+              <p className="text-sm leading-6 text-gray-300">{prizeCopy(shownPrize || {})}</p>
+              <Link
+                href="/"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white"
+              >
+                Explore Marketplace
+              </Link>
+            </>
           )}
 
           {shownPrize?.cashAmount ? (

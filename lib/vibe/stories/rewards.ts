@@ -54,6 +54,8 @@ export type StoryRewardAnalytics = {
   stories: StoryRewardAnalyticsRow[];
 };
 
+export const STORY_FEATURED_CLAIM_HREF = "/profile?section=featured";
+
 export function storyRewardReturnPath(slug: string, endingId?: string, welcome = false) {
   return VIBE_PATHS.storyReward(slug, endingId, welcome);
 }

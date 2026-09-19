@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import useProfile from "./hooks/useProfile";
 import useChat from "./hooks/useChat";
 import { computeSellerScore } from "./utils";
@@ -9,17 +9,20 @@ import ProfileHeroBanner from "./components/ProfileHeroBanner";
 import ProfileHeader from "./components/ProfileHeader";
 import StatsCards from "./components/StatsCards";
 import RewardsCard from "./components/RewardsCard";
+import FeaturedAds from "./components/FeaturedAds";
 import ProfileQuickActions from "./components/ProfileQuickActions";
 import ProfileRightPanel from "./components/ProfileRightPanel";
 import { AboutPanel } from "./components/ProfileTabPanels";
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { ProfileNavKey } from "./components/Sidebar";
 
 const Favorites = dynamic(() => import("./components/Favorites"));
 
-export default function ProfilePage() {
+function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const openFeatured = searchParams.get("section") === "featured";
   const {
     loading,
     userDataLoading,
@@ -56,6 +59,13 @@ export default function ProfilePage() {
 
   const [aboutText, setAboutText] = useState<string | undefined>(undefined);
   const [showFavorites, setShowFavorites] = useState(false);
+
+  useEffect(() => {
+    if (!openFeatured) return;
+    const node = document.getElementById("featured-ads");
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [openFeatured, userDataLoading]);
 
   const displayName =
     userData?.displayName ||
@@ -148,7 +158,7 @@ export default function ProfilePage() {
       userData={userData}
       displayName={displayName}
       unreadCount={unreadCount}
-      activeItem="profile"
+      activeItem={openFeatured ? "credits" : "profile"}
       onNavigate={handleNavigate}
       onRequestPro={requestProSeller}
       chat={{
@@ -207,6 +217,11 @@ export default function ProfilePage() {
 
         <RewardsCard userData={userData} loading={userDataLoading} />
 
+        <FeaturedAds
+          featuredCredits={Number(userData?.featuredCredits ?? 0)}
+          highlighted={openFeatured}
+        />
+
         {showFavorites && (
           <Favorites
             favoriteAds={favoriteAds}
@@ -238,5 +253,19 @@ export default function ProfilePage() {
         </div>
       </div>
     </ProfileShell>
+  );
+}
+
+export default function Profile() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#0B0E14] text-white">
+          Loading...
+        </div>
+      }
+    >
+      <ProfilePage />
+    </Suspense>
   );
 }
