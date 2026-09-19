@@ -143,20 +143,9 @@ export async function fetchPublishedStories(): Promise<InteractiveStory[]> {
     if (published.some((story) => story.slug === THE_LAST_WITNESS_SLUG)) {
       return published;
     }
-
-    try {
-      const seedSnap = await getDoc(doc(db, VIBE_STORIES_COLLECTION, THE_LAST_WITNESS_SLUG));
-      if (seedSnap.exists()) {
-        const mapped = mapInteractiveStory(
-          seedSnap.id,
-          seedSnap.data() as Record<string, unknown>
-        );
-        return mapped?.published ? mergePublicStories([mapped, ...remote]) : published;
-      }
-      return mergePublicStories([THE_LAST_WITNESS, ...remote]);
-    } catch {
-      return published;
-    }
+    // The launched seed stays public unless Firestore has a published copy.
+    // An unpublished admin draft is not readable to guests, so it must not hide the seed.
+    return mergePublicStories([THE_LAST_WITNESS, ...remote]);
   } catch {
     return [THE_LAST_WITNESS];
   }
