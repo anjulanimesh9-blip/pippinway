@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
-import { fetchPublicStory, THE_LAST_WITNESS, type InteractiveStory } from "@/lib/vibe/stories";
+import { fetchPublicStory, getSeedStory, type InteractiveStory } from "@/lib/vibe/stories";
 import StoryReader from "../StoryReader";
 import StoryReaderLayout from "../StoryReaderLayout";
 
 function initialStory(slug: string): InteractiveStory | null {
-  return slug === THE_LAST_WITNESS.slug ? THE_LAST_WITNESS : null;
+  return getSeedStory(slug);
 }
 
 export default function StoryPageClient({ slug }: { slug: string }) {

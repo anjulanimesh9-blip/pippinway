@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ListingPhoto from "@/app/components/ListingPhoto";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
-import { fetchPublishedStories, type InteractiveStory } from "@/lib/vibe/stories";
-import { THE_LAST_WITNESS } from "@/lib/vibe/stories/theLastWitness";
+import { fetchPublishedStories, SEED_STORIES, type InteractiveStory } from "@/lib/vibe/stories";
 import VibeCategoryNav from "../components/VibeCategoryNav";
 import VibePageTrack from "../components/VibePageTrack";
 import StoryReaderLayout, { STORY_INTRO_TEXT_CLASS } from "./StoryReaderLayout";
 
 export default function StoriesListClient() {
-  const [stories, setStories] = useState<InteractiveStory[]>([THE_LAST_WITNESS]);
+  const [stories, setStories] = useState<InteractiveStory[]>(SEED_STORIES);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

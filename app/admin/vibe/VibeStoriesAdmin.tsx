@@ -5,8 +5,9 @@ import Link from "next/link";
 import {
   deleteInteractiveStory,
   fetchAdminStories,
+  getSeedStory,
   saveInteractiveStory,
-  THE_LAST_WITNESS,
+  SEED_STORIES,
   type InteractiveStory,
 } from "@/lib/vibe/stories";
 
@@ -30,6 +31,16 @@ export default function VibeStoriesAdmin() {
     void reload();
   }, []);
 
+  const importSeed = async (story: InteractiveStory) => {
+    try {
+      await saveInteractiveStory(story);
+      setMessage(`${story.title} is saved and ready to edit.`);
+      await reload();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Could not import the story.");
+    }
+  };
+
   return (
     <section className="mt-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -41,21 +52,16 @@ export default function VibeStoriesAdmin() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="rounded-full border border-white/10 px-3 py-1.5 text-xs"
-            onClick={async () => {
-              try {
-                await saveInteractiveStory(THE_LAST_WITNESS);
-                setMessage("The Last Witness is saved and ready to edit.");
-                await reload();
-              } catch (err) {
-                setMessage(err instanceof Error ? err.message : "Could not import the story.");
-              }
-            }}
-          >
-            Import The Last Witness
-          </button>
+          {SEED_STORIES.map((story) => (
+            <button
+              key={story.slug}
+              type="button"
+              className="rounded-full border border-white/10 px-3 py-1.5 text-xs"
+              onClick={() => void importSeed(story)}
+            >
+              Import {story.title}
+            </button>
+          ))}
           <Link
             href="/admin/vibe/stories/new"
             className="rounded-full bg-[#FBB03B] px-3 py-1.5 text-xs font-semibold text-[#0B1220]"
@@ -88,7 +94,7 @@ export default function VibeStoriesAdmin() {
                 >
                   Edit
                 </Link>
-                {story.id && story.id !== THE_LAST_WITNESS.id ? (
+                {story.id && !getSeedStory(story.id) && !getSeedStory(story.slug) ? (
                   <button
                     type="button"
                     className="rounded-full border border-red-500/30 px-3 py-1 text-xs text-red-300"

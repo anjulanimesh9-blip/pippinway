@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { vibeSectionMetadata } from "@/lib/vibe/seo";
 import { VIBE_PATHS } from "@/lib/vibe/constants";
-import { THE_LAST_WITNESS } from "@/lib/vibe/stories/theLastWitness";
+import { getSeedStory } from "@/lib/vibe/stories/seeds";
 import StoryPageClient from "./StoryPageClient";
 
 type PageProps = {
@@ -10,7 +10,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const story = slug === THE_LAST_WITNESS.slug ? THE_LAST_WITNESS : null;
+  const story = getSeedStory(slug);
   if (!story) {
     return vibeSectionMetadata(
       "Interactive Story",

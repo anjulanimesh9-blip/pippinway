@@ -12,7 +12,7 @@ import {
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { auth, db, storage } from "@/app/firebase";
 import { compressListingImage } from "@/lib/compressImage";
-import { THE_LAST_WITNESS, THE_LAST_WITNESS_SLUG } from "./theLastWitness";
+import { SEED_STORIES, getSeedStory, withMissingSeedStories } from "./seeds";
 import type { InteractiveStory, StoryScene } from "./types";
 import { validateInteractiveStory } from "./validate";
 
@@ -108,25 +108,33 @@ export function storyBySlug(stories: InteractiveStory[], slug: string) {
 }
 
 export function withSeedSceneImages(story: InteractiveStory): InteractiveStory {
-  if (story.slug !== THE_LAST_WITNESS_SLUG) return story;
+  const seed = getSeedStory(story.slug);
+  if (!seed) return story;
+  const coverImageUrl = story.coverImageUrl || seed.coverImageUrl;
   return {
     ...story,
+    coverImageUrl,
     scenes: story.scenes.map((scene) => {
       if (scene.imageUrl) return scene;
-      const seed = THE_LAST_WITNESS.scenes.find((item) => item.id === scene.id);
-      if (!seed?.imageUrl) return scene;
-      return { ...scene, imageUrl: seed.imageUrl, imagePath: scene.imagePath || seed.imagePath };
+      const seedScene = seed.scenes.find((item) => item.id === scene.id);
+      if (!seedScene?.imageUrl) return scene;
+      return { ...scene, imageUrl: seedScene.imageUrl, imagePath: scene.imagePath || seedScene.imagePath };
     }),
   };
 }
+
+const SEED_ORDER = SEED_STORIES.map((story) => story.slug);
 
 export function mergePublicStories(remote: InteractiveStory[]): InteractiveStory[] {
   return remote
     .filter((story) => story.published)
     .map(withSeedSceneImages)
     .sort((a, b) => {
-      if (a.slug === THE_LAST_WITNESS_SLUG) return -1;
-      if (b.slug === THE_LAST_WITNESS_SLUG) return 1;
+      const aIndex = SEED_ORDER.indexOf(a.slug);
+      const bIndex = SEED_ORDER.indexOf(b.slug);
+      if (aIndex !== -1 || bIndex !== -1) {
+        return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+      }
       return a.title.localeCompare(b.title);
     });
 }
@@ -140,14 +148,17 @@ export async function fetchPublishedStories(): Promise<InteractiveStory[]> {
       .map((item) => mapInteractiveStory(item.id, item.data() as Record<string, unknown>))
       .filter((item): item is InteractiveStory => Boolean(item));
     const published = mergePublicStories(remote);
-    if (published.some((story) => story.slug === THE_LAST_WITNESS_SLUG)) {
-      return published;
-    }
-    // The launched seed stays public unless Firestore has a published copy.
+    const missingSeeds = SEED_STORIES.filter(
+      (seed) => seed.published && !published.some((story) => story.slug === seed.slug)
+    );
+    // Launched seeds stay public unless Firestore has a published copy.
     // An unpublished admin draft is not readable to guests, so it must not hide the seed.
-    return mergePublicStories([THE_LAST_WITNESS, ...remote]);
+    if (missingSeeds.length) {
+      return mergePublicStories([...missingSeeds, ...remote]);
+    }
+    return published;
   } catch {
-    return [THE_LAST_WITNESS];
+    return SEED_STORIES.filter((story) => story.published);
   }
 }
 
@@ -161,22 +172,27 @@ export async function fetchAdminStories(): Promise<InteractiveStory[]> {
   const remote = snap.docs
     .map((item) => mapInteractiveStory(item.id, item.data() as Record<string, unknown>))
     .filter((item): item is InteractiveStory => Boolean(item));
-  const mapped = remote.map(withSeedSceneImages);
-  if (!mapped.some((story) => story.slug === THE_LAST_WITNESS_SLUG)) {
-    return [THE_LAST_WITNESS, ...mapped];
-  }
-  return mapped.sort((a, b) => a.title.localeCompare(b.title));
+  const mapped = withMissingSeedStories(remote.map(withSeedSceneImages));
+  return mapped.sort((a, b) => {
+    const aIndex = SEED_STORIES.findIndex((story) => story.slug === a.slug);
+    const bIndex = SEED_STORIES.findIndex((story) => story.slug === b.slug);
+    if (aIndex !== -1 || bIndex !== -1) {
+      return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+    }
+    return a.title.localeCompare(b.title);
+  });
 }
 
 export async function fetchAdminStory(id: string): Promise<InteractiveStory | null> {
   if (id === "new") return emptyStoryDraft();
-  if (id === THE_LAST_WITNESS_SLUG) {
-    const snap = await getDoc(doc(db, VIBE_STORIES_COLLECTION, THE_LAST_WITNESS_SLUG));
+  const seed = getSeedStory(id);
+  if (seed) {
+    const snap = await getDoc(doc(db, VIBE_STORIES_COLLECTION, seed.slug));
     if (snap.exists()) {
       const mapped = mapInteractiveStory(snap.id, snap.data() as Record<string, unknown>);
-      return mapped ? withSeedSceneImages(mapped) : { ...THE_LAST_WITNESS };
+      return mapped ? withSeedSceneImages(mapped) : { ...seed };
     }
-    return { ...THE_LAST_WITNESS };
+    return { ...seed };
   }
   const snap = await getDoc(doc(db, VIBE_STORIES_COLLECTION, id));
   if (!snap.exists()) return null;
@@ -312,5 +328,8 @@ export async function setStoryPublished(id: string, published: boolean) {
 }
 
 export async function deleteInteractiveStory(id: string) {
+  if (getSeedStory(id)) {
+    throw new Error("Launched seed stories cannot be deleted.");
+  }
   await deleteDoc(doc(db, VIBE_STORIES_COLLECTION, id));
 }

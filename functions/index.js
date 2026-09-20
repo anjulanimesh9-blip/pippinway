@@ -1081,7 +1081,10 @@ exports.compressExistingListingImagesNow = onCall(
 
 const STORY_REWARD_STATS_ALL = "_all";
 const STORY_SIGNUP_WINDOW_MS = 30 * 60 * 1000;
-const SEED_STORY_SLUG = "the-last-witness";
+const SEED_STORY_TITLES = {
+  "the-last-witness": "The Last Witness",
+  "the-wrong-trail": "The Wrong Trail",
+};
 const STORY_EVENTS = [
   "read",
   "complete",
@@ -1110,8 +1113,8 @@ async function assertPublishedStory(slug) {
       title: clipString(snap.data().title || slug, 120),
     };
   }
-  if (slug === SEED_STORY_SLUG) {
-    return { slug, title: "The Last Witness" };
+  if (SEED_STORY_TITLES[slug]) {
+    return { slug, title: SEED_STORY_TITLES[slug] };
   }
   throw new HttpsError("not-found", "Story not found.");
 }
@@ -1608,7 +1611,9 @@ exports.getStoryRewardAnalytics = onCall(async (request) => {
     titles[slug] = clipString(data.title || slug, 120);
     titles[item.id] = titles[slug];
   });
-  titles[SEED_STORY_SLUG] = titles[SEED_STORY_SLUG] || "The Last Witness";
+  Object.entries(SEED_STORY_TITLES).forEach(([slug, title]) => {
+    titles[slug] = titles[slug] || title;
+  });
 
   const empty = {
     readers: 0,
