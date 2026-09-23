@@ -355,6 +355,8 @@ export type ScannerResponse = {
   progress?: ScannerProgress;
   counts?: ScannerCounts;
   health?: ScannerHealth;
+  /** Informational only — never official LONG/SHORT. */
+  nearSetups?: import('./near-setups').NearSetup[];
 };
 
 export type SignalRecord = {

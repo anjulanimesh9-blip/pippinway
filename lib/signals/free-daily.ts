@@ -11,6 +11,7 @@ import {
   snapshotAgeMs,
 } from "@/lib/signals/scan-snapshot";
 import { scanMarkets, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
+import { selectNearSetups } from "@/lib/signals-engine/near-setups";
 
 export type FreeEligibleCoin = {
   symbol: string;
@@ -69,7 +70,15 @@ async function loadFreeScan(force: boolean) {
     if (age != null && age > 5 * 60_000) {
       warnings.push(`Published scanner snapshot is ${Math.round(age / 1000)}s old.`);
     }
-    return { ...filtered, warnings, stale: filtered.stale || (age != null && age > 3 * 60_000) };
+    const nearSetups = filtered.nearSetups?.length
+      ? filtered.nearSetups
+      : selectNearSetups(published.response.coins || []);
+    return {
+      ...filtered,
+      nearSetups,
+      warnings,
+      stale: filtered.stale || (age != null && age > 3 * 60_000),
+    };
   }
   startBackgroundScanLoop();
   return scanMarkets(force, { mode: "15", force });
@@ -93,6 +102,8 @@ export async function buildFreeDailyPayload(access: SignalsAccess, force = false
     eligible: view.eligible,
     preview: view.eligible.slice(0, 6).map((item) => ({ symbol: item.symbol, locked: true as const })),
     availableCount: view.signals.length,
+    /** Informational only — never treated as Free reveals or official LONG/SHORT. */
+    nearSetups: scan.nearSetups || [],
     allowance,
     subscription: access.subscription,
     config: {

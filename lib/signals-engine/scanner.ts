@@ -19,6 +19,7 @@ import {
 } from './types';
 import { loadScanJob, restoreCoins, saveScanJob } from './scan-job-persist';
 import { DEFAULT_LIVE_SCAN_MODE, jobFingerprint, parseScanMode, resolveUniverse, scannerCounts } from './universe';
+import { selectNearSetups } from './near-setups';
 
 const published = new Map<string, PublishedSignal>();
 let hydrated = false;
@@ -682,6 +683,7 @@ function snapshotFromJob(job: ScanJob, prices: Map<string, number>, stats: Map<s
       queueBacklog: job.queueBacklog,
     },
     counts: scannerCounts(coins),
+    nearSetups: selectNearSetups(coins),
     health: {
       priceFeed: job.priceFeed,
       analysisFeed: job.analysisFeed,

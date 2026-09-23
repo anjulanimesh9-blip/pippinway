@@ -10,6 +10,7 @@ import { readFirebaseAdminAccount } from "@/lib/signals/admin-credentials";
 import type { CoinScan, ScannerResponse, ScanMode } from "@/lib/signals-engine/types";
 import { DEFAULT_SETTINGS } from "@/lib/signals-engine/types";
 import { CORE_WATCHLIST, selectUniverse } from "@/lib/signals-engine/universe";
+import { selectNearSetups } from "@/lib/signals-engine/near-setups";
 import { createSign } from "crypto";
 
 export const SCAN_SNAPSHOT_COLLECTION = "signalsScanSnapshot";
@@ -39,6 +40,9 @@ export function compactScannerResponse(response: ScannerResponse): ScannerRespon
   return {
     ...response,
     coins: (response.coins || []).map(compactCoin),
+    nearSetups: response.nearSetups?.length
+      ? response.nearSetups
+      : selectNearSetups(response.coins || []),
   };
 }
 
@@ -268,6 +272,7 @@ export function emptyOfflineScannerResponse(message: string): ScannerResponse {
     coins: [],
     universe: { mode: "50", eligible: 0, selected: 0, listedAt: new Date().toISOString() },
     counts: { long: 0, short: 0, wait: 0, invalid: 0, expired: 0, pending: 0 },
+    nearSetups: [],
     health: {
       priceFeed: "error",
       analysisFeed: "error",

@@ -18,8 +18,10 @@ import SignalsAdSlot from "../components/SignalsAdSlot";
 import SignalsHero from "../components/SignalsHero";
 import SignalsPromoBanner from "../components/SignalsPromoBanner";
 import SummaryCards from "../components/SummaryCards";
+import NearSetupsPanel from "../components/NearSetupsPanel";
 import { pairLabel } from "../lib/format";
 import { isActionableSetup, matchesStatusFilter } from "../lib/status";
+import type { NearSetup } from "@/lib/signals-engine/near-setups";
 
 type ScanResponse = {
   error?: string;
@@ -28,6 +30,7 @@ type ScanResponse = {
   pricesUpdatedAt?: string;
   fetchedAt?: string;
   coins?: CoinScan[];
+  nearSetups?: NearSetup[];
   universe?: { mode: string; eligible: number; selected: number };
   progress?: { scanned: number; failed: number; skipped: number; pending: number; running: boolean; fresh?: number; stale?: number; queueBacklog?: number };
   counts?: { long: number; short: number; wait: number; invalid: number; expired: number; pending: number };
@@ -216,6 +219,16 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
         { label: "Stale", value: scan?.health?.staleCount ?? 0 },
         { label: "Expired", value: scan?.counts?.expired ?? 0 },
       ]} />
+
+      {(tab === "signals" || tab === "scanner") && (
+        <NearSetupsPanel
+          items={scan?.nearSetups}
+          onSelect={(symbol) => {
+            setSelected(symbol);
+            if (tab !== "signals") setTab("signals");
+          }}
+        />
+      )}
 
       {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</p>}
 

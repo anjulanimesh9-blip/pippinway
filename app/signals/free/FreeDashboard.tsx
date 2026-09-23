@@ -14,15 +14,18 @@ import SignalsAdSlot from "../components/SignalsAdSlot";
 import SignalsHero from "../components/SignalsHero";
 import SignalsPromoBanner from "../components/SignalsPromoBanner";
 import SummaryCards from "../components/SummaryCards";
+import NearSetupsPanel from "../components/NearSetupsPanel";
 import UpgradePanel from "../components/UpgradePanel";
 import UtcCountdown from "../components/UtcCountdown";
 import { ScannerSkeletons } from "../components/ScannerSkeletons";
+import type { NearSetup } from "@/lib/signals-engine/near-setups";
 
 type DailyPayload = {
   error?: string;
   pending?: boolean;
   signals?: CoinScan[];
   eligible?: FreeEligibleCoin[];
+  nearSetups?: NearSetup[];
   resetAt?: string;
   stale?: boolean;
   allowance?: { used: number; limit: number; remaining: number; resetAt: string };
@@ -152,6 +155,8 @@ export default function FreeDashboard({ user, initial }: { user: User; initial?:
         { label: "Locked watchlist", value: eligible.length, tone: "wait" },
         { label: "Resets in", value: <UtcCountdown resetAt={data?.resetAt || data?.allowance?.resetAt} />, hint: "00:00 UTC" },
       ]} />
+
+      <NearSetupsPanel items={data?.nearSetups} />
 
       {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</p>}
 

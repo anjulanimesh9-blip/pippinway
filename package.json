@@ -10,7 +10,8 @@
     "test": "vitest run",
     "monitor:worker": "node --use-system-ca scripts/signals-monitor-worker.mjs",
     "monitor:worker:http": "node --use-system-ca scripts/signals-monitor-worker.mjs",
-    "monitor:benchmark": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/signals-top50-benchmark.ts"
+    "monitor:benchmark": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/signals-top50-benchmark.ts",
+    "monitor:wait-diag": "node --use-system-ca ./node_modules/tsx/dist/cli.mjs scripts/signals-wait-diagnostic.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.2",

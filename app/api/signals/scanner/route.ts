@@ -11,6 +11,7 @@ import {
   snapshotAgeMs,
 } from "@/lib/signals/scan-snapshot";
 import { scanMarkets, scanSymbol, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
+import { selectNearSetups } from "@/lib/signals-engine/near-setups";
 import { DEFAULT_SETTINGS } from "@/lib/signals-engine/types";
 import { allowedScanMode, clampWatchlist, parseScanMode } from "@/lib/signals-engine/universe";
 
@@ -37,8 +38,11 @@ async function loadPublishedBoard(mode: ReturnType<typeof parseScanMode>, custom
   if (mode === "100" || mode === "all") {
     warnings.push("Published worker board currently covers the Top 50 liquid USDT-M perpetuals.");
   }
+  const nearSetups = filtered.nearSetups?.length
+    ? filtered.nearSetups
+    : selectNearSetups(published.response.coins || []);
   return {
-    scan: { ...filtered, warnings, stale: filtered.stale || (age != null && age > 3 * 60_000) },
+    scan: { ...filtered, nearSetups, warnings, stale: filtered.stale || (age != null && age > 3 * 60_000) },
     publishedAt: published.publishedAt,
     ageMs: age,
   };
@@ -112,6 +116,7 @@ export async function GET(req: NextRequest) {
         coins: daily.signals,
         eligible: daily.eligible,
         preview: daily.preview,
+        nearSetups: daily.nearSetups,
         warnings: daily.warnings,
         fetchedAt: daily.fetchedAt,
         stale: daily.stale,
