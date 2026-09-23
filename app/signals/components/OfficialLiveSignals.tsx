@@ -5,8 +5,8 @@ import SignalCard from "./SignalCard";
 import { isActionableSetup } from "../lib/status";
 
 /**
- * Official live signals section — additive to Near Setups.
- * Shows validated LONG/SHORT cards with Entry / SL / TP.
+ * Official live signals — only genuine validated current publications.
+ * Never shows Near Setups or stale/malformed Firestore leftovers.
  */
 export default function OfficialLiveSignals({
   items,
@@ -17,7 +17,9 @@ export default function OfficialLiveSignals({
   stale?: boolean;
   sparks?: Record<string, number[]>;
 }) {
-  const rows = (items || []).filter((coin) => isActionableSetup(coin));
+  const rows = (items || []).filter(
+    (coin) => isActionableSetup(coin) && coin.setup && (coin.setup.netRiskReward ?? 0) >= 3,
+  );
   return (
     <section
       id="official-live-signals"
@@ -31,7 +33,7 @@ export default function OfficialLiveSignals({
             Official Live Signals
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-400">
-            Validated LONG/SHORT setups published by the engine. These stay visible through lifecycle even if the next Top 50 pass is WAIT.
+            Current validated LONG/SHORT publications with net R/R ≥ 1:3. Stale or malformed history rows are excluded.
           </p>
         </div>
         <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-200">
@@ -41,7 +43,7 @@ export default function OfficialLiveSignals({
 
       {!rows.length ? (
         <p className="mt-5 rounded-2xl border border-white/10 bg-[#0B1220]/80 px-4 py-6 text-sm text-slate-300">
-          No validated official signal is open right now. WAIT-only scans do not invent trades. Near Setups below are watching only.
+          No validated live signals right now. WAIT-only Top 50 scans do not invent trades. Near Setups below are watching only.
         </p>
       ) : (
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">

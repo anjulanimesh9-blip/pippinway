@@ -176,7 +176,8 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
   const progressPct = selectedCount ? Math.min(100, Math.round((scanned / selectedCount) * 100)) : 0;
 
   const validated = coins.filter((coin) => isActionableSetup(coin));
-  const officialLive = (scan?.officialLive?.length ? scan.officialLive : validated).filter((coin) => isActionableSetup(coin));
+  const officialLive = (scan?.officialLive || []).filter((coin) => isActionableSetup(coin));
+  const nearCount = scan?.nearSetups?.length ?? 0;
 
   return (
     <div className="space-y-5">
@@ -214,13 +215,13 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
       </header>
 
       <SummaryCards items={[
-        { label: "Selected coins", value: selectedCount, tone: "gold" },
-        { label: "Validated LONG", value: scan?.counts?.long ?? 0, tone: "long" },
-        { label: "Validated SHORT", value: scan?.counts?.short ?? 0, tone: "short" },
-        { label: "WAIT", value: scan?.counts?.wait ?? 0, tone: "wait" },
+        { label: "Top 50 selected", value: selectedCount, tone: "gold" },
+        { label: "Scan LONG", value: scan?.counts?.long ?? 0, tone: "long" },
+        { label: "Scan SHORT", value: scan?.counts?.short ?? 0, tone: "short" },
+        { label: "Scan WAIT", value: scan?.counts?.wait ?? 0, tone: "wait" },
+        { label: "Official active", value: officialLive.length, tone: "long" },
+        { label: "Near Setups", value: nearCount, tone: "muted" },
         { label: "Pending", value: scan?.counts?.pending ?? scan?.progress?.pending ?? 0 },
-        { label: "Stale", value: scan?.health?.staleCount ?? 0 },
-        { label: "Expired", value: scan?.counts?.expired ?? 0 },
       ]} />
 
       {(tab === "signals" || tab === "scanner") && (

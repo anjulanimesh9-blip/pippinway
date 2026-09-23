@@ -360,8 +360,11 @@ export type ScannerResponse = {
   /**
    * Active official published signals (WAITING/TRIGGERED/ACTIVE/…).
    * Separate from Near Setups and not limited to the latest WAIT scan pass.
+   * Only records that pass display validation (geometry + net R/R ≥ 3 + not expired).
    */
   officialLive?: CoinScan[];
+  /** Diagnostics: official rows excluded from Official Live (not deleted from history). */
+  officialLiveExcluded?: Array<{ id: string; symbol: string; reasons: string[] }>;
 };
 
 export type SignalRecord = {
