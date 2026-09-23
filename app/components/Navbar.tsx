@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaBell } from "react-icons/fa";
 import {
+  Activity,
   Home,
   Info,
   LogOut,
@@ -43,6 +44,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const vibeActive = pathname.startsWith("/vibe");
   const pipwebActive = pathname.startsWith("/pipweb");
+  const signalsActive = pathname.startsWith("/signals");
   const { requireAuth } = useGuestAuthPrompt();
   const { addListingHref } = useCountryNavigation();
   const { t } = useI18n();
@@ -151,6 +153,12 @@ export default function Navbar() {
             className={`${NAV_LINK} ${pipwebActive ? "bg-white/10 font-semibold text-[#7DD3FC]" : ""}`}
           >
             PipWeb
+          </Link>
+          <Link
+            href="/signals"
+            className={`${NAV_LINK} ${signalsActive ? "bg-white/10 font-semibold text-[#FBB03B]" : ""}`}
+          >
+            {t("nav.signals")}
           </Link>
           <Link href="/about" className={NAV_LINK}>
             {t("nav.about")}
@@ -354,6 +362,14 @@ export default function Navbar() {
                 >
                   <Monitor className="h-[18px] w-[18px] shrink-0 text-[#7DD3FC]" />
                   PipWeb
+                </button>
+                <button
+                  type="button"
+                  className={`${DRAWER_ROW} ${signalsActive ? "font-semibold text-[#FBB03B]" : ""}`}
+                  onClick={() => go("/signals")}
+                >
+                  <Activity className="h-[18px] w-[18px] shrink-0 text-[#FBB03B]" />
+                  {t("nav.signals")}
                 </button>
                 <button type="button" className={DRAWER_ROW} onClick={() => go("/categories")}>
                   <span aria-hidden className="w-[18px] text-center text-gray-400">

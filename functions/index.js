@@ -1,7 +1,7 @@
 "use strict";
 
 const { setGlobalOptions } = require("firebase-functions/v2");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const functionsV1 = require("firebase-functions/v1");
 const crypto = require("crypto");
 
@@ -1669,3 +1669,137 @@ exports.getStoryRewardAnalytics = onCall(async (request) => {
   stories.sort((a, b) => b.rewardAttempts - a.rewardAttempts || a.title.localeCompare(b.title));
   return { totals, stories };
 });
+
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+
+exports.signalsMonitorTick = onSchedule(
+  { schedule: "every 1 minutes", region: "us-central1", timeoutSeconds: 120 },
+  async () => {
+    const url = process.env.SIGNALS_MONITOR_URL;
+    const secret = process.env.SIGNALS_MONITOR_SECRET;
+    if (!url) return;
+    await fetch(`${String(url).replace(/\/$/, "")}/api/signals/monitor`, {
+      headers: { "x-signals-monitor-secret": secret || "" },
+    });
+  }
+);
+
+const OFFICIAL_FROZEN = [
+  "id",
+  "symbol",
+  "direction",
+  "interval",
+  "originalEntry",
+  "stop",
+  "target",
+  "openedAt",
+  "quantity",
+  "marginUSDT",
+  "leverage",
+  "marginMode",
+  "totalFeesUSDT",
+  "notionalUSDT",
+  "requiredMarginUSDT",
+  "calculationVersion",
+  "snapshotFrozen",
+  "fillConfirmed",
+  "brokerageVerified",
+];
+
+function assertSignalsSecret(req) {
+  const secret = process.env.SIGNALS_MONITOR_SECRET;
+  const header = req.get("x-signals-monitor-secret") || "";
+  return Boolean(secret) && header === secret;
+}
+
+exports.signalsOfficialSync = onRequest(
+  { region: "us-central1", cors: false, timeoutSeconds: 60 },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "POST only" });
+      return;
+    }
+    if (!assertSignalsSecret(req)) {
+      res.status(403).json({ error: "Official signal writes require SIGNALS_MONITOR_SECRET." });
+      return;
+    }
+    const firestore = getDb();
+    const body = req.body || {};
+    const op = body.op;
+    if (op === "list") {
+      const [signals, events, outcomes, healthSnap] = await Promise.all([
+        firestore.collection("signalsOfficial").limit(2000).get(),
+        firestore.collection("signalsLifecycleEvents").limit(8000).get(),
+        firestore.collection("signalsObserved").limit(2000).get(),
+        firestore.collection("signalsHealth").doc("scanner").get(),
+      ]);
+      res.json({
+        signals: signals.docs.map((doc) => doc.data()),
+        events: events.docs.map((doc) => doc.data()),
+        outcomes: outcomes.docs.map((doc) => doc.data()),
+        health: healthSnap.exists ? healthSnap.data() : null,
+      });
+      return;
+    }
+    if (op === "create" && body.signal?.id) {
+      const ref = firestore.collection("signalsOfficial").doc(String(body.signal.id));
+      const existing = await ref.get();
+      if (existing.exists) {
+        res.json({ created: false, record: existing.data() });
+        return;
+      }
+      const record = { ...body.signal, fillConfirmed: false, brokerageVerified: false, snapshotFrozen: true };
+      await ref.create(record);
+      res.json({ created: true, record });
+      return;
+    }
+    if (op === "patch" && body.id) {
+      const ref = firestore.collection("signalsOfficial").doc(String(body.id));
+      const existing = await ref.get();
+      if (!existing.exists) {
+        res.json({ changed: false });
+        return;
+      }
+      const current = existing.data() || {};
+      const patch = body.patch || {};
+      const next = { ...current };
+      for (const key of Object.keys(patch)) {
+        if (!OFFICIAL_FROZEN.includes(key)) next[key] = patch[key];
+      }
+      next.fillConfirmed = false;
+      next.brokerageVerified = false;
+      await ref.set(next, { merge: true });
+      res.json({ changed: true, record: next });
+      return;
+    }
+    if (op === "event" && body.event?.id) {
+      const ref = firestore.collection("signalsLifecycleEvents").doc(String(body.event.id));
+      const existing = await ref.get();
+      if (existing.exists) {
+        res.json({ created: false });
+        return;
+      }
+      await ref.create({ ...body.event, fillConfirmed: false });
+      res.json({ created: true });
+      return;
+    }
+    if (op === "outcome" && body.outcome?.signalId) {
+      const id = `${body.outcome.signalId}-${body.outcome.kind}`;
+      const ref = firestore.collection("signalsObserved").doc(id);
+      const existing = await ref.get();
+      if (existing.exists) {
+        res.json({ created: false });
+        return;
+      }
+      await ref.create({ ...body.outcome, fillConfirmed: false, brokerageVerified: false });
+      res.json({ created: true });
+      return;
+    }
+    if (op === "health" && body.health) {
+      await firestore.collection("signalsHealth").doc("scanner").set(body.health, { merge: true });
+      res.json({ ok: true });
+      return;
+    }
+    res.status(400).json({ error: "Unknown official sync operation." });
+  }
+);

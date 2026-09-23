@@ -63,6 +63,9 @@ export type BannerPlacement =
   | "sidebar"
   | "profile"
   | "story-before-choices"
+  | "signals-free"
+  | "signals-pro"
+  | "signals-mobile"
   | "unassigned";
 
 /** Auto Fit contains the full image; Crop to Fill covers the slot. */

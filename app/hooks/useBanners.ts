@@ -15,6 +15,9 @@ const KNOWN_PLACEMENTS: BannerPlacement[] = [
   "sidebar",
   "profile",
   "story-before-choices",
+  "signals-free",
+  "signals-pro",
+  "signals-mobile",
   "unassigned",
 ];
 

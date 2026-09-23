@@ -8,6 +8,7 @@ import LandingHeroArt from "@/app/components/homepage/LandingHeroArt";
 import LandingSearch from "@/app/components/homepage/LandingSearch";
 import LandingVibePreview from "@/app/components/homepage/LandingVibePreview";
 import PipWebPromo from "@/app/components/homepage/PipWebPromo";
+import SignalsPromo from "@/app/components/homepage/SignalsPromo";
 import { MARKET_COUNTRIES } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 
@@ -48,7 +49,7 @@ export default function CountryLanding() {
       </p>
 
       <div
-        className="pw-land-hero mt-5 flex flex-col gap-2.5 sm:mx-auto sm:mt-6 sm:max-w-md sm:flex-row sm:justify-center sm:gap-3"
+        className="pw-land-hero mt-5 flex flex-col gap-2.5 sm:mx-auto sm:mt-6 sm:max-w-2xl sm:flex-row sm:flex-wrap sm:justify-center sm:gap-3"
         style={{ animationDelay: "120ms" }}
       >
         <button
@@ -67,6 +68,12 @@ export default function CountryLanding() {
           className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FBB03B]"
         >
           {t("home.exploreVibe")}
+        </Link>
+        <Link
+          href="/signals"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-[#FBB03B]/40 bg-[#FBB03B]/10 px-5 text-sm font-semibold text-[#FBB03B] transition hover:bg-[#FBB03B]/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FBB03B]"
+        >
+          {t("home.exploreSignals")}
         </Link>
       </div>
 
@@ -120,6 +127,10 @@ export default function CountryLanding() {
 
       <div className="mt-10 sm:mt-12 lg:mt-14">
         <PipWebPromo />
+      </div>
+
+      <div className="mt-6 sm:mt-8">
+        <SignalsPromo />
       </div>
 
       <LandingVibePreview />

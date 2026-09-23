@@ -17,6 +17,7 @@ export default function AdminShell({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [adminReady, setAdminReady] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
     setMenuOpen(false);
@@ -28,15 +29,28 @@ export default function AdminShell({
         router.push("/login");
         return;
       }
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (!snap.exists() || snap.data().role !== "admin") {
-        router.push("/");
-        return;
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        const emailAdmin = user.email === "anjulanimesh9@gmail.com";
+        if ((!snap.exists() || snap.data().role !== "admin") && !emailAdmin) {
+          router.push("/");
+          return;
+        }
+        setAdminReady(true);
+      } catch (error) {
+        setAuthError(error instanceof Error ? error.message : "Admin authorization failed.");
       }
-      setAdminReady(true);
     });
     return unsub;
   }, [router]);
+
+  if (authError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#020817] px-4 text-rose-300">
+        {authError}
+      </div>
+    );
+  }
 
   if (!adminReady) {
     return (

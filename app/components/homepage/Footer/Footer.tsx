@@ -41,6 +41,7 @@ export default function Footer() {
   const pippinwayLinks = [
     { href: "/about", label: t("footer.about") },
     { href: "/vibe", label: t("nav.vibe") },
+    { href: "/signals", label: t("nav.signals") },
     { href: "/how-it-works", label: t("footer.howItWorks") },
   ];
   const supportLinks = [

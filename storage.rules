@@ -52,6 +52,14 @@ service firebase.storage {
         canUploadImage();
     }
 
+    match /signals_receipts/{userId}/{fileName} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+      allow write: if false;
+    }
+
     match /featured_receipts/{userId}/{fileName} {
       allow read: if isSignedIn() && (
         request.auth.uid == userId ||

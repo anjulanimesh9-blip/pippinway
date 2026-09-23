@@ -1,0 +1,46 @@
+.pw-signals {
+  --pw-navy: #020817;
+  --pw-card: rgba(15, 23, 42, 0.72);
+  --pw-gold: #fbb03b;
+  --pw-long: #34d399;
+  --pw-short: #f43f5e;
+  --pw-wait: #f59e0b;
+}
+
+.pw-signals-glass {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(11, 18, 32, 0.92));
+  border: 1px solid rgba(251, 176, 59, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.pw-signals-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 13, 26, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.pw-signals {
+  overflow-x: clip;
+}
+
+.pw-signals h1,
+.pw-signals h2,
+.pw-signals h3 {
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-signals *,
+  .pw-signals *::before,
+  .pw-signals *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .pw-signals .animate-pulse {
+    animation: none !important;
+    opacity: 0.7;
+  }
+}

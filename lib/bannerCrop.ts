@@ -10,6 +10,9 @@ export const BANNER_SLOT_PX: Record<BannerPlacement, { width: number; height: nu
   profile: { width: 1600, height: 500 },
   sidebar: { width: 1600, height: 500 },
   "story-before-choices": { width: 1600, height: 200 },
+  "signals-free": { width: 1600, height: 500 },
+  "signals-pro": { width: 1600, height: 500 },
+  "signals-mobile": { width: 1600, height: 500 },
   unassigned: { width: 1600, height: 500 },
 };
 
@@ -19,6 +22,9 @@ export const BANNER_CROP_ASPECT: Record<BannerPlacement, number> = {
   profile: 16 / 5,
   sidebar: 16 / 5,
   "story-before-choices": 8,
+  "signals-free": 16 / 5,
+  "signals-pro": 16 / 5,
+  "signals-mobile": 16 / 5,
   unassigned: 16 / 5,
 };
 
@@ -31,6 +37,9 @@ export const BANNER_CROP_OUTPUT: Record<
   profile: { width: 1600, height: 500 },
   sidebar: { width: 1600, height: 500 },
   "story-before-choices": { width: 1600, height: 200 },
+  "signals-free": { width: 1600, height: 500 },
+  "signals-pro": { width: 1600, height: 500 },
+  "signals-mobile": { width: 1600, height: 500 },
   unassigned: { width: 1600, height: 500 },
 };
 
@@ -40,6 +49,9 @@ export const BANNER_CROP_HINT: Record<BannerPlacement, string> = {
   sidebar: "Crop to 16:5 — homepage right rail uses the same Auto Fit row as list banners.",
   "story-before-choices":
     "Wide compact strip before story choices (export 1600×200). Live height is 90px desktop / 65px mobile.",
+  "signals-free": "Signals Free dashboard ad slot. Marketplace and Vibe banners stay on their own placements.",
+  "signals-pro": "Signals Pro dashboard ad slot. Marketplace and Vibe banners stay on their own placements.",
+  "signals-mobile": "Signals mobile ad slot. Marketplace and Vibe banners stay on their own placements.",
   unassigned: "Saved in Banner Ads only — not shown on the site until you assign a type.",
 };
 

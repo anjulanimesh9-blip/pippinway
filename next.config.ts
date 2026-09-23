@@ -57,6 +57,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.firebasestorage.app",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+        pathname: "/gh/spothq/cryptocurrency-icons@master/**",
+      },
     ],
   },
 };

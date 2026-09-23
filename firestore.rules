@@ -31,6 +31,8 @@ service cloud.firestore {
           request.resource.data.featuredCreditLots.size() == 0
         ) &&
         request.resource.data.get('membership', 'free') == 'free' &&
+        request.resource.data.get('signalsMembership', 'free') == 'free' &&
+        !request.resource.data.keys().hasAny(['signalsProExpiresAt', 'signalsProStartedAt', 'signalsProPaymentId']) &&
         request.resource.data.get('proApproved', false) != true &&
         request.resource.data.get('verifiedSeller', false) != true;
     }
@@ -41,7 +43,11 @@ service cloud.firestore {
         'membership',
         'proApproved',
         'verifiedSeller',
-        'monthlyAdLimit'
+        'monthlyAdLimit',
+        'signalsMembership',
+        'signalsProExpiresAt',
+        'signalsProStartedAt',
+        'signalsProPaymentId'
       ];
     }
 
@@ -225,6 +231,15 @@ service cloud.firestore {
         );
         allow write: if false;
       }
+
+      match /signalsHistory/{signalId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == userId ||
+          isAdmin()
+        );
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow update, delete: if isAdmin();
+      }
     }
 
     match /listings/{listingId} {
@@ -273,7 +288,47 @@ service cloud.firestore {
 
     match /siteSettings/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() && id == 'vibe';
+      allow create, update, delete: if isAdmin() && (id == 'vibe' || id == 'signals');
+    }
+
+    // Official Signals records. Clients may read; only backend Admin SDK may write.
+    match /signalsOfficial/{id} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if false;
+    }
+    match /signalsLifecycleEvents/{id} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if false;
+    }
+    match /signalsObserved/{id} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if false;
+    }
+    match /signalsHealth/{id} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /signalsPayments/{id} {
+      allow read: if isSignedIn() && (
+        resource.data.uid == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.status == 'PENDING' &&
+        request.resource.data.method == 'ECOCASH' &&
+        !request.resource.data.keys().hasAny(['adminUid', 'decision', 'decisionAt', 'subscriptionStart', 'subscriptionExpires']);
+      allow update, delete: if false;
+    }
+
+    match /signalsPaymentRefs/{id} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/signalsReveals/{day} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update, delete: if false;
     }
 
     match /featured_package_purchases/{purchaseId} {

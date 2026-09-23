@@ -33,6 +33,22 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+!.env.example
+
+# Firebase Admin service-account files must stay outside git
+*firebase-adminsdk*.json
+*serviceAccount*.json
+*service-account*.json
+
+# local official signal cache
+/data/*.json
+
+# local tooling
+/.tools/
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
 
 # vercel
 .vercel

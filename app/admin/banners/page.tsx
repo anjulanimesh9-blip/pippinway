@@ -44,6 +44,9 @@ const BANNER_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
   { value: "sidebar", label: "Homepage sidebar" },
   { value: "profile", label: "Profile banner" },
   { value: "story-before-choices", label: "Interactive Story — Before Choices" },
+  { value: "signals-free", label: "Signals Free dashboard" },
+  { value: "signals-pro", label: "Signals Pro dashboard" },
+  { value: "signals-mobile", label: "Signals mobile" },
 ];
 
 const LIBRARY_TYPE_OPTIONS: { value: BannerPlacement; label: string }[] = [
@@ -58,6 +61,9 @@ const PLACEMENT_HINT: Record<BannerPlacement, string> = {
   profile: "16:5 banner at the top of the profile page.",
   "story-before-choices":
     "Compact strip between the scene text and “What do I do next?” (90px desktop / 65px mobile). Change Type to Unassigned to take it off the story without deleting the advertisement.",
+  "signals-free": "Optional paid ad on the Free Signals dashboard. Labelled Advertisement. Does not replace Pippinway's own promo banner.",
+  "signals-pro": "Optional paid ad on the Pro Signals dashboard. Labelled Advertisement. Does not replace Pippinway's own promo banner.",
+  "signals-mobile": "Optional paid ad on Signals mobile layouts. Labelled Advertisement.",
   unassigned: "Kept in Banner Ads only. Assign a type to show it on the site.",
 };
 

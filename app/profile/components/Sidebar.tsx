@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   Boxes,
   Gift,
   Heart,
@@ -122,6 +123,11 @@ export default function Sidebar({
           <Link href="/vibe" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
             <Sparkles size={18} />
             <span>{t("nav.vibe")}</span>
+          </Link>
+
+          <Link href="/signals" onClick={() => onClose?.()} className={SIDE_LINK_CLASS}>
+            <Activity size={18} />
+            <span>{t("nav.signals")}</span>
           </Link>
 
           <Link

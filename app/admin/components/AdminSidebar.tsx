@@ -4,8 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   BarChart3,
   Bell,
+  BookOpen,
   CheckCircle2,
   CreditCard,
   Gift,
@@ -18,7 +20,6 @@ import {
   Sparkles,
   Star,
   Users,
-  BookOpen,
 } from "lucide-react";
 
 const LINK_CLASS =
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { href: "/admin/pro-users", label: "Pro Requests", icon: Shield },
   { href: "/admin/vibe", label: "Vibe", icon: Sparkles },
   { href: "/admin/vibe/analytics", label: "Story Rewards", icon: BookOpen },
+  { href: "/admin/signals", label: "Signals", icon: Activity },
 ] as const;
 
 function isActive(pathname: string, href: string) {

@@ -15,6 +15,7 @@
     "logout": "Logout",
     "chat": "Chat",
     "vibe": "Vibe",
+    "signals": "Signals",
     "marketplace": "Marketplace"
   },
   "common": {
@@ -98,6 +99,7 @@
     "chooseCountryExplore": "Marketplace and community, all in one place.",
     "exploreMarketplace": "Explore Marketplace",
     "exploreVibe": "Explore Vibe",
+    "exploreSignals": "Explore Signals",
     "browseListings": "Browse listings",
     "buySellWith": "Buy and Sell with Pippinway",
     "landingIntro": "Pippinway is a classified marketplace. People post their own ads for cars, property, electronics, jobs, services and more. Choosing a country opens that local marketplace so you can browse listings posted there.",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   addListingPath,
@@ -12,12 +13,17 @@ export default function useCountryNavigation() {
   const pathname = usePathname();
   const market = countryFromPathname(pathname);
   const onLanding = pathname === "/";
+  const [storedHome, setStoredHome] = useState("/");
+
+  useEffect(() => {
+    setStoredHome(storedCountryPath() ?? "/");
+  }, [pathname]);
 
   let marketplaceHome = "/";
   if (market) {
     marketplaceHome = `/${market.slug}`;
   } else if (!onLanding) {
-    marketplaceHome = storedCountryPath() ?? "/";
+    marketplaceHome = storedHome;
   }
 
   const addListingHref = addListingPath(market?.firestoreValue);

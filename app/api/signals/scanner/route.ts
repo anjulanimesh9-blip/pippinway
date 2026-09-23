@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSignalsAccess } from "@/lib/signals/access";
+import { getRevealRecord, revealSymbol } from "@/lib/signals/billing-store";
+import { allowanceFromRecord } from "@/lib/signals/quota";
+import { gateScanner } from "@/lib/signals/redact";
+import { scanMarkets, scanSymbol, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
+import { DEFAULT_SETTINGS } from "@/lib/signals-engine/types";
+import { allowedScanMode, clampWatchlist, parseScanMode } from "@/lib/signals-engine/universe";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(req: NextRequest) {
+  try {
+    const access = await getSignalsAccess(req);
+    if (!access) {
+      return NextResponse.json({ error: "Sign in with your Pippinway account to use Signals." }, { status: 401 });
+    }
+    startBackgroundScanLoop();
+    const symbol = req.nextUrl.searchParams.get("symbol");
+    const force = req.nextUrl.searchParams.get("force") === "1";
+    const reveal = req.nextUrl.searchParams.get("reveal") === "1";
+    let revealed = (await getRevealRecord(access.uid))?.symbols || [];
+    if (symbol && reveal && access.plan !== "pro") {
+      const result = await revealSymbol(access.uid, symbol.toUpperCase(), access.config.freeDailyReveals);
+      revealed = result.record.symbols;
+      if (!result.allowed) {
+        return NextResponse.json({
+          error: `Free accounts can reveal ${access.config.freeDailyReveals} unique complete signals per UTC day.`,
+          allowance: result.allowance,
+        }, { status: 403 });
+      }
+    }
+    const allowance = allowanceFromRecord(await getRevealRecord(access.uid), access.config.freeDailyReveals);
+    if (symbol) {
+      const coin = await scanSymbol(symbol.toUpperCase());
+      const gated = gateScanner(
+        {
+          settings: {
+            ...DEFAULT_SETTINGS,
+            leverage: access.settings.leverage,
+            marginUSDT: access.settings.marginUSDT,
+          },
+          fetchedAt: new Date().toISOString(),
+          pricesUpdatedAt: new Date().toISOString(),
+          stale: coin.stale,
+          warnings: [],
+          coins: [coin],
+        },
+        access,
+        { revealed },
+      );
+      return NextResponse.json({
+        coin: gated.coins[0],
+        access: { ...(gated as { access?: Record<string, unknown> }).access, allowance },
+        fetchedAt: new Date().toISOString(),
+      });
+    }
+    if (access.plan !== "pro") {
+      const { buildFreeDailyPayload } = await import("@/lib/signals/free-daily");
+      const daily = await buildFreeDailyPayload(access, force);
+      return NextResponse.json({
+        coins: daily.signals,
+        eligible: daily.eligible,
+        preview: daily.preview,
+        warnings: daily.warnings,
+        fetchedAt: daily.fetchedAt,
+        stale: daily.stale,
+        access: { plan: "free", allowance: daily.allowance, subscription: daily.subscription, revealed: daily.allowance.symbols },
+        universe: { mode: "15", eligible: daily.eligible.length, selected: daily.signals.length, listedAt: daily.fetchedAt },
+        counts: {
+          long: daily.signals.filter((coin) => coin.direction === "LONG").length,
+          short: daily.signals.filter((coin) => coin.direction === "SHORT").length,
+          wait: 0,
+          invalid: 0,
+          expired: 0,
+          pending: daily.pending ? 1 : 0,
+        },
+      });
+    }
+    const requested = parseScanMode(req.nextUrl.searchParams.get("mode") || access.settings.scanMode);
+    const allowed = allowedScanMode(access.plan, requested);
+    const custom = clampWatchlist(
+      req.nextUrl.searchParams.get("watchlist")?.split(",") || access.settings.watchlist,
+    );
+    const scan = await scanMarkets(force, { mode: allowed.mode, custom, force });
+    const gated = gateScanner(scan, access, { revealed });
+    if (allowed.warning) gated.warnings = [...gated.warnings, allowed.warning];
+    return NextResponse.json({
+      ...gated,
+      access: { ...(gated as { access?: Record<string, unknown> }).access, allowance },
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Scanner error" }, { status: 502 });
+  }
+}
