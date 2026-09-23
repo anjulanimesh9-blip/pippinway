@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "node --use-system-ca ./node_modules/next/dist/bin/next dev",
-    "build": "node --use-system-ca ./node_modules/next/dist/bin/next build",
-    "start": "node --use-system-ca ./node_modules/next/dist/bin/next start",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "monitor:worker": "node scripts/signals-monitor-worker.mjs"
+    "monitor:worker": "node --use-system-ca scripts/signals-monitor-worker.mjs",
+    "monitor:worker:http": "node --use-system-ca scripts/signals-monitor-worker.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.2",
@@ -36,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^3.2.4"
   }

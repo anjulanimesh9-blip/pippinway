@@ -12,6 +12,11 @@ type Health = MonitorHealth & {
   pendingCount?: number | null;
   priceUpdatedCount?: number | null;
   coverageNote?: string | null;
+  lastBinanceStatus?: number | null;
+  lastBinanceKind?: string | null;
+  lastBinanceReason?: string | null;
+  lastBinancePath?: string | null;
+  binanceCircuitOpen?: boolean;
 };
 
 function stamp(value?: string | null) {
@@ -42,6 +47,14 @@ export default function ScannerHealthPanel({ health, selected }: { health?: Heal
         <div><dt className="text-[11px] uppercase text-slate-500">Next expected cycle</dt><dd className="mt-1 font-semibold">{nextCycleLabel(health)}</dd></div>
       </dl>
       {health?.coverageNote && <p className="mt-3 text-xs text-amber-200">{health.coverageNote}</p>}
+      {(health?.lastBinanceReason || health?.binanceCircuitOpen) && (
+        <p className="mt-3 text-xs text-amber-200">
+          {health.binanceCircuitOpen ? "Binance circuit open" : "Last Binance failure"}
+          {health.lastBinanceStatus != null ? ` · HTTP ${health.lastBinanceStatus}` : health.lastBinanceKind ? ` · ${health.lastBinanceKind}` : ""}
+          {health.lastBinancePath ? ` · ${health.lastBinancePath}` : ""}
+          {health.lastBinanceReason ? ` · ${health.lastBinanceReason}` : ""}
+        </p>
+      )}
       {last === 0 && <p className="mt-3 text-xs text-slate-400">No completed monitoring cycle has been recorded on this process yet.</p>}
     </section>
   );

@@ -1672,9 +1672,19 @@ exports.getStoryRewardAnalytics = onCall(async (request) => {
 
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 
+// Continuous Binance scanning must run on the persistent worker host (local/Windows),
+// not by pinging Vercel (Production egress receives Binance HTTP 451).
+// This schedule is intentionally a no-op health keepalive unless SIGNALS_MONITOR_HTTP_PING=1.
 exports.signalsMonitorTick = onSchedule(
   { schedule: "every 1 minutes", region: "us-central1", timeoutSeconds: 120 },
   async () => {
+    if (process.env.SIGNALS_MONITOR_HTTP_PING !== "1") {
+      console.log(JSON.stringify({
+        event: "signals_monitor_tick_skipped",
+        reason: "Binance scanning moved to persistent worker; set SIGNALS_MONITOR_HTTP_PING=1 only for legacy HTTP ping.",
+      }));
+      return;
+    }
     const url = process.env.SIGNALS_MONITOR_URL;
     const secret = process.env.SIGNALS_MONITOR_SECRET;
     if (!url) return;

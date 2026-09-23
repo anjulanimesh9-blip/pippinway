@@ -162,6 +162,7 @@ function setJob(job: ScanJob) {
 
 export function publicMonitorHealth() {
   const job = getJob();
+  const weight = weightSnapshot();
   const monitorOn = Boolean((globalThis as typeof globalThis & { __pippinwaySignalsMonitor?: unknown }).__pippinwaySignalsMonitor);
   return {
     lastCycleAt: job?.lastCycleAt ?? null,
@@ -178,6 +179,11 @@ export function publicMonitorHealth() {
       : job?.lastCycleAt
         ? 'A monitoring cycle was recorded, but the persistent 60-second worker is not running on this process.'
         : 'No completed monitoring cycle has been recorded on this process yet.',
+    lastBinanceStatus: weight.lastFailure?.status ?? null,
+    lastBinanceKind: weight.lastFailure?.kind ?? null,
+    lastBinanceReason: weight.lastFailure?.reason ?? null,
+    lastBinancePath: weight.lastFailure?.path ?? null,
+    binanceCircuitOpen: weight.circuitOpen,
   };
 }
 
@@ -511,6 +517,22 @@ function syncJob(selection: { mode: ScanMode; symbols: string[]; eligible: numbe
   return next;
 }
 
+/** Build a ScannerResponse from the in-process job without additional Binance calls. */
+export function currentScannerResponse(warnings: string[] = [], error?: string): ScannerResponse | null {
+  const job = getJob();
+  if (!job || !job.symbols.length) return null;
+  const prices = new Map<string, number>();
+  const stats = new Map<string, { changePct: number; quoteVolume: number }>();
+  for (const symbol of job.symbols) {
+    const coin = job.coins.get(symbol);
+    if (coin?.price != null) prices.set(symbol, coin.price);
+    if (coin && (coin.changePct != null || coin.quoteVolume != null)) {
+      stats.set(symbol, { changePct: coin.changePct ?? 0, quoteVolume: coin.quoteVolume ?? 0 });
+    }
+  }
+  return snapshotFromJob(job, prices, stats, warnings, error);
+}
+
 function snapshotFromJob(job: ScanJob, prices: Map<string, number>, stats: Map<string, { changePct: number; quoteVolume: number }>, warnings: string[], error?: string): ScannerResponse {
   const fetchedAt = new Date().toISOString();
   const coins = job.symbols.map((symbol) => {
@@ -582,6 +604,11 @@ function snapshotFromJob(job: ScanJob, prices: Map<string, number>, stats: Map<s
       pendingCount: freshness.never_scanned + pending,
       neverScannedCount: freshness.never_scanned,
       coverageNote,
+      lastBinanceStatus: weight.lastFailure?.status ?? null,
+      lastBinanceKind: weight.lastFailure?.kind ?? null,
+      lastBinanceReason: weight.lastFailure?.reason ?? null,
+      lastBinancePath: weight.lastFailure?.path ?? null,
+      binanceCircuitOpen: weight.circuitOpen,
     },
   };
 }

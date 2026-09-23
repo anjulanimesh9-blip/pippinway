@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSignalsAccess } from "@/lib/signals/access";
+import { binanceScanningAllowed } from "@/lib/signals/host-role";
 import { getCandles, isAllowedInterval } from "@/lib/signals-engine/binance";
 import { SCAN_INTERVALS } from "@/lib/signals-engine/types";
 import { isValidSymbol } from "@/lib/signals-engine/universe";
@@ -32,6 +33,18 @@ export async function GET(req: NextRequest) {
         candles: [],
         error: "Full charts for this pair are a Pro feature.",
       });
+    }
+
+    if (!binanceScanningAllowed()) {
+      return NextResponse.json({
+        symbol,
+        interval,
+        locked: false,
+        candles: [],
+        unavailable: true,
+        error: "Live candle charts are unavailable from this host. Binance market data is served by the persistent Signals worker.",
+        fetchedAt: new Date().toISOString(),
+      }, { status: 503 });
     }
 
     const candles = await getCandles(symbol, interval, 180);

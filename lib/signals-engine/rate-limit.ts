@@ -20,6 +20,23 @@ export function endpointWeight(path: string, klineLimit = 250): number {
   return 1;
 }
 
+export type BinanceFailureKind =
+  | 'http'
+  | 'timeout'
+  | 'dns'
+  | 'network'
+  | 'tls'
+  | 'unknown';
+
+export type BinanceFailureRecord = {
+  at: string;
+  path: string | null;
+  status: number | null;
+  kind: BinanceFailureKind;
+  reason: string;
+  openedCircuit: boolean;
+};
+
 export type WeightSnapshot = {
   used: number;
   limit: number;
@@ -29,6 +46,7 @@ export type WeightSnapshot = {
   circuitOpenUntil: number;
   consecutiveFailures: number;
   lastRequestAt: number | null;
+  lastFailure: BinanceFailureRecord | null;
 };
 
 type State = {
@@ -38,6 +56,7 @@ type State = {
   consecutiveFailures: number;
   circuitOpenUntil: number;
   lastRequestAt: number | null;
+  lastFailure: BinanceFailureRecord | null;
 };
 
 function nowMs() {
@@ -52,6 +71,7 @@ function freshState(): State {
     consecutiveFailures: 0,
     circuitOpenUntil: 0,
     lastRequestAt: null,
+    lastFailure: null,
   };
 }
 
@@ -75,19 +95,104 @@ export function recordUsedWeight(headerValue: string | null, estimated: number) 
   state.lastRequestAt = nowMs();
 }
 
+export function sanitizeBinanceReason(status?: number | null, kind: BinanceFailureKind = 'http', detail?: string): string {
+  if (status === 429) return 'HTTP 429 Too Many Requests';
+  if (status === 418) return 'HTTP 418 IP ban / rate-limit ban';
+  if (status === 451) return 'HTTP 451 Unavailable For Legal Reasons (egress/geo restriction)';
+  if (status === 403) return 'HTTP 403 Forbidden';
+  if (status === 401) return 'HTTP 401 Unauthorized';
+  if (status != null && status >= 500) return `HTTP ${status} upstream server error`;
+  if (status != null) return `HTTP ${status}`;
+  if (kind === 'timeout') return 'timeout';
+  if (kind === 'dns') return 'DNS/network name resolution failure';
+  if (kind === 'tls') return 'TLS/certificate failure';
+  if (kind === 'network') return 'network error';
+  if (detail) {
+    const trimmed = detail.replace(/\s+/g, ' ').trim().slice(0, 160);
+    return trimmed || 'unknown failure';
+  }
+  return 'unknown failure';
+}
+
+export function classifyBinanceError(error: unknown): { kind: BinanceFailureKind; reason: string; status: number | null } {
+  if (!(error instanceof Error)) {
+    return { kind: 'unknown', reason: sanitizeBinanceReason(null, 'unknown'), status: null };
+  }
+  const message = error.message || '';
+  const http = message.match(/Binance request failed \((\d{3})\)/);
+  if (http) {
+    const status = Number(http[1]);
+    return { kind: 'http', status, reason: sanitizeBinanceReason(status, 'http') };
+  }
+  const cause = 'cause' in error && error.cause instanceof Error ? error.cause : error;
+  const code = 'code' in cause ? String((cause as { code?: string }).code || '') : '';
+  const text = `${code} ${cause.message || message}`.toLowerCase();
+  if (code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || text.includes('certificate')) {
+    return { kind: 'tls', status: null, reason: sanitizeBinanceReason(null, 'tls') };
+  }
+  if (text.includes('abort') || text.includes('timeout') || code === 'ETIMEDOUT' || code === 'UND_ERR_CONNECT_TIMEOUT') {
+    return { kind: 'timeout', status: null, reason: sanitizeBinanceReason(null, 'timeout') };
+  }
+  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN' || text.includes('getaddrinfo')) {
+    return { kind: 'dns', status: null, reason: sanitizeBinanceReason(null, 'dns') };
+  }
+  if (code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'EHOSTUNREACH' || text.includes('fetch failed')) {
+    return { kind: 'network', status: null, reason: sanitizeBinanceReason(null, 'network', message) };
+  }
+  return { kind: 'unknown', status: null, reason: sanitizeBinanceReason(null, 'unknown', message) };
+}
+
 export function noteSuccess() {
   state.consecutiveFailures = 0;
 }
 
-export function noteFailure(status?: number) {
+export function noteFailure(
+  status?: number,
+  detail?: { path?: string; kind?: BinanceFailureKind; reason?: string },
+) {
   state.consecutiveFailures += 1;
-  if (status === 418 || state.consecutiveFailures >= CIRCUIT_FAILURES) {
+  const kind = detail?.kind || (status != null ? 'http' : 'unknown');
+  const reason = detail?.reason || sanitizeBinanceReason(status, kind);
+  const shouldOpen = status === 418 || status === 451 || state.consecutiveFailures >= CIRCUIT_FAILURES;
+  const wasOpen = circuitOpen();
+  if (shouldOpen) {
     state.circuitOpenUntil = nowMs() + CIRCUIT_OPEN_MS;
+  }
+  const openedCircuit = shouldOpen && !wasOpen;
+  state.lastFailure = {
+    at: new Date().toISOString(),
+    path: detail?.path || null,
+    status: status ?? null,
+    kind,
+    reason,
+    openedCircuit,
+  };
+  if (openedCircuit) {
+    console.warn(JSON.stringify({
+      event: 'binance_circuit_open',
+      status: status ?? null,
+      kind,
+      reason,
+      path: detail?.path || null,
+      consecutiveFailures: state.consecutiveFailures,
+      openForMs: CIRCUIT_OPEN_MS,
+    }));
   }
 }
 
 export function circuitOpen(at = nowMs()): boolean {
   return state.circuitOpenUntil > at;
+}
+
+export function lastBinanceFailure(): BinanceFailureRecord | null {
+  return state.lastFailure;
+}
+
+export function circuitOpenMessage(path: string): string {
+  const last = state.lastFailure;
+  if (!last) return `Binance circuit open for ${path}`;
+  const statusPart = last.status != null ? `HTTP ${last.status}` : last.kind;
+  return `Binance circuit open for ${path} (opened after ${statusPart}: ${last.reason})`;
 }
 
 export function weightSnapshot(at = nowMs()): WeightSnapshot {
@@ -101,6 +206,7 @@ export function weightSnapshot(at = nowMs()): WeightSnapshot {
     circuitOpenUntil: state.circuitOpenUntil,
     consecutiveFailures: state.consecutiveFailures,
     lastRequestAt: state.lastRequestAt,
+    lastFailure: state.lastFailure,
   };
 }
 

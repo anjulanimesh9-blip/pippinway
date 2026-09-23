@@ -3,6 +3,13 @@ import { getSignalsAccess } from "@/lib/signals/access";
 import { getRevealRecord, revealSymbol } from "@/lib/signals/billing-store";
 import { allowanceFromRecord } from "@/lib/signals/quota";
 import { gateScanner } from "@/lib/signals/redact";
+import { preferPublishedScanSnapshot, binanceScanningAllowed } from "@/lib/signals/host-role";
+import {
+  emptyOfflineScannerResponse,
+  filterSnapshotForMode,
+  loadPublishedScanSnapshot,
+  snapshotAgeMs,
+} from "@/lib/signals/scan-snapshot";
 import { scanMarkets, scanSymbol, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
 import { DEFAULT_SETTINGS } from "@/lib/signals-engine/types";
 import { allowedScanMode, clampWatchlist, parseScanMode } from "@/lib/signals-engine/universe";
@@ -10,13 +17,43 @@ import { allowedScanMode, clampWatchlist, parseScanMode } from "@/lib/signals-en
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+async function loadPublishedBoard(mode: ReturnType<typeof parseScanMode>, custom?: string[]) {
+  const published = await loadPublishedScanSnapshot();
+  if (!published?.response) {
+    return {
+      scan: emptyOfflineScannerResponse(
+        "Scanner board unavailable. The persistent Signals worker has not published a snapshot yet.",
+      ),
+      publishedAt: null as string | null,
+      ageMs: null as number | null,
+    };
+  }
+  const filtered = filterSnapshotForMode(published.response, mode, custom);
+  const age = snapshotAgeMs(published);
+  const warnings = [...(filtered.warnings || [])];
+  if (age != null && age > 5 * 60_000) {
+    warnings.push(`Published scanner snapshot is ${Math.round(age / 1000)}s old. Waiting for the next worker cycle.`);
+  }
+  if (mode === "100" || mode === "all") {
+    warnings.push("Published worker board currently covers the Top 50 liquid USDT-M perpetuals.");
+  }
+  return {
+    scan: { ...filtered, warnings, stale: filtered.stale || (age != null && age > 3 * 60_000) },
+    publishedAt: published.publishedAt,
+    ageMs: age,
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const access = await getSignalsAccess(req);
     if (!access) {
       return NextResponse.json({ error: "Sign in with your Pippinway account to use Signals." }, { status: 401 });
     }
-    startBackgroundScanLoop();
+    const usePublished = preferPublishedScanSnapshot();
+    if (binanceScanningAllowed() && !usePublished) {
+      startBackgroundScanLoop();
+    }
     const symbol = req.nextUrl.searchParams.get("symbol");
     const force = req.nextUrl.searchParams.get("force") === "1";
     const reveal = req.nextUrl.searchParams.get("reveal") === "1";
@@ -33,7 +70,19 @@ export async function GET(req: NextRequest) {
     }
     const allowance = allowanceFromRecord(await getRevealRecord(access.uid), access.config.freeDailyReveals);
     if (symbol) {
-      const coin = await scanSymbol(symbol.toUpperCase());
+      let coin;
+      if (usePublished || !binanceScanningAllowed()) {
+        const { scan } = await loadPublishedBoard("50");
+        coin = scan.coins.find((item) => item.symbol === symbol.toUpperCase()) || null;
+        if (!coin) {
+          return NextResponse.json({
+            error: "Symbol is not in the published Top 50 board yet.",
+            access: { plan: access.plan, allowance },
+          }, { status: 404 });
+        }
+      } else {
+        coin = await scanSymbol(symbol.toUpperCase());
+      }
       const gated = gateScanner(
         {
           settings: {
@@ -76,6 +125,7 @@ export async function GET(req: NextRequest) {
           expired: 0,
           pending: daily.pending ? 1 : 0,
         },
+        health: daily.health,
       });
     }
     const requested = parseScanMode(req.nextUrl.searchParams.get("mode") || access.settings.scanMode);
@@ -83,6 +133,19 @@ export async function GET(req: NextRequest) {
     const custom = clampWatchlist(
       req.nextUrl.searchParams.get("watchlist")?.split(",") || access.settings.watchlist,
     );
+
+    if (usePublished || !binanceScanningAllowed()) {
+      const { scan, publishedAt } = await loadPublishedBoard(allowed.mode, custom);
+      const gated = gateScanner(scan, access, { revealed });
+      if (allowed.warning) gated.warnings = [...gated.warnings, allowed.warning];
+      return NextResponse.json({
+        ...gated,
+        publishedAt,
+        source: "persistent-worker",
+        access: { ...(gated as { access?: Record<string, unknown> }).access, allowance },
+      });
+    }
+
     const scan = await scanMarkets(force, { mode: allowed.mode, custom, force });
     const gated = gateScanner(scan, access, { revealed });
     if (allowed.warning) gated.warnings = [...gated.warnings, allowed.warning];

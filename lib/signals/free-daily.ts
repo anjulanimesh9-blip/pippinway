@@ -3,6 +3,13 @@ import { allowanceFromRecord } from "./quota";
 import { gateScanner } from "./redact";
 import type { SignalsAccess } from "./access";
 import type { CoinScan } from "@/lib/signals-engine/types";
+import { preferPublishedScanSnapshot, binanceScanningAllowed } from "@/lib/signals/host-role";
+import {
+  emptyOfflineScannerResponse,
+  filterSnapshotForMode,
+  loadPublishedScanSnapshot,
+  snapshotAgeMs,
+} from "@/lib/signals/scan-snapshot";
 import { scanMarkets, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
 
 export type FreeEligibleCoin = {
@@ -48,9 +55,28 @@ export function splitFreeDashboard(input: {
   return { signals, eligible, revealed };
 }
 
-export async function buildFreeDailyPayload(access: SignalsAccess, force = false) {
+async function loadFreeScan(force: boolean) {
+  if (preferPublishedScanSnapshot() || !binanceScanningAllowed()) {
+    const published = await loadPublishedScanSnapshot();
+    if (!published?.response) {
+      return emptyOfflineScannerResponse(
+        "Free Signals board unavailable until the persistent worker publishes a scanner snapshot.",
+      );
+    }
+    const filtered = filterSnapshotForMode(published.response, "15");
+    const age = snapshotAgeMs(published);
+    const warnings = [...(filtered.warnings || [])];
+    if (age != null && age > 5 * 60_000) {
+      warnings.push(`Published scanner snapshot is ${Math.round(age / 1000)}s old.`);
+    }
+    return { ...filtered, warnings, stale: filtered.stale || (age != null && age > 3 * 60_000) };
+  }
   startBackgroundScanLoop();
-  const scan = await scanMarkets(force, { mode: "15", force });
+  return scanMarkets(force, { mode: "15", force });
+}
+
+export async function buildFreeDailyPayload(access: SignalsAccess, force = false) {
+  const scan = await loadFreeScan(force);
   const record = await getRevealRecord(access.uid);
   const allowance = allowanceFromRecord(record, access.config.freeDailyReveals);
   const gated = gateScanner(scan, access, { revealed: allowance.symbols });

@@ -10,8 +10,10 @@ import {
   setSignalsUserPlan,
 } from "@/lib/signals/billing-store";
 import { sanitizeConfig } from "@/lib/signals/config";
+import { binanceScanningAllowed, preferPublishedScanSnapshot } from "@/lib/signals/host-role";
 import { getOfficialStore } from "@/lib/signals/official-store";
 import { getOfficialPerformance } from "@/lib/signals/performance";
+import { loadPublishedScanSnapshot } from "@/lib/signals/scan-snapshot";
 import { getHistory } from "@/lib/signals-engine/history";
 import { monitorIsRunning } from "@/lib/signals-engine/monitor";
 import { getLivePrices } from "@/lib/signals-engine/scanner";
@@ -31,7 +33,19 @@ export async function GET(req: NextRequest) {
       .catch(() => [] as string[]);
     const [history, prices, officialHealth, performance, official, extraUids] = await Promise.all([
       getHistory(),
-      getLivePrices(),
+      (preferPublishedScanSnapshot() || !binanceScanningAllowed())
+        ? loadPublishedScanSnapshot().then((published) => ({
+            fetchedAt: published?.publishedAt || new Date().toISOString(),
+            stale: !published,
+            error: published ? null : "Waiting for persistent worker snapshot",
+            prices: (published?.response?.coins || []).map((coin) => ({
+              symbol: coin.symbol,
+              price: coin.price,
+              changePct: coin.changePct ?? null,
+              available: coin.available !== false,
+            })),
+          }))
+        : getLivePrices(),
       store.health(),
       getOfficialPerformance(),
       store.listSignals(),

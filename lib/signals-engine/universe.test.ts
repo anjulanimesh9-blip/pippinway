@@ -127,10 +127,15 @@ describe('dynamic USDT-M universe', () => {
 });
 
 describe('rate-limit and concurrency helpers', () => {
-  it('retries 429/418 with Retry-After or exponential backoff', () => {
+  it('retries 429/418 with Retry-After or exponential backoff and jitter', () => {
     expect(retryDelayMs(200, '1', 0)).toBeNull();
-    expect(retryDelayMs(429, '2', 0)).toBe(2000);
-    expect(retryDelayMs(418, null, 3)).toBe(8000);
+    expect(retryDelayMs(451, '2', 0)).toBeNull();
+    const after = retryDelayMs(429, '2', 0);
+    expect(after).toBeGreaterThanOrEqual(1600);
+    expect(after).toBeLessThanOrEqual(2400);
+    const banned = retryDelayMs(418, null, 3);
+    expect(banned).toBeGreaterThanOrEqual(6400);
+    expect(banned).toBeLessThanOrEqual(9600);
   });
 
   it('bounds concurrent workers', async () => {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSignalsAccess } from "@/lib/signals/access";
+import { binanceScanningAllowed } from "@/lib/signals/host-role";
+import { getOfficialStore } from "@/lib/signals/official-store";
 import { runMonitoringCycle } from "@/lib/signals-engine/monitor-cycle";
 import { monitorIsRunning, startSignalsMonitor } from "@/lib/signals-engine/monitor";
 
@@ -24,6 +26,35 @@ export async function GET(req: NextRequest) {
   if (!authorized(req, Boolean(access?.isAdmin))) {
     return NextResponse.json({ error: "Monitor endpoint requires admin, Vercel Cron, or SIGNALS_MONITOR_SECRET." }, { status: 403 });
   }
+
+  // On Vercel, Binance continuous scanning is blocked (HTTP 451). Serve published health only.
+  if (!binanceScanningAllowed()) {
+    const health = await getOfficialStore().health().catch(() => null);
+    return NextResponse.json({
+      ok: true,
+      running: false,
+      overlapped: false,
+      skippedBinance: true,
+      note: "Binance scanning is disabled on this host. The persistent worker publishes scanner state to Firestore.",
+      cycle: {
+        ok: true,
+        overlapped: false,
+        workerStatus: health?.workerStatus || "offline",
+        coverageNote: health?.coverageNote || "Waiting for the persistent Signals worker.",
+        durationMs: health?.lastCycleDurationMs ?? null,
+        backlog: health?.queueBacklog ?? null,
+        weightUsed: health?.requestWeightUsed ?? null,
+        analyzed: [],
+        eligible: health?.availablePairs ?? 0,
+        selected: health?.totalPairs ?? 0,
+        long: health?.validatedLong ?? 0,
+        short: health?.validatedShort ?? 0,
+        wait: health?.waitCount ?? 0,
+      },
+      health,
+    });
+  }
+
   if (process.env.SIGNALS_MONITOR_INLINE === "1") startSignalsMonitor();
   const cycle = await runMonitoringCycle();
   return NextResponse.json({

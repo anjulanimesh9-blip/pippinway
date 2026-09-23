@@ -1,4 +1,5 @@
 import { getOfficialStore } from '@/lib/signals/official-store';
+import { publishScanSnapshot } from '@/lib/signals/scan-snapshot';
 import { weightSnapshot } from './rate-limit';
 import {
   persistLease,
@@ -9,6 +10,7 @@ import {
 } from './monitor-lease';
 import { PROCESS_ID } from './scan-job-persist';
 import {
+  currentScannerResponse,
   processCycleBatch,
   recordCycleMetrics,
   runScheduledScanTick,
@@ -98,31 +100,65 @@ export async function runMonitoringCycle(): Promise<MonitoringCycleResult> {
       || (batch.backlog > 0
         ? `Queue still has ${batch.backlog} symbols. Full-universe analysis is incremental and is not claimed to finish every 60 seconds.`
         : 'Selected symbols have analysis snapshots. Freshness is per-coin, not a 60-second full-universe guarantee.');
+
+    // Build the post-batch board first. runScheduledScanTick counts are pre-batch (mostly pending)
+    // and must not overwrite LONG/SHORT/WAIT after processCycleBatch finishes.
+    const liveBoard = currentScannerResponse(
+      [
+        coverageNote,
+        ...(scan.warnings || []),
+      ].filter(Boolean),
+    );
+    const boardCounts = liveBoard?.counts;
+    const boardHealth = liveBoard?.health;
+
     await getOfficialStore().setHealth({
       lastCycleAt: startedAt,
       lastCycleDurationMs: durationMs,
-      lastFullUniverseAt: scan.health?.lastFullUniverseAt ?? null,
-      lastFullUniverseDurationMs: scan.health?.lastFullUniverseDurationMs ?? null,
+      lastFullUniverseAt: boardHealth?.lastFullUniverseAt ?? scan.health?.lastFullUniverseAt ?? null,
+      lastFullUniverseDurationMs: boardHealth?.lastFullUniverseDurationMs ?? scan.health?.lastFullUniverseDurationMs ?? null,
       requestWeightUsed: weight.used,
       requestWeightLimit: weight.limit,
       queueBacklog: batch.backlog,
       workerStatus: 'running',
-      freshCount: scan.health?.freshCount,
-      staleCount: scan.health?.staleCount,
-      failedCount: scan.health?.failedCount,
-      pendingCount: scan.health?.pendingCount,
-      neverScannedCount: scan.health?.neverScannedCount,
-      validatedLong: scan.counts?.long,
-      validatedShort: scan.counts?.short,
-      waitCount: scan.counts?.wait,
-      rejectedCount: scan.counts?.invalid,
+      freshCount: boardHealth?.freshCount,
+      staleCount: boardHealth?.staleCount,
+      failedCount: boardHealth?.failedCount,
+      pendingCount: boardHealth?.pendingCount,
+      neverScannedCount: boardHealth?.neverScannedCount,
+      // Board direction counts among analyzed coins (scanState !== pending). Not official actionable fills.
+      validatedLong: boardCounts?.long ?? 0,
+      validatedShort: boardCounts?.short ?? 0,
+      waitCount: boardCounts?.wait ?? 0,
+      rejectedCount: boardCounts?.invalid ?? 0,
       cycleOverlapsBlocked: 0,
       coverageNote,
-      lastScanAt: scan.health?.lastScanAt ?? startedAt,
+      lastScanAt: boardHealth?.lastScanAt ?? scan.health?.lastScanAt ?? startedAt,
       lastSuccessAt: new Date(finished).toISOString(),
-      stale: Boolean(scan.stale),
+      stale: Boolean(liveBoard?.stale ?? scan.stale),
       monitoring: 'running',
     });
+    if (liveBoard) {
+      liveBoard.health = {
+        ...liveBoard.health!,
+        lastCycleAt: startedAt,
+        lastCycleDurationMs: durationMs,
+        lastFullUniverseAt: boardHealth?.lastFullUniverseAt ?? scan.health?.lastFullUniverseAt ?? null,
+        lastFullUniverseDurationMs: boardHealth?.lastFullUniverseDurationMs ?? scan.health?.lastFullUniverseDurationMs ?? null,
+        requestWeightUsed: weight.used,
+        requestWeightLimit: weight.limit,
+        queueBacklog: batch.backlog,
+        workerStatus: 'running',
+        monitoring: 'running',
+        coverageNote,
+      };
+      await publishScanSnapshot(liveBoard, { processId: PROCESS_ID, source: 'persistent-worker' }).catch((error) => {
+        console.warn(JSON.stringify({
+          event: 'scan_snapshot_publish_failed',
+          reason: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
+        }));
+      });
+    }
     return {
       ok: true,
       overlapped: false,
@@ -133,20 +169,20 @@ export async function runMonitoringCycle(): Promise<MonitoringCycleResult> {
       backlog: batch.backlog,
       weightUsed: weight.used,
       weightLimit: weight.limit,
-      lastFullUniverseAt: scan.health?.lastFullUniverseAt ?? null,
-      lastFullUniverseDurationMs: scan.health?.lastFullUniverseDurationMs ?? null,
+      lastFullUniverseAt: boardHealth?.lastFullUniverseAt ?? scan.health?.lastFullUniverseAt ?? null,
+      lastFullUniverseDurationMs: boardHealth?.lastFullUniverseDurationMs ?? scan.health?.lastFullUniverseDurationMs ?? null,
       coverageNote,
       workerStatus: 'running',
-      eligible: scan.universe?.eligible ?? 0,
-      selected: scan.universe?.selected ?? 0,
-      long: scan.counts?.long ?? 0,
-      short: scan.counts?.short ?? 0,
-      wait: scan.counts?.wait ?? 0,
-      rejected: scan.counts?.invalid ?? 0,
-      fresh: scan.health?.freshCount ?? 0,
-      stale: scan.health?.staleCount ?? 0,
-      failed: scan.health?.failedCount ?? 0,
-      pending: scan.health?.pendingCount ?? batch.backlog,
+      eligible: liveBoard?.universe?.eligible ?? scan.universe?.eligible ?? 0,
+      selected: liveBoard?.universe?.selected ?? scan.universe?.selected ?? 0,
+      long: boardCounts?.long ?? 0,
+      short: boardCounts?.short ?? 0,
+      wait: boardCounts?.wait ?? 0,
+      rejected: boardCounts?.invalid ?? 0,
+      fresh: boardHealth?.freshCount ?? 0,
+      stale: boardHealth?.staleCount ?? 0,
+      failed: boardHealth?.failedCount ?? 0,
+      pending: boardCounts?.pending ?? batch.backlog,
     };
   } catch (error) {
     const finished = Date.now();

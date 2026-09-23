@@ -5,13 +5,28 @@ import {
   type Candle,
   type SymbolFilters,
 } from './types';
-import { awaitBudget, circuitOpen, endpointWeight, klineWeight, noteFailure, noteSuccess, recordUsedWeight } from './rate-limit';
+import {
+  awaitBudget,
+  circuitOpen,
+  circuitOpenMessage,
+  classifyBinanceError,
+  endpointWeight,
+  klineWeight,
+  noteFailure,
+  noteSuccess,
+  recordUsedWeight,
+  sanitizeBinanceReason,
+} from './rate-limit';
 
 const BASE = 'https://fapi.binance.com';
-const EXCHANGE_TTL_MS = 15 * 60 * 1000;
+/** Soft TTL: refresh exchangeInfo infrequently; it does not need every scanner cycle. */
+const EXCHANGE_TTL_MS = 30 * 60 * 1000;
+/** Keep serving the last successful exchangeInfo during temporary Binance outages. */
+const EXCHANGE_STALE_MAX_MS = 6 * 60 * 60 * 1000;
 const TICKER_TTL_MS = 4000;
+const MAX_TRANSIENT_ATTEMPTS = 3;
 
-type CacheEntry<T> = { value: T; expires: number };
+type CacheEntry<T> = { value: T; expires: number; fetchedAt: number };
 
 const cache = new Map<string, CacheEntry<unknown>>();
 const inflight = new Map<string, Promise<unknown>>();
@@ -42,15 +57,37 @@ function klineTtlMs(interval: string): number {
   return Math.max(2500, nextClose - now + 1200);
 }
 
-async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
+async function cached<T>(
+  key: string,
+  ttlMs: number,
+  load: () => Promise<T>,
+  options?: { allowStaleOnError?: boolean; maxStaleMs?: number },
+): Promise<T> {
   const hit = cache.get(key) as CacheEntry<T> | undefined;
   if (hit && hit.expires > Date.now()) return hit.value;
   const pending = inflight.get(key) as Promise<T> | undefined;
   if (pending) return pending;
   const task = load()
     .then((value) => {
-      cache.set(key, { value, expires: Date.now() + ttlMs });
+      const now = Date.now();
+      cache.set(key, { value, expires: now + ttlMs, fetchedAt: now });
       return value;
+    })
+    .catch((error) => {
+      if (
+        options?.allowStaleOnError
+        && hit
+        && Date.now() - hit.fetchedAt <= (options.maxStaleMs ?? EXCHANGE_STALE_MAX_MS)
+      ) {
+        console.warn(JSON.stringify({
+          event: 'binance_cache_stale_reuse',
+          key,
+          ageMs: Date.now() - hit.fetchedAt,
+          reason: error instanceof Error ? error.message.slice(0, 180) : 'unknown',
+        }));
+        return hit.value;
+      }
+      throw error;
     })
     .finally(() => inflight.delete(key));
   inflight.set(key, task);
@@ -66,11 +103,22 @@ function causeMessage(error: unknown): string {
   return cause.message || error.message;
 }
 
+function withJitter(ms: number): number {
+  const base = Math.max(0, ms);
+  const jitter = base * (0.15 * Math.random());
+  return Math.min(30_000, Math.round(base + jitter));
+}
+
+/** Only 429/418 are retried. 451 and other client/legal failures are not retried. */
 export function retryDelayMs(status: number, retryAfterHeader: string | null, attempt: number): number | null {
   if (status !== 429 && status !== 418) return null;
   const header = retryAfterHeader ? Number(retryAfterHeader) : NaN;
-  if (Number.isFinite(header) && header >= 0) return Math.min(30_000, header * 1000);
-  return Math.min(30_000, 1000 * 2 ** attempt);
+  if (Number.isFinite(header) && header >= 0) return withJitter(Math.min(30_000, header * 1000));
+  return withJitter(Math.min(30_000, 1000 * 2 ** attempt));
+}
+
+export function isNonRetryableBinanceStatus(status: number): boolean {
+  return status === 400 || status === 401 || status === 403 || status === 404 || status === 451;
 }
 
 function klineLimitFromPath(path: string): number {
@@ -81,11 +129,9 @@ function klineLimitFromPath(path: string): number {
 async function binanceGet<T>(path: string, timeoutMs = 12000): Promise<T> {
   const estimated = endpointWeight(path, klineLimitFromPath(path));
   let lastError: Error | null = null;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < MAX_TRANSIENT_ATTEMPTS; attempt++) {
     if (circuitOpen()) {
-      lastError = Error(`Binance circuit open for ${path}`);
-      await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
-      continue;
+      throw Error(circuitOpenMessage(path));
     }
     await awaitBudget(estimated);
     try {
@@ -95,28 +141,35 @@ async function binanceGet<T>(path: string, timeoutMs = 12000): Promise<T> {
         headers: { Accept: 'application/json' },
       });
       recordUsedWeight(response.headers.get('X-MBX-USED-WEIGHT-1M'), estimated);
-      const delay = retryDelayMs(response.status, response.headers.get('Retry-After'), attempt);
-      if (delay != null) {
-        noteFailure(response.status);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        lastError = Error(`Binance request failed (${response.status}) for ${path}`);
-        continue;
-      }
       if (!response.ok) {
-        noteFailure(response.status);
-        throw Error(`Binance request failed (${response.status}) for ${path}`);
+        const reason = sanitizeBinanceReason(response.status, 'http');
+        noteFailure(response.status, { path, kind: 'http', reason });
+        const delay = retryDelayMs(response.status, response.headers.get('Retry-After'), attempt);
+        lastError = Error(`Binance request failed (${response.status}) for ${path}`);
+        // Never aggressively retry legal/client failures such as 451.
+        if (delay == null || isNonRetryableBinanceStatus(response.status) || attempt >= MAX_TRANSIENT_ATTEMPTS - 1) {
+          throw lastError;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
       }
       noteSuccess();
       return response.json() as Promise<T>;
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Binance request failed')) throw error;
+      if (error instanceof Error && error.message.startsWith('Binance circuit open')) throw error;
+      const classified = classifyBinanceError(error);
+      const networkReason = classified.kind === 'unknown'
+        ? sanitizeBinanceReason(null, 'network', causeMessage(error))
+        : classified.reason;
       lastError = Error(`Binance request failed: ${causeMessage(error)}`);
-      noteFailure();
-      if (attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
-        continue;
-      }
-      throw lastError;
+      noteFailure(classified.status ?? undefined, {
+        path,
+        kind: classified.kind === 'unknown' ? 'network' : classified.kind,
+        reason: networkReason,
+      });
+      if (attempt >= MAX_TRANSIENT_ATTEMPTS - 1) throw lastError;
+      await new Promise((resolve) => setTimeout(resolve, withJitter(300 * 2 ** attempt)));
     }
   }
   throw lastError || Error(`Binance request failed for ${path}`);
@@ -174,10 +227,15 @@ export function invalidateExchangeInfo() {
 
 export async function getRawExchangeInfo(force = false): Promise<RawExchangeSymbol[]> {
   if (force) invalidateExchangeInfo();
-  return cached('exchangeInfo:raw', EXCHANGE_TTL_MS, async () => {
-    const info = await binanceGet<{ symbols?: RawExchangeSymbol[] }>('/fapi/v1/exchangeInfo', 20000);
-    return info.symbols || [];
-  });
+  return cached(
+    'exchangeInfo:raw',
+    EXCHANGE_TTL_MS,
+    async () => {
+      const info = await binanceGet<{ symbols?: RawExchangeSymbol[] }>('/fapi/v1/exchangeInfo', 20000);
+      return info.symbols || [];
+    },
+    { allowStaleOnError: true, maxStaleMs: EXCHANGE_STALE_MAX_MS },
+  );
 }
 
 export async function getExchangeFilters(symbols: readonly string[] = SCAN_SYMBOLS): Promise<Map<string, SymbolFilters>> {
