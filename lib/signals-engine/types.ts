@@ -357,6 +357,11 @@ export type ScannerResponse = {
   health?: ScannerHealth;
   /** Informational only — never official LONG/SHORT. */
   nearSetups?: import('./near-setups').NearSetup[];
+  /**
+   * Active official published signals (WAITING/TRIGGERED/ACTIVE/…).
+   * Separate from Near Setups and not limited to the latest WAIT scan pass.
+   */
+  officialLive?: CoinScan[];
 };
 
 export type SignalRecord = {

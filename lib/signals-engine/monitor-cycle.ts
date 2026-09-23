@@ -1,4 +1,5 @@
 import { getOfficialStore } from '@/lib/signals/official-store';
+import { mergeOfficialLiveIntoResponse } from '@/lib/signals/official-live';
 import { publishScanSnapshot } from '@/lib/signals/scan-snapshot';
 import { weightSnapshot } from './rate-limit';
 import {
@@ -136,8 +137,10 @@ async function publishBoard(input: {
   });
 
   if (liveBoard) {
-    liveBoard.health = {
-      ...liveBoard.health!,
+    const activeOfficial = await getOfficialStore().listActive().catch(() => []);
+    const enriched = mergeOfficialLiveIntoResponse(liveBoard, activeOfficial);
+    enriched.health = {
+      ...enriched.health!,
       lastCycleAt: input.startedAt,
       lastCycleDurationMs: input.durationMs,
       requestWeightUsed: weight.used,
@@ -153,12 +156,13 @@ async function publishBoard(input: {
       cycleStartedAt: input.startedAt,
       cycleCompletedAt: input.finishedAt,
     };
-    await publishScanSnapshot(liveBoard, { processId: PROCESS_ID, source: 'persistent-worker' }).catch((error) => {
+    await publishScanSnapshot(enriched, { processId: PROCESS_ID, source: 'persistent-worker' }).catch((error) => {
       console.warn(JSON.stringify({
         event: 'scan_snapshot_publish_failed',
         reason: error instanceof Error ? error.message.slice(0, 200) : 'unknown',
       }));
     });
+    return { liveBoard: enriched, boardCounts: enriched.counts, boardHealth: enriched.health, selectedCount, analyzedCount, weight };
   }
 
   return { liveBoard, boardCounts, boardHealth, selectedCount, analyzedCount, weight };

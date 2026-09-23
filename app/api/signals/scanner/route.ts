@@ -10,6 +10,8 @@ import {
   loadPublishedScanSnapshot,
   snapshotAgeMs,
 } from "@/lib/signals/scan-snapshot";
+import { getOfficialStore } from "@/lib/signals/official-store";
+import { mergeOfficialLiveIntoResponse } from "@/lib/signals/official-live";
 import { scanMarkets, scanSymbol, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
 import { selectNearSetups } from "@/lib/signals-engine/near-setups";
 import { DEFAULT_SETTINGS } from "@/lib/signals-engine/types";
@@ -17,6 +19,19 @@ import { allowedScanMode, clampWatchlist, parseScanMode } from "@/lib/signals-en
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+async function withOfficialLiveOverlay(scan: ReturnType<typeof filterSnapshotForMode>) {
+  try {
+    const active = await getOfficialStore().listActive();
+    return mergeOfficialLiveIntoResponse(scan, active);
+  } catch {
+    return {
+      ...scan,
+      officialLive: scan.officialLive || [],
+      nearSetups: scan.nearSetups?.length ? scan.nearSetups : selectNearSetups(scan.coins || []),
+    };
+  }
+}
 
 async function loadPublishedBoard(mode: ReturnType<typeof parseScanMode>, custom?: string[]) {
   const published = await loadPublishedScanSnapshot();
@@ -41,8 +56,15 @@ async function loadPublishedBoard(mode: ReturnType<typeof parseScanMode>, custom
   const nearSetups = filtered.nearSetups?.length
     ? filtered.nearSetups
     : selectNearSetups(published.response.coins || []);
+  const base = {
+    ...filtered,
+    nearSetups,
+    warnings,
+    stale: filtered.stale || (age != null && age > 3 * 60_000),
+  };
+  const scan = await withOfficialLiveOverlay(base);
   return {
-    scan: { ...filtered, nearSetups, warnings, stale: filtered.stale || (age != null && age > 3 * 60_000) },
+    scan,
     publishedAt: published.publishedAt,
     ageMs: age,
   };
@@ -151,7 +173,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const scan = await scanMarkets(force, { mode: allowed.mode, custom, force });
+    const scan = await withOfficialLiveOverlay(await scanMarkets(force, { mode: allowed.mode, custom, force }));
     const gated = gateScanner(scan, access, { revealed });
     if (allowed.warning) gated.warnings = [...gated.warnings, allowed.warning];
     return NextResponse.json({

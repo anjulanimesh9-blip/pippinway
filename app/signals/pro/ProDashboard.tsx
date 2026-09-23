@@ -19,6 +19,7 @@ import SignalsHero from "../components/SignalsHero";
 import SignalsPromoBanner from "../components/SignalsPromoBanner";
 import SummaryCards from "../components/SummaryCards";
 import NearSetupsPanel from "../components/NearSetupsPanel";
+import OfficialLiveSignals from "../components/OfficialLiveSignals";
 import { pairLabel } from "../lib/format";
 import { isActionableSetup, matchesStatusFilter } from "../lib/status";
 import type { NearSetup } from "@/lib/signals-engine/near-setups";
@@ -31,6 +32,7 @@ type ScanResponse = {
   fetchedAt?: string;
   coins?: CoinScan[];
   nearSetups?: NearSetup[];
+  officialLive?: CoinScan[];
   universe?: { mode: string; eligible: number; selected: number };
   progress?: { scanned: number; failed: number; skipped: number; pending: number; running: boolean; fresh?: number; stale?: number; queueBacklog?: number };
   counts?: { long: number; short: number; wait: number; invalid: number; expired: number; pending: number };
@@ -174,6 +176,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
   const progressPct = selectedCount ? Math.min(100, Math.round((scanned / selectedCount) * 100)) : 0;
 
   const validated = coins.filter((coin) => isActionableSetup(coin));
+  const officialLive = (scan?.officialLive?.length ? scan.officialLive : validated).filter((coin) => isActionableSetup(coin));
 
   return (
     <div className="space-y-5">
@@ -221,13 +224,16 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
       ]} />
 
       {(tab === "signals" || tab === "scanner") && (
-        <NearSetupsPanel
-          items={scan?.nearSetups}
-          onSelect={(symbol) => {
-            setSelected(symbol);
-            if (tab !== "signals") setTab("signals");
-          }}
-        />
+        <>
+          <OfficialLiveSignals items={officialLive} stale={scan?.stale} sparks={sparks} />
+          <NearSetupsPanel
+            items={scan?.nearSetups}
+            onSelect={(symbol) => {
+              setSelected(symbol);
+              if (tab !== "signals") setTab("signals");
+            }}
+          />
+        </>
       )}
 
       {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</p>}

@@ -43,6 +43,7 @@ export function compactScannerResponse(response: ScannerResponse): ScannerRespon
     nearSetups: response.nearSetups?.length
       ? response.nearSetups
       : selectNearSetups(response.coins || []),
+    officialLive: (response.officialLive || []).map(compactCoin),
   };
 }
 
@@ -273,6 +274,7 @@ export function emptyOfflineScannerResponse(message: string): ScannerResponse {
     universe: { mode: "50", eligible: 0, selected: 0, listedAt: new Date().toISOString() },
     counts: { long: 0, short: 0, wait: 0, invalid: 0, expired: 0, pending: 0 },
     nearSetups: [],
+    officialLive: [],
     health: {
       priceFeed: "error",
       analysisFeed: "error",

@@ -10,11 +10,17 @@ const CATEGORY_LABEL: Record<NearSetupCategory, string> = {
   developing_pattern: "Developing pattern",
 };
 
-const BIAS_TONE: Record<NearSetup["bias"], string> = {
+const WATCH_TONE: Record<NearSetup["bias"], string> = {
   LONG: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
   SHORT: "border-rose-500/40 bg-rose-500/10 text-rose-200",
   UNKNOWN: "border-white/15 bg-white/5 text-slate-300",
 };
+
+function watchBadge(bias: NearSetup["bias"]) {
+  if (bias === "LONG") return "LONG WATCH";
+  if (bias === "SHORT") return "SHORT WATCH";
+  return "WATCH";
+}
 
 function NearSetupCard({
   item,
@@ -30,12 +36,20 @@ function NearSetupCard({
           <p className="text-lg font-bold tracking-tight">{pairLabel(item.symbol)}</p>
           <p className="mt-0.5 text-[11px] text-slate-500">{CATEGORY_LABEL[item.category]}</p>
         </div>
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${BIAS_TONE[item.bias]}`}>
-          {item.bias === "UNKNOWN" ? "BIAS?" : item.bias}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${WATCH_TONE[item.bias]}`}>
+            {watchBadge(item.bias)}
+          </span>
+          <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-100">
+            NOT A SIGNAL
+          </span>
+        </div>
       </div>
 
       <p className="mt-3 line-clamp-3 text-sm leading-snug text-slate-300">{item.headline}</p>
+      <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        Waiting for validation
+      </p>
 
       <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
         <span>{item.pattern !== "None" ? item.pattern : "No named pattern"}</span>
@@ -66,7 +80,7 @@ function NearSetupCard({
   );
 
   const className =
-    "flex h-full w-full flex-col rounded-2xl border border-white/10 bg-[#0B1220]/80 px-4 py-4 text-left transition hover:border-[#FBB03B]/35";
+    "flex h-full w-full flex-col rounded-2xl border border-dashed border-white/15 bg-[#0B1220]/80 px-4 py-4 text-left transition hover:border-[#FBB03B]/35";
 
   if (onSelect) {
     return (
@@ -105,7 +119,7 @@ export default function NearSetupsPanel({
           </p>
         </div>
         <p className="max-w-xs text-right text-[11px] leading-relaxed text-slate-500">
-          Informational only. Near Setups never become official LONG/SHORT and do not use a Free reveal.
+          Informational only. Near Setups are not official LONG/SHORT signals and do not use a Free reveal.
         </p>
       </div>
 

@@ -10,6 +10,8 @@ import {
   loadPublishedScanSnapshot,
   snapshotAgeMs,
 } from "@/lib/signals/scan-snapshot";
+import { getOfficialStore } from "@/lib/signals/official-store";
+import { mergeOfficialLiveIntoResponse } from "@/lib/signals/official-live";
 import { scanMarkets, startBackgroundScanLoop } from "@/lib/signals-engine/scanner";
 import { selectNearSetups } from "@/lib/signals-engine/near-setups";
 
@@ -73,12 +75,18 @@ async function loadFreeScan(force: boolean) {
     const nearSetups = filtered.nearSetups?.length
       ? filtered.nearSetups
       : selectNearSetups(published.response.coins || []);
-    return {
+    const base = {
       ...filtered,
       nearSetups,
       warnings,
       stale: filtered.stale || (age != null && age > 3 * 60_000),
     };
+    try {
+      const active = await getOfficialStore().listActive();
+      return mergeOfficialLiveIntoResponse(base, active);
+    } catch {
+      return base;
+    }
   }
   startBackgroundScanLoop();
   return scanMarkets(force, { mode: "15", force });
@@ -104,6 +112,8 @@ export async function buildFreeDailyPayload(access: SignalsAccess, force = false
     availableCount: view.signals.length,
     /** Informational only — never treated as Free reveals or official LONG/SHORT. */
     nearSetups: scan.nearSetups || [],
+    /** Active official published signals — separate from Near Setups. */
+    officialLive: scan.officialLive || [],
     allowance,
     subscription: access.subscription,
     config: {
