@@ -111,6 +111,10 @@ export type ScannerHealth = {
   rejectedCount?: number;
   cycleOverlapsBlocked?: number;
   coverageNote?: string;
+  selectedCount?: number;
+  analyzedCount?: number;
+  priceUpdatedCount?: number | null;
+  analysisDurationMs?: number | null;
 };
 
 export type OfficialStoreSnapshot = {

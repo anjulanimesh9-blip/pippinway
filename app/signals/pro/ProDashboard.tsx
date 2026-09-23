@@ -50,7 +50,10 @@ type ScanResponse = {
     failedCount?: number;
     pendingCount?: number;
     neverScannedCount?: number;
+    selectedCount?: number;
+    analyzedCount?: number;
     priceUpdatedCount?: number;
+    analysisDurationMs?: number | null;
     coverageNote?: string;
   };
 };
@@ -308,12 +311,13 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
             {[
               ["Eligible", scan?.universe?.eligible ?? "—"],
               ["Top 50 selected", scan?.universe?.selected ?? coins.length],
+              ["Analyzed", scan?.health?.analyzedCount != null ? `${scan.health.analyzedCount}/${scan.health.selectedCount ?? scan?.universe?.selected ?? 50}` : (scan?.progress?.scanned ?? 0)],
               ["Price update", scan?.health?.lastPriceAt ? new Date(scan.health.lastPriceAt).toLocaleTimeString() : "—"],
+              ["Updated quotes", scan?.health?.priceUpdatedCount ?? "—"],
               ["Last analysis", scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleTimeString() : "—"],
-              ["Scanned", scan?.progress?.scanned ?? 0],
               ["Fresh", scan?.health?.freshCount ?? scan?.progress?.fresh ?? "—"],
               ["Stale", scan?.health?.staleCount ?? scan?.progress?.stale ?? "—"],
-              ["Pending", scan?.progress?.pending ?? scan?.health?.neverScannedCount ?? 0],
+              ["Pending", scan?.progress?.pending ?? scan?.health?.pendingCount ?? 0],
               ["Failed", scan?.health?.failedCount ?? scan?.progress?.failed ?? 0],
               ["Queue", scan?.health?.queueBacklog ?? scan?.progress?.queueBacklog ?? "—"],
               ["LONG", scan?.counts?.long ?? 0],
@@ -321,7 +325,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
               ["WAIT", scan?.counts?.wait ?? 0],
               ["Invalid/Expired", (scan?.counts?.invalid ?? 0) + (scan?.counts?.expired ?? 0)],
               ["Cycle", scan?.health?.lastCycleDurationMs != null ? `${scan.health.lastCycleDurationMs} ms` : "—"],
-              ["Full pass", scan?.health?.lastFullUniverseDurationMs != null ? `${Math.round(scan.health.lastFullUniverseDurationMs / 1000)}s` : "not yet"],
+              ["Full pass", (scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) != null ? `${Math.round(((scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) as number) / 1000)}s` : "not yet"],
               ["Weight", scan?.health?.requestWeightUsed != null ? `${scan.health.requestWeightUsed}/${scan.health.requestWeightLimit || 2400}` : "—"],
               ["Worker", scan?.health?.workerStatus || scan?.health?.monitoring || "—"],
             ].map(([label, value]) => (

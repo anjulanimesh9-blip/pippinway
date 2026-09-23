@@ -1,0 +1,30 @@
+[Unit]
+Description=Pippinway Signals persistent worker (Binance + Firestore)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pippinway
+Group=pippinway
+WorkingDirectory=/opt/pippinway
+Environment=NODE_OPTIONS=--use-system-ca
+Environment=SIGNALS_WORKER_MODE=engine
+Environment=SIGNALS_PRICE_INTERVAL_MS=60000
+Environment=SIGNALS_ANALYSIS_INTERVAL_MS=180000
+Environment=GOOGLE_APPLICATION_CREDENTIALS=/etc/pippinway/firebase-adminsdk.json
+# Optional: EnvironmentFile=-/etc/pippinway/signals-worker.env
+ExecStart=/usr/bin/node --use-system-ca /opt/pippinway/scripts/signals-monitor-worker.mjs
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/pippinway/data
+
+[Install]
+WantedBy=multi-user.target

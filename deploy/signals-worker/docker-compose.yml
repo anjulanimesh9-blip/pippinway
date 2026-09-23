@@ -1,0 +1,22 @@
+services:
+  signals-worker:
+    build:
+      context: ../..
+      dockerfile: deploy/signals-worker/Dockerfile
+    container_name: pippinway-signals-worker
+    restart: unless-stopped
+    env_file:
+      - .env.worker
+    environment:
+      NODE_OPTIONS: --use-system-ca
+      SIGNALS_WORKER_MODE: engine
+      SIGNALS_PRICE_INTERVAL_MS: "60000"
+      SIGNALS_ANALYSIS_INTERVAL_MS: "180000"
+    volumes:
+      # Mount Firebase Admin JSON outside the image/repo
+      - ${FIREBASE_ADMIN_HOST_PATH}:/run/secrets/firebase-adminsdk.json:ro
+      - signals-worker-data:/app/data
+    working_dir: /app
+
+volumes:
+  signals-worker-data:

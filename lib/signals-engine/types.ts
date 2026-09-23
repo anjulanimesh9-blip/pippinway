@@ -329,6 +329,12 @@ export type ScannerHealth = {
   pendingCount?: number;
   neverScannedCount?: number;
   coverageNote?: string;
+  selectedCount?: number;
+  analyzedCount?: number;
+  priceUpdatedCount?: number | null;
+  analysisDurationMs?: number | null;
+  cycleStartedAt?: string | null;
+  cycleCompletedAt?: string | null;
   /** Sanitized last Binance failure that opened/fed the circuit breaker. Never includes secrets. */
   lastBinanceStatus?: number | null;
   lastBinanceKind?: string | null;

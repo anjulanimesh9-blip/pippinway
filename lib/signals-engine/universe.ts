@@ -7,6 +7,8 @@ export const CORE_WATCHLIST: string[] = [...SCAN_SYMBOLS];
 export const DEFAULT_LIVE_SCAN_MODE: ScanMode = '50';
 export const MIN_LIQUID_QUOTE_VOLUME = 1_000_000;
 const UNIVERSE_TTL_MS = 15 * 60_000;
+/** How long the Top 50 (or mode) ranking is reused before re-sorting by 24h quote volume. */
+const SELECTION_TTL_MS = 15 * 60_000;
 
 export type EligibleUniverse = {
   symbols: string[];
@@ -24,6 +26,10 @@ export type UniverseSelection = {
 type CachedUniverse = { value: EligibleUniverse; expires: number };
 let universeCache: CachedUniverse | null = null;
 let universeInflight: Promise<EligibleUniverse> | null = null;
+
+type CachedSelection = { value: UniverseSelection; expires: number; key: string };
+let selectionCache: CachedSelection | null = null;
+let selectionInflight: Promise<UniverseSelection> | null = null;
 
 export function parseScanMode(value: string | null | undefined): ScanMode {
   if (value === '15' || value === '50' || value === '100' || value === 'all' || value === 'custom') return value;
@@ -142,6 +148,7 @@ export function jobFingerprint(mode: string, symbols: string[]): string {
 
 export function invalidateUniverse() {
   universeCache = null;
+  selectionCache = null;
 }
 
 export async function listEligiblePerpetuals(force = false): Promise<EligibleUniverse> {
@@ -171,9 +178,25 @@ export async function quoteVolumeMap(): Promise<Record<string, number>> {
   return out;
 }
 
-export async function resolveUniverse(mode: ScanMode, custom?: string[]): Promise<UniverseSelection> {
-  const [listed, volume] = await Promise.all([listEligiblePerpetuals(), quoteVolumeMap().catch(() => ({} as Record<string, number>))]);
-  return selectUniverse({ mode, eligible: listed.symbols, quoteVolume: volume, custom });
+export async function resolveUniverse(mode: ScanMode, custom?: string[], force = false): Promise<UniverseSelection> {
+  const key = `${mode}:${(custom || []).join(',')}`;
+  if (!force && selectionCache && selectionCache.key === key && selectionCache.expires > Date.now()) {
+    return selectionCache.value;
+  }
+  if (!force && selectionInflight && selectionCache?.key === key) return selectionInflight;
+
+  selectionInflight = (async () => {
+    const [listed, volume] = await Promise.all([
+      listEligiblePerpetuals(force),
+      quoteVolumeMap().catch(() => ({} as Record<string, number>)),
+    ]);
+    const value = selectUniverse({ mode, eligible: listed.symbols, quoteVolume: volume, custom });
+    selectionCache = { value, expires: Date.now() + SELECTION_TTL_MS, key };
+    return value;
+  })().finally(() => {
+    selectionInflight = null;
+  });
+  return selectionInflight;
 }
 
 export function allowedScanMode(plan: 'free' | 'pro', requested: ScanMode): { mode: ScanMode; warning?: string } {

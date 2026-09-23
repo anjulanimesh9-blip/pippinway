@@ -307,14 +307,22 @@ async function analyzeCached(
   priceUpdatedAt: string,
   extras: Parameters<typeof analyzeSymbol>[4],
   force: boolean,
+  touchAnalyzedAt = false,
 ): Promise<CoinScan> {
   const hit = analysisCache.get(symbol);
   if (!force && hit && !symbolNeedsAnalysis(symbol, hit.coin, false) && !hit.coin.stale) {
     const cached = hit.coin;
     if (livePrice != null && cached.scanState === 'ready') {
-      return attachLifecycle({ ...cached, price: livePrice, priceUpdatedAt, changePct: cached.changePct, quoteVolume: cached.quoteVolume });
+      return attachLifecycle({
+        ...cached,
+        price: livePrice,
+        priceUpdatedAt,
+        changePct: cached.changePct,
+        quoteVolume: cached.quoteVolume,
+        analyzedAt: touchAnalyzedAt ? new Date().toISOString() : cached.analyzedAt,
+      });
     }
-    return cached;
+    return touchAnalyzedAt ? { ...cached, analyzedAt: new Date().toISOString() } : cached;
   }
   const coin = tagState(await analyzeSymbol(symbol, filters, livePrice, priceUpdatedAt, extras, force));
   analysisCache.set(symbol, { coin, at: Date.now() });
@@ -357,38 +365,87 @@ export function recordCycleMetrics(input: {
 
 export async function processCycleBatch(options: {
   force?: boolean;
+  /** Visit every selected symbol once (cache-aware). Used for complete Top 50 analysis passes. */
+  fullPass?: boolean;
   activeSymbols?: string[];
   budget?: number;
-} = {}): Promise<{ analyzed: string[]; backlog: number }> {
+} = {}): Promise<{ analyzed: string[]; backlog: number; analysisDurationMs: number; priceUpdatedCount: number }> {
   const job = getJob();
   if (!job || job.running || !job.symbols.length) {
-    return { analyzed: [], backlog: job?.queueBacklog || 0 };
+    return { analyzed: [], backlog: job?.queueBacklog || 0, analysisDurationMs: 0, priceUpdatedCount: 0 };
   }
   const generation = job.generation;
+  const analysisStarted = Date.now();
+  if (options.fullPass) {
+    job.lastFullUniverseStartedAt = analysisStarted;
+  }
   job.running = true;
   try {
-    const queued = prioritizeSymbols({
+    const prioritized = prioritizeSymbols({
       symbols: job.symbols,
       coins: job.coins,
       activeSymbols: options.activeSymbols,
-      force: options.force,
-    }).slice(0, options.budget ?? CYCLE_ANALYZE_BUDGET);
-    if (queued.length) await processSymbols(queued, options.force === true, generation);
+      force: options.force || options.fullPass,
+    });
+    const queued = options.fullPass
+      ? job.symbols
+      : prioritized.slice(0, options.budget ?? CYCLE_ANALYZE_BUDGET);
+    let priceUpdatedCount = 0;
+    if (queued.length) {
+      const beforePrices = new Map(
+        queued.map((symbol) => [symbol, job.coins.get(symbol)?.price ?? null] as const),
+      );
+      await processSymbols(queued, options.force === true, generation, { touchAnalyzedAt: Boolean(options.fullPass) });
+      const latest = getJob();
+      if (latest) {
+        for (const symbol of queued) {
+          const next = latest.coins.get(symbol)?.price ?? null;
+          if (next != null && next !== beforePrices.get(symbol)) priceUpdatedCount += 1;
+        }
+      }
+    }
     const latest = getJob();
     if (latest && latest.generation === generation) {
       latest.queueBacklog = latest.symbols.filter((symbol) => symbolNeedsAnalysis(symbol, latest.coins.get(symbol), options.force)).length;
-      markFullPassIfComplete(latest);
+      if (options.fullPass) {
+        const complete = latest.symbols.every((symbol) => {
+          const coin = latest.coins.get(symbol);
+          return Boolean(coin && coin.scanState && coin.scanState !== 'pending');
+        });
+        if (complete) {
+          latest.lastFullUniverseDurationMs = Date.now() - analysisStarted;
+          latest.lastFullUniverseAt = new Date().toISOString();
+          latest.lastFullUniverseStartedAt = Date.now();
+        }
+      } else {
+        markFullPassIfComplete(latest);
+      }
       void saveScanJob({ ...latest, lastCandleCloseBySymbolTf: serializeCandleCloses() }).catch(() => undefined);
-      return { analyzed: queued, backlog: latest.queueBacklog };
+      return {
+        analyzed: queued,
+        backlog: latest.queueBacklog,
+        analysisDurationMs: Date.now() - analysisStarted,
+        priceUpdatedCount,
+      };
     }
-    return { analyzed: queued, backlog: queued.length };
+    return {
+      analyzed: queued,
+      backlog: queued.length,
+      analysisDurationMs: Date.now() - analysisStarted,
+      priceUpdatedCount,
+    };
   } finally {
     const latest = getJob();
     if (latest && latest.generation === generation) latest.running = false;
   }
 }
 
-async function processSymbols(symbols: string[], force: boolean, generation: number): Promise<void> {
+async function processSymbols(
+  symbols: string[],
+  force: boolean,
+  generation: number,
+  options: { touchAnalyzedAt?: boolean } = {},
+): Promise<void> {
   const job = getJob();
   if (!job || !symbols.length || job.generation !== generation) return;
   const fetchedAt = new Date().toISOString();
@@ -439,7 +496,7 @@ async function processSymbols(symbols: string[], force: boolean, generation: num
         markPrice: prem?.markPrice ?? null,
         btcSnapshots: btc.snapshots,
         btcCloses: btc.closes,
-      }, force), ANALYZE_TIMEOUT_MS, symbol);
+      }, force, options.touchAnalyzedAt === true), ANALYZE_TIMEOUT_MS, symbol);
       const row = stats.get(symbol);
       return {
         ...coin,
@@ -518,6 +575,45 @@ function syncJob(selection: { mode: ScanMode; symbols: string[]; eligible: numbe
 }
 
 /** Build a ScannerResponse from the in-process job without additional Binance calls. */
+/** Refresh prices/24h stats on the in-memory board without re-running technical analysis. */
+export async function refreshBoardPrices(): Promise<{ priceUpdatedCount: number; lastPriceAt: string | null }> {
+  const job = getJob();
+  if (!job?.symbols.length) return { priceUpdatedCount: 0, lastPriceAt: null };
+  const fetchedAt = new Date().toISOString();
+  let prices = new Map<string, number>();
+  let stats = new Map<string, { changePct: number; quoteVolume: number }>();
+  try {
+    [prices, stats] = await Promise.all([
+      getTickers(job.symbols),
+      getTicker24hrAll().catch(() => new Map()),
+    ]);
+    job.priceFeed = 'ok';
+    job.lastPriceAt = fetchedAt;
+  } catch {
+    job.priceFeed = 'error';
+    return { priceUpdatedCount: 0, lastPriceAt: job.lastPriceAt };
+  }
+  let priceUpdatedCount = 0;
+  for (const symbol of job.symbols) {
+    const coin = job.coins.get(symbol);
+    if (!coin) continue;
+    const price = prices.get(symbol);
+    const row = stats.get(symbol);
+    const next = {
+      ...coin,
+      price: price ?? coin.price,
+      priceUpdatedAt: price != null ? fetchedAt : coin.priceUpdatedAt,
+      changePct: row?.changePct ?? coin.changePct ?? null,
+      quoteVolume: row?.quoteVolume ?? coin.quoteVolume ?? null,
+    };
+    if (price != null && price !== coin.price) priceUpdatedCount += 1;
+    job.coins.set(symbol, next);
+  }
+  job.updatedAt = fetchedAt;
+  void saveScanJob({ ...job, lastCandleCloseBySymbolTf: serializeCandleCloses() }).catch(() => undefined);
+  return { priceUpdatedCount, lastPriceAt: fetchedAt };
+}
+
 export function currentScannerResponse(warnings: string[] = [], error?: string): ScannerResponse | null {
   const job = getJob();
   if (!job || !job.symbols.length) return null;
@@ -557,9 +653,11 @@ function snapshotFromJob(job: ScanJob, prices: Map<string, number>, stats: Map<s
   const timedOut = coins.filter((coin) => coin.scanState === 'timeout').length;
   const freshness = freshnessCounts(coins);
   const weight = weightSnapshot();
-  const coverageNote = freshness.never_scanned || freshness.stale || pending
-    ? 'Not every selected coin was analyzed in the last monitoring cycle. Coverage is incremental.'
-    : 'Selected coins currently have a completed analysis snapshot. This is not a claim that every coin refreshed in the last 60 seconds.';
+  const selected = job.symbols.length;
+  const analyzedCount = coins.filter((coin) => coin.scanState && coin.scanState !== 'pending').length;
+  const coverageNote = pending > 0 || analyzedCount < selected
+    ? `Coverage is incomplete — ${analyzedCount}/${selected} selected coins have completed analysis.`
+    : `Top ${selected} analysis complete — ${analyzedCount}/${selected} analyzed.`;
   return {
     settings: DEFAULT_SETTINGS,
     fetchedAt,
@@ -603,6 +701,8 @@ function snapshotFromJob(job: ScanJob, prices: Map<string, number>, stats: Map<s
       failedCount: freshness.failed,
       pendingCount: freshness.never_scanned + pending,
       neverScannedCount: freshness.never_scanned,
+      selectedCount: selected,
+      analyzedCount,
       coverageNote,
       lastBinanceStatus: weight.lastFailure?.status ?? null,
       lastBinanceKind: weight.lastFailure?.kind ?? null,
