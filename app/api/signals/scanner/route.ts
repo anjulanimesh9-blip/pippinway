@@ -51,7 +51,23 @@ async function loadPublishedBoard(mode: ReturnType<typeof parseScanMode>, custom
     warnings.push(`Published scanner snapshot is ${Math.round(age / 1000)}s old. Waiting for the next worker cycle.`);
   }
   if (mode === "100" || mode === "all") {
-    warnings.push("Published worker board currently covers the Top 50 liquid USDT-M perpetuals.");
+    const health = filtered.health || published.response.health;
+    const eligible = health?.eligibleUniverse ?? published.response.universe?.eligible;
+    const covered = health?.fullUniverseCoverageCount;
+    const pct = health?.fullUniverseCoveragePct;
+    const coldAnalyzed = health?.coldUniverseAnalyzed;
+    const coldSize = health?.coldUniverseSize;
+    if (mode === "all") {
+      warnings.push(
+        covered != null && eligible != null
+          ? `All Coins board cards still show the hot Top 50 snapshot. Rolling full-universe analysis coverage is ${covered}/${eligible}${pct != null ? ` (${pct}%)` : ""}${coldAnalyzed != null && coldSize != null ? `; cold ${coldAnalyzed}/${coldSize}` : ""}. Official Live can include cold-universe signals that pass net R/R ≥ 3.0.`
+          : "All Coins board cards still show the hot Top 50 snapshot. The worker also runs a rolling cold-universe scanner across remaining eligible USDT-M pairs; Official Live can include those signals when they pass publication gates.",
+      );
+    } else {
+      warnings.push(
+        "UI mode 100 Coins currently filters the published Top 50 worker board. Symbols outside the hot Top 50 are covered by the rolling cold-universe scanner; Official Live can include them when they pass publication gates.",
+      );
+    }
   }
   const nearSetups = filtered.nearSetups?.length
     ? filtered.nearSetups

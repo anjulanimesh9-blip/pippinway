@@ -1,16 +1,35 @@
 import type { User } from "firebase/auth";
 import { formatPriceByTick } from "@/lib/signals-engine/trading";
 
-export async function signalsFetch(path: string, user: User | null, init?: RequestInit) {
+const DEFAULT_TIMEOUT_MS = 45_000;
+
+export async function signalsFetch(path: string, user: User | null, init?: RequestInit & { timeoutMs?: number }) {
   const token = user ? await user.getIdToken() : "";
-  return fetch(path, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      ...(init?.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  const timeoutMs = init?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const { timeoutMs: _omit, ...rest } = init || {};
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (rest.signal) {
+    rest.signal.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+  try {
+    return await fetch(path, {
+      ...rest,
+      signal: controller.signal,
+      cache: "no-store",
+      headers: {
+        ...(rest.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Signals request timed out after ${Math.round(timeoutMs / 1000)}s. The scanner API did not respond.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function fmtPrice(value: number | null | undefined, tickSize?: number | null, pricePrecision?: number) {

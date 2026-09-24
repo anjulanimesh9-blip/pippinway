@@ -60,6 +60,18 @@ type ScanResponse = {
     priceUpdatedCount?: number;
     analysisDurationMs?: number | null;
     coverageNote?: string;
+    eligibleUniverse?: number;
+    hotUniverseSelected?: number;
+    hotUniverseAnalyzed?: number;
+    coldUniverseSize?: number;
+    coldUniverseAnalyzed?: number;
+    fullUniverseCoverageCount?: number;
+    fullUniverseCoveragePct?: number;
+    currentColdBatch?: string;
+    lastFullEligibleUniverseAt?: string | null;
+    nextExpectedFullEligibleUniverseAt?: string | null;
+    lastColdBatchAt?: string | null;
+    lastColdBatchDurationMs?: number | null;
   };
 };
 
@@ -106,13 +118,16 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
     busy.current = true;
     setScanning(true);
     try {
-      const response = await signalsFetch(`/api/signals/scanner?mode=${mode}${force ? "&force=1" : ""}`, user);
+      const response = await signalsFetch(`/api/signals/scanner?mode=${mode}${force ? "&force=1" : ""}`, user, {
+        timeoutMs: 60_000,
+      });
       const body = await response.json();
       if (!response.ok) throw Error(body.error || "Scanner failed");
       setScan(body);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Scanner failed");
+      // Keep prior scan if we have one; otherwise leave scan null so the error UI shows.
     } finally {
       busy.current = false;
       setScanning(false);
@@ -267,7 +282,24 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
               <option value="change">24h move</option>
             </select>
           </div>
-          {!coins.length ? <ScannerSkeletons count={6} /> : (
+          {!coins.length && error ? (
+            <div className="rounded-[22px] border border-rose-500/30 bg-rose-500/10 px-4 py-6 text-sm text-rose-100">
+              <p className="font-semibold">Scanner data unavailable</p>
+              <p className="mt-2 text-rose-100/90">{error}</p>
+              <button
+                type="button"
+                onClick={() => void loadScan(true)}
+                className="mt-4 inline-flex min-h-10 items-center rounded-full bg-[#FBB03B] px-4 text-sm font-bold text-[#0B1220]"
+              >
+                Retry
+              </button>
+            </div>
+          ) : !coins.length ? (
+            <div className="space-y-3">
+              <ScannerSkeletons count={6} />
+              {scanning && <p className="text-xs text-slate-500">Loading published scanner board…</p>}
+            </div>
+          ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {pageItems.map((coin) => (
                 <SignalCard
@@ -329,9 +361,20 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
             {[
-              ["Eligible", scan?.universe?.eligible ?? "—"],
-              ["Top 50 selected", scan?.universe?.selected ?? coins.length],
-              ["Analyzed", scan?.health?.analyzedCount != null ? `${scan.health.analyzedCount}/${scan.health.selectedCount ?? scan?.universe?.selected ?? 50}` : (scan?.progress?.scanned ?? 0)],
+              ["Eligible universe", scan?.health?.eligibleUniverse ?? scan?.universe?.eligible ?? "—"],
+              ["Top 50 selected", scan?.health?.hotUniverseSelected ?? scan?.universe?.selected ?? coins.length],
+              ["Hot analyzed", scan?.health?.hotUniverseAnalyzed != null
+                ? `${scan.health.hotUniverseAnalyzed}/${scan.health.hotUniverseSelected ?? scan?.universe?.selected ?? 50}`
+                : (scan?.health?.analyzedCount != null
+                  ? `${scan.health.analyzedCount}/${scan.health.selectedCount ?? scan?.universe?.selected ?? 50}`
+                  : (scan?.progress?.scanned ?? 0))],
+              ["Cold analyzed", scan?.health?.coldUniverseAnalyzed != null && scan?.health?.coldUniverseSize != null
+                ? `${scan.health.coldUniverseAnalyzed}/${scan.health.coldUniverseSize}`
+                : "—"],
+              ["Full coverage", scan?.health?.fullUniverseCoverageCount != null && scan?.health?.eligibleUniverse != null
+                ? `${scan.health.fullUniverseCoverageCount}/${scan.health.eligibleUniverse}${scan.health.fullUniverseCoveragePct != null ? ` (${scan.health.fullUniverseCoveragePct}%)` : ""}`
+                : "—"],
+              ["Cold batch", scan?.health?.currentColdBatch ?? "—"],
               ["Price update", scan?.health?.lastPriceAt ? new Date(scan.health.lastPriceAt).toLocaleTimeString() : "—"],
               ["Updated quotes", scan?.health?.priceUpdatedCount ?? "—"],
               ["Last analysis", scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleTimeString() : "—"],
@@ -340,12 +383,14 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
               ["Pending", scan?.progress?.pending ?? scan?.health?.pendingCount ?? 0],
               ["Failed", scan?.health?.failedCount ?? scan?.progress?.failed ?? 0],
               ["Queue", scan?.health?.queueBacklog ?? scan?.progress?.queueBacklog ?? "—"],
-              ["LONG", scan?.counts?.long ?? 0],
-              ["SHORT", scan?.counts?.short ?? 0],
-              ["WAIT", scan?.counts?.wait ?? 0],
+              ["Scan LONG", scan?.counts?.long ?? 0],
+              ["Scan SHORT", scan?.counts?.short ?? 0],
+              ["Scan WAIT", scan?.counts?.wait ?? 0],
               ["Invalid/Expired", (scan?.counts?.invalid ?? 0) + (scan?.counts?.expired ?? 0)],
               ["Cycle", scan?.health?.lastCycleDurationMs != null ? `${scan.health.lastCycleDurationMs} ms` : "—"],
-              ["Full pass", (scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) != null ? `${Math.round(((scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) as number) / 1000)}s` : "not yet"],
+              ["Full Top 50", (scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) != null ? `${Math.round(((scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) as number) / 1000)}s` : "not yet"],
+              ["Last full eligible", scan?.health?.lastFullEligibleUniverseAt ? new Date(scan.health.lastFullEligibleUniverseAt).toLocaleTimeString() : "not yet"],
+              ["Next full eligible", scan?.health?.nextExpectedFullEligibleUniverseAt ? new Date(scan.health.nextExpectedFullEligibleUniverseAt).toLocaleTimeString() : "—"],
               ["Weight", scan?.health?.requestWeightUsed != null ? `${scan.health.requestWeightUsed}/${scan.health.requestWeightLimit || 2400}` : "—"],
               ["Worker", scan?.health?.workerStatus || scan?.health?.monitoring || "—"],
             ].map(([label, value]) => (
@@ -356,9 +401,21 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
             ))}
           </div>
           <p className="text-xs text-slate-500">
-            Health {scan?.health ? `${scan.health.priceFeed}/${scan.health.analysisFeed}` : "—"} · last scan {scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleString() : "—"} · last cycle {scan?.health?.lastCycleAt ? new Date(scan.health.lastCycleAt).toLocaleTimeString() : "—"} · last full-universe pass {scan?.health?.lastFullUniverseAt ? new Date(scan.health.lastFullUniverseAt).toLocaleString() : "not measured yet"}
+            Health {scan?.health ? `${scan.health.priceFeed}/${scan.health.analysisFeed}` : "—"} · last scan {scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleString() : "—"} · last cycle {scan?.health?.lastCycleAt ? new Date(scan.health.lastCycleAt).toLocaleTimeString() : "—"} · last Top 50 pass {scan?.health?.lastFullUniverseAt ? new Date(scan.health.lastFullUniverseAt).toLocaleString() : "not measured yet"} · last full eligible {scan?.health?.lastFullEligibleUniverseAt ? new Date(scan.health.lastFullEligibleUniverseAt).toLocaleString() : "not measured yet"}
           </p>
           {scan?.health?.coverageNote && <p className="text-xs text-amber-200">{scan.health.coverageNote}</p>}
+          {!!scan?.warnings?.length && (
+            <ul className="space-y-1 text-xs text-amber-200/90">
+              {scan.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          )}
+          {mode === "all" && (
+            <p className="text-xs text-slate-400">
+              All Coins does not mean every eligible pair is listed as a board card here. Board cards remain the hot Top 50; cold-universe pairs are analyzed on a rolling schedule and appear under Official Live only when they pass the same publication gates (net R/R ≥ 3.0).
+            </p>
+          )}
         </section>
       )}
 

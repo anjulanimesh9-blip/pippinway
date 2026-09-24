@@ -341,6 +341,20 @@ export type ScannerHealth = {
   lastBinanceReason?: string | null;
   lastBinancePath?: string | null;
   binanceCircuitOpen?: boolean;
+  /** Rolling cold-universe / full-eligible coverage (worker). */
+  eligibleUniverse?: number;
+  hotUniverseSelected?: number;
+  hotUniverseAnalyzed?: number;
+  coldUniverseSize?: number;
+  coldUniverseAnalyzed?: number;
+  fullUniverseCoverageCount?: number;
+  fullUniverseCoveragePct?: number;
+  currentColdBatch?: string;
+  currentColdBatchSymbols?: string[];
+  lastFullEligibleUniverseAt?: string | null;
+  nextExpectedFullEligibleUniverseAt?: string | null;
+  lastColdBatchAt?: string | null;
+  lastColdBatchDurationMs?: number | null;
 };
 
 export type ScannerResponse = {

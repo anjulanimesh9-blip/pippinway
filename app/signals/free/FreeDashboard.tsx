@@ -57,14 +57,18 @@ export default function FreeDashboard({ user, initial }: { user: User; initial?:
   const [showMore, setShowMore] = useState(false);
 
   async function load() {
-    const response = await signalsFetch("/api/signals/daily", user);
-    const body = await response.json() as DailyPayload;
-    if (!response.ok) {
-      setError(body.error || "Could not load today's signals.");
-      return;
+    try {
+      const response = await signalsFetch("/api/signals/daily", user, { timeoutMs: 60_000 });
+      const body = await response.json() as DailyPayload;
+      if (!response.ok) {
+        setError(body.error || "Could not load today's signals.");
+        return;
+      }
+      setData(body);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load today's signals.");
     }
-    setData(body);
-    setError("");
   }
 
   useEffect(() => {
@@ -164,11 +168,22 @@ export default function FreeDashboard({ user, initial }: { user: User; initial?:
       />
       <NearSetupsPanel items={data?.nearSetups} />
 
-      {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</p>}
+      {error && (
+        <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="mt-3 inline-flex min-h-10 items-center rounded-full bg-[#FBB03B] px-4 text-sm font-bold text-[#0B1220]"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {!data && !error ? (
         <ScannerSkeletons count={4} />
-      ) : (
+      ) : !data && error ? null : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6">
             <section>
