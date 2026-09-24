@@ -13,7 +13,7 @@ export default function UpgradePanel({
       <h2 className="mt-2 text-2xl font-bold">{expired ? "Renew Pro access" : "See every validated setup"}</h2>
       <ul className="mt-4 grid gap-2 text-sm text-slate-300 sm:grid-cols-2">
         <li>✓ Unlimited complete-signal reveals</li>
-        <li>✓ Top 50 live Binance Futures scanner</li>
+        <li>✓ Top 100 live Binance Futures scanner</li>
         <li>✓ Charts, patterns and official history</li>
         <li>✓ EcoCash checkout with admin verification</li>
       </ul>

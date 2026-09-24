@@ -174,8 +174,8 @@ describe('official live display gating', () => {
     expect(merged.officialLiveExcluded?.some((item) => item.id === 'bad-shib')).toBe(true);
   });
 
-  it('5. net R/R < 3 legacy record is not promoted as current 1:3 live signal', () => {
-    // Historical BCH-style ~gross 1:2 levels.
+  it('5. legacy gross-1:2 pattern record displays when net≥3 floor is not required', () => {
+    // Historical BCH-style ~gross 1:2 levels (restored pattern-engine publication).
     const legacy = baseOfficial({
       id: 'legacy-bch',
       symbol: 'BCHUSDT',
@@ -188,9 +188,12 @@ describe('official live display gating', () => {
     const setup = setupFromOfficialRecord(legacy);
     expect(setup).not.toBeNull();
     expect(setup!.netRiskReward).toBeLessThan(MIN_NET_RISK_REWARD);
+    expect(passesPublicationRr(setup!.netRiskReward)).toBe(false);
     const verdict = classifyOfficialLiveRecord(legacy, Date.parse('2026-09-23T12:30:00.000Z'));
-    expect(verdict.ok).toBe(false);
-    if (!verdict.ok) expect(verdict.reasons.join(' ')).toMatch(/below official floor/);
+    expect(verdict.ok).toBe(true);
+    const merged = mergeOfficialLiveIntoResponse(emptyBoard([waitBoardCoin('BCHUSDT')]), [legacy], Date.parse('2026-09-23T12:30:00.000Z'));
+    expect(merged.officialLive).toHaveLength(1);
+    expect(merged.officialLive![0].symbol).toBe('BCHUSDT');
   });
 
   it('6. duplicate same-symbol records keep only one lifecycle card', () => {

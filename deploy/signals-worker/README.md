@@ -36,7 +36,7 @@ node -e "const e=require('/tmp/ex.json'); const n=(e.symbols||[]).filter(s=>s.st
 | Disk | **10+ GB** (app + logs + `data/`) |
 | OS | Ubuntu 22.04/24.04 or Debian bookworm |
 
-Estimated steady usage: low CPU between cycles; spikes during Top 50 analysis (~20–90s). Binance weight typically well under 2400/min with caching.
+Estimated steady usage: low CPU between cycles; spikes during Top 100 pattern analysis. Binance weight typically well under 2400/min with caching.
 
 ## Environment variables
 
@@ -46,7 +46,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/etc/pippinway/firebase-adminsdk.json
 FIREBASE_PROJECT_ID=pippinway-e9719
 SIGNALS_WORKER_MODE=engine
 SIGNALS_PRICE_INTERVAL_MS=60000
-SIGNALS_ANALYSIS_INTERVAL_MS=180000
+SIGNALS_ANALYSIS_INTERVAL_MS=300000
 NODE_OPTIONS=--use-system-ca
 ```
 

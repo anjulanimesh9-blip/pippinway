@@ -33,7 +33,7 @@ export default function SignalsHero({
         </h1>
         <div className="mt-5 flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-slate-200">
-            <Layers className="h-3.5 w-3.5 text-[#FBB03B]" /> Top 50 liquid coins
+            <Layers className="h-3.5 w-3.5 text-[#FBB03B]" /> Top 100 • Pattern Analysis • Every 5 Minutes
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-slate-200">
             <Clock3 className="h-3.5 w-3.5 text-[#FBB03B]" /> {live ? "Market monitoring every minute" : "Monitoring status is shown honestly"}

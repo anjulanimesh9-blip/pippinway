@@ -127,6 +127,13 @@ export type ScannerHealth = {
   nextExpectedFullEligibleUniverseAt?: string | null;
   lastColdBatchAt?: string | null;
   lastColdBatchDurationMs?: number | null;
+  top100RankedAt?: string | null;
+  nextAnalysisAt?: string | null;
+  binanceCircuitOpen?: boolean;
+  lastBinanceStatus?: number | null;
+  lastBinanceKind?: string | null;
+  lastBinanceReason?: string | null;
+  lastBinancePath?: string | null;
 };
 
 export type OfficialStoreSnapshot = {
@@ -139,6 +146,7 @@ export type OfficialStoreSnapshot = {
 export const TERMINAL_OFFICIAL: SignalLifecycleStatus[] = [
   "TARGET_HIT",
   "STOP_HIT",
+  "AMBIGUOUS",
   "EXPIRED",
   "INVALIDATED",
   "MISSED_ENTRY",

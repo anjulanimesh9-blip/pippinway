@@ -4,11 +4,15 @@ import { SCAN_SYMBOLS, isValidSymbol, type CoinScan, type ScanMode, type Scanner
 export { isValidSymbol };
 
 export const CORE_WATCHLIST: string[] = [...SCAN_SYMBOLS];
-export const DEFAULT_LIVE_SCAN_MODE: ScanMode = '50';
+export const DEFAULT_LIVE_SCAN_MODE: ScanMode = '100';
 export const MIN_LIQUID_QUOTE_VOLUME = 1_000_000;
+/** Eligible contract list (exchangeInfo) may be reused briefly; ranking always refreshes on forced analysis. */
 const UNIVERSE_TTL_MS = 15 * 60_000;
-/** How long the Top 50 (or mode) ranking is reused before re-sorting by 24h quote volume. */
-const SELECTION_TTL_MS = 15 * 60_000;
+/**
+ * Soft cache for price-only ticks. Full 5-minute analysis passes force=true so Top 100
+ * is always re-fetched from current 24h quote volume (never a permanently fixed list).
+ */
+const SELECTION_TTL_MS = 4 * 60_000;
 
 export type EligibleUniverse = {
   symbols: string[];

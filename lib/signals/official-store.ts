@@ -187,6 +187,14 @@ export class OfficialSignalStore {
     const store = await this.load();
     const current = store.signals.find((item) => item.id === input.id);
     if (!current) return { changed: false, record: undefined };
+    // Terminal TARGET/STOP/AMBIGUOUS (and other terminals) must never be overwritten.
+    if (TERMINAL_OFFICIAL.includes(current.lifecycleStatus)) {
+      current.lastPrice = input.lastPrice ?? current.lastPrice;
+      current.lastPriceAt = input.lastPriceAt ?? current.lastPriceAt;
+      current.updatedAt = new Date().toISOString();
+      await this.save();
+      return { changed: false, record: current };
+    }
     if (current.lifecycleStatus === input.status && current.lastPrice === input.lastPrice) {
       current.lastPriceAt = input.lastPriceAt;
       current.updatedAt = new Date().toISOString();
@@ -363,6 +371,17 @@ export function publishedFromOfficial(record: OfficialSignal): PublishedSignal {
 export async function persistReconcile(coin: CoinScan, published: PublishedSignal | null, previousStatus?: SignalLifecycleStatus) {
   if (!published) return;
   const store = getOfficialStore();
+  const existing = (await store.listSignals()).find(
+    (item) =>
+      item.symbol === published.symbol
+      && item.direction === published.direction
+      && item.originalEntry === published.entry
+      && item.openedAt === published.lifecycle.openedAt,
+  );
+  // Never let a later reconcile overwrite an already-terminal official record.
+  if (existing && TERMINAL_OFFICIAL.includes(existing.lifecycleStatus)) {
+    return;
+  }
   const record = officialFromPublished(coin, published);
   const created = await store.upsertCreate(record);
   if (!created.created) {
@@ -379,18 +398,23 @@ export async function persistReconcile(coin: CoinScan, published: PublishedSigna
   if (TERMINAL_OFFICIAL.includes(published.lifecycle.status)) {
     const qty = record.quantity;
     const fees = record.totalFeesUSDT;
-    const exit = published.lifecycle.status === "STOP_HIT" ? record.stop : published.lifecycle.status === "TARGET_HIT" ? record.target : coin.price;
+    let exit: number | null = coin.price;
+    if (published.lifecycle.status === "STOP_HIT") exit = record.stop;
+    else if (published.lifecycle.status === "TARGET_HIT") exit = record.target;
+    else if (published.lifecycle.status === "AMBIGUOUS") exit = coin.price;
     const gross =
-      exit == null
-        ? null
+      exit == null || published.lifecycle.status === "AMBIGUOUS"
+        ? published.lifecycle.status === "AMBIGUOUS"
+          ? 0
+          : null
         : record.direction === "LONG"
           ? (exit - record.originalEntry) * qty
           : (record.originalEntry - exit) * qty;
     await store.recordOutcome({
       signalId: record.id,
       kind: published.lifecycle.status,
-      at: new Date().toISOString(),
-      price: coin.price,
+      at: published.lifecycle.closedAt || new Date().toISOString(),
+      price: exit,
       fillConfirmed: false,
       brokerageVerified: false,
       hypotheticalGrossPnl: gross == null ? null : Number(gross.toFixed(4)),

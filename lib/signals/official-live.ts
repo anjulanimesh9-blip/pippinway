@@ -4,6 +4,7 @@ import {
   geometryValid,
   MIN_NET_RISK_REWARD,
   passesPublicationRr,
+  requirePublicationNetRr,
   roundToTick,
 } from "@/lib/signals-engine/trading";
 import { selectNearSetups } from "@/lib/signals-engine/near-setups";
@@ -182,7 +183,7 @@ export function classifyOfficialLiveRecord(
     }
   } else {
     if (!(setup.grossRiskReward > 0)) reasons.push("rebuilt gross R/R is not positive");
-    if (!passesPublicationRr(setup.netRiskReward)) {
+    if (requirePublicationNetRr() && !passesPublicationRr(setup.netRiskReward)) {
       reasons.push(
         `net R/R 1:${Number(setup.netRiskReward).toFixed(2)} below official floor 1:${MIN_NET_RISK_REWARD}`,
       );

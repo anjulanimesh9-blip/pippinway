@@ -1,16 +1,12 @@
 /**
- * Real Top 50 + cold-universe worker benchmark.
+ * Real Top 100 pattern-engine worker benchmark.
  * Run: npm run monitor:benchmark
  */
 import { runFastMarketMonitor, runFullTop50Analysis } from "../lib/signals-engine/monitor-cycle";
 import { loadPublishedScanSnapshot } from "../lib/signals/scan-snapshot";
 import { weightSnapshot, lastBinanceFailure } from "../lib/signals-engine/rate-limit";
-import {
-  COLD_BATCH_SIZE,
-  COLD_COVERAGE_TARGET_MS,
-  COLD_FAST_BATCH_SIZE,
-} from "../lib/signals-engine/cold-universe";
-import { MIN_NET_RISK_REWARD } from "../lib/signals-engine/trading";
+import { MIN_NET_RISK_REWARD, requirePublicationNetRr } from "../lib/signals-engine/trading";
+import { DEFAULT_LIVE_SCAN_MODE } from "../lib/signals-engine/universe";
 
 async function probe(url: string) {
   const started = Date.now();
@@ -39,21 +35,32 @@ async function main() {
   const ready = coins.filter((c) => c.scanState === "ready").length;
   const failed = coins.filter((c) => c.scanState === "failed" || c.scanState === "timeout").length;
   const pending = coins.filter((c) => !c.scanState || c.scanState === "pending").length;
-  const health = published?.response?.health;
-  const cold = analysis.cold || price.cold;
-  const coldSize = cold?.coldUniverseSize ?? Math.max(0, (analysis.eligible || 0) - (analysis.selected || 50));
-  // Expected cadence: analysis (~3m) batch + two fast (~60s) micro-batches per analysis window.
-  const symbolsPerApprox3Min = COLD_BATCH_SIZE + 2 * COLD_FAST_BATCH_SIZE;
-  const expectedCoverageMin =
-    coldSize > 0 ? Math.round((coldSize / Math.max(symbolsPerApprox3Min, 1)) * 3 * 10) / 10 : 0;
+  const signals = coins
+    .filter((c) => c.direction === "LONG" || c.direction === "SHORT")
+    .map((c) => ({
+      symbol: c.symbol,
+      direction: c.direction,
+      pattern: c.pattern,
+      entry: c.setup?.entry ?? null,
+      stop: c.setup?.stop ?? null,
+      target: c.setup?.target ?? null,
+      grossRr: c.setup?.grossRiskReward ?? null,
+      netRr: c.setup?.netRiskReward ?? null,
+      lifecycle: c.lifecycle?.status ?? null,
+    }));
+  const officialLive = published?.response?.officialLive || [];
+  const nearSetups = published?.response?.nearSetups || [];
 
   const report = {
     exchangeInfoHttp: exchange.status,
     exchangeInfoMs: exchange.ms,
     tickerHttp: ticker.status,
     tickerMs: ticker.ms,
+    defaultLiveMode: DEFAULT_LIVE_SCAN_MODE,
+    requireNetRrFloor: requirePublicationNetRr(),
+    minNetRrConstant: MIN_NET_RISK_REWARD,
     eligibleContracts: analysis.eligible,
-    selectedTop50: analysis.selected,
+    selectedTop100: analysis.selected,
     analyzedCount: analysis.analyzedCount,
     readyCount: ready,
     freshCount: analysis.fresh,
@@ -62,12 +69,16 @@ async function main() {
     long: analysis.long,
     short: analysis.short,
     wait: analysis.wait,
+    signals,
+    officialLiveCount: officialLive.length,
+    nearSetupsCount: nearSetups.length,
     priceRefreshMs: priceMs,
     priceUpdatedCount: price.priceUpdatedCount,
     fullAnalysisMs: analysis.analysisDurationMs ?? analysisMs,
     wallAnalysisMs: analysisMs,
-    binanceWeight: weight.used,
-    weightLimit: weight.limit,
+    binanceWeight: analysis.weightUsed ?? weight.used,
+    weightLimit: analysis.weightLimit ?? weight.limit,
+    weightAfterCycle: weight.used,
     circuitOpen: weight.circuitOpen,
     lastBinanceFailure: failure
       ? { status: failure.status, kind: failure.kind, reason: failure.reason, path: failure.path }
@@ -76,47 +87,26 @@ async function main() {
     snapshotCoinCount: coins.length,
     snapshotAnalyzed: analyzed,
     coverageNote: analysis.coverageNote,
-    lastFullTop50PassAt: analysis.lastFullUniverseAt,
+    lastFullTop100PassAt: analysis.lastFullUniverseAt,
     workerHeartbeatAt: analysis.finishedAt,
-    minNetRr: MIN_NET_RISK_REWARD,
-    cold: {
-      batchSizeAnalysis: COLD_BATCH_SIZE,
-      batchSizeFast: COLD_FAST_BATCH_SIZE,
-      coldAnalyzedThisCycle: analysis.coldAnalyzed?.length ?? 0,
-      fastColdAnalyzedThisCycle: price.coldAnalyzed?.length ?? 0,
-      eligibleUniverse: cold?.eligibleUniverse ?? health?.eligibleUniverse ?? null,
-      hotUniverseAnalyzed: cold?.hotUniverseAnalyzed ?? health?.hotUniverseAnalyzed ?? null,
-      coldUniverseSize: cold?.coldUniverseSize ?? health?.coldUniverseSize ?? null,
-      coldUniverseAnalyzed: cold?.coldUniverseAnalyzed ?? health?.coldUniverseAnalyzed ?? null,
-      fullUniverseCoverageCount: cold?.fullUniverseCoverageCount ?? health?.fullUniverseCoverageCount ?? null,
-      fullUniverseCoveragePct: cold?.fullUniverseCoveragePct ?? health?.fullUniverseCoveragePct ?? null,
-      currentColdBatch: cold?.currentColdBatch ?? health?.currentColdBatch ?? null,
-      lastFullEligibleUniverseAt: cold?.lastFullEligibleUniverseAt ?? health?.lastFullEligibleUniverseAt ?? null,
-      nextExpectedFullEligibleUniverseAt:
-        cold?.nextExpectedFullEligibleUniverseAt ?? health?.nextExpectedFullEligibleUniverseAt ?? null,
-      coverageTargetMinutes: Math.round(COLD_COVERAGE_TARGET_MS / 60_000),
-      expectedFullCoverageMinutesApprox: expectedCoverageMin,
-      expectedWeightPerColdSymbolApprox: "15-40 (incremental klines + ticker)",
-      expectedPeakWeightPerMinuteApprox: "< 0.85 * 2400 with awaitBudget gating",
-    },
+    nextAnalysisCadenceMs: Number(process.env.SIGNALS_ANALYSIS_INTERVAL_MS || 300_000),
     acceptance: {
-      selected50: analysis.selected === 50,
-      analyzed50: analysis.analyzedCount === 50,
+      selected100: analysis.selected === 100,
+      analyzed100: analysis.analyzedCount === 100,
       exchangeOk: exchange.status === 200,
       tickerOk: ticker.status === 200,
-      snapshotOk: Boolean(published?.publishedAt && coins.length === 50),
-      minNetRrUnchanged: MIN_NET_RISK_REWARD === 3,
-      coldBatchBounded: COLD_BATCH_SIZE <= 80 && COLD_FAST_BATCH_SIZE <= 40,
-      coverageEtaInWindow: expectedCoverageMin >= 15 && expectedCoverageMin <= 40,
+      snapshotOk: Boolean(published?.publishedAt && coins.length === 100),
+      legacyNetRrFloorOff: requirePublicationNetRr() === false,
+      liveMode100: DEFAULT_LIVE_SCAN_MODE === "100",
     },
   };
 
-  console.log("TOP50_BENCHMARK " + JSON.stringify(report));
+  console.log("TOP100_BENCHMARK " + JSON.stringify(report));
   if (
-    !report.acceptance.selected50
-    || !report.acceptance.analyzed50
+    !report.acceptance.selected100
+    || !report.acceptance.analyzed100
     || !report.acceptance.exchangeOk
-    || !report.acceptance.minNetRrUnchanged
+    || !report.acceptance.liveMode100
   ) {
     process.exitCode = 2;
   }

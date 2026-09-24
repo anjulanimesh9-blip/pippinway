@@ -95,7 +95,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
   const tab = (TABS.includes(params.get("tab") as Tab) ? params.get("tab") : "signals") as Tab;
   const [scan, setScan] = useState<ScanResponse | null>(null);
   const [error, setError] = useState("");
-  const [mode, setMode] = useState<"15" | "50" | "100" | "all" | "custom">("50");
+  const [mode, setMode] = useState<"15" | "50" | "100" | "all" | "custom">("100");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string>("SETUPS");
   const [tfFilter, setTfFilter] = useState("ALL");
@@ -207,7 +207,10 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#FBB03B]">Pippinway Signals Pro</p>
             <h2 className="mt-1 text-3xl font-bold tracking-tight">Validated setups, clearly labeled</h2>
             <p className="mt-2 max-w-2xl text-sm text-slate-400">
-              Unlimited reveals. The default universe is the Top 50 USDT-M perpetuals by 24h quote volume. Not every selected coin is a trade.
+              Unlimited reveals. Live board: Top 100 USDT-M perpetuals by 24h quote volume — pattern analysis every 5 minutes. Not every selected coin is a trade.
+            </p>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#FBB03B]/90">
+              Top 100 • Pattern Analysis • Every 5 Minutes
             </p>
           </div>
           <div className="text-right">
@@ -230,7 +233,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
       </header>
 
       <SummaryCards items={[
-        { label: "Top 50 selected", value: selectedCount, tone: "gold" },
+        { label: "Top 100 selected", value: selectedCount, tone: "gold" },
         { label: "Scan LONG", value: scan?.counts?.long ?? 0, tone: "long" },
         { label: "Scan SHORT", value: scan?.counts?.short ?? 0, tone: "short" },
         { label: "Scan WAIT", value: scan?.counts?.wait ?? 0, tone: "wait" },
@@ -241,7 +244,20 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
 
       {(tab === "signals" || tab === "scanner") && (
         <>
-          <OfficialLiveSignals items={officialLive} stale={scan?.stale} sparks={sparks} />
+          <OfficialLiveSignals
+            items={officialLive}
+            stale={scan?.stale}
+            sparks={sparks}
+            performance={(history?.performance as {
+              wins?: number;
+              losses?: number;
+              resolved?: number;
+              active?: number;
+              ambiguous?: number;
+              winRate?: number | null;
+              winRateLabel?: string;
+            } | undefined) || null}
+          />
           <NearSetupsPanel
             items={scan?.nearSetups}
             onSelect={(symbol) => {
@@ -361,20 +377,11 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
             {[
-              ["Eligible universe", scan?.health?.eligibleUniverse ?? scan?.universe?.eligible ?? "—"],
-              ["Top 50 selected", scan?.health?.hotUniverseSelected ?? scan?.universe?.selected ?? coins.length],
-              ["Hot analyzed", scan?.health?.hotUniverseAnalyzed != null
-                ? `${scan.health.hotUniverseAnalyzed}/${scan.health.hotUniverseSelected ?? scan?.universe?.selected ?? 50}`
-                : (scan?.health?.analyzedCount != null
-                  ? `${scan.health.analyzedCount}/${scan.health.selectedCount ?? scan?.universe?.selected ?? 50}`
-                  : (scan?.progress?.scanned ?? 0))],
-              ["Cold analyzed", scan?.health?.coldUniverseAnalyzed != null && scan?.health?.coldUniverseSize != null
-                ? `${scan.health.coldUniverseAnalyzed}/${scan.health.coldUniverseSize}`
-                : "—"],
-              ["Full coverage", scan?.health?.fullUniverseCoverageCount != null && scan?.health?.eligibleUniverse != null
-                ? `${scan.health.fullUniverseCoverageCount}/${scan.health.eligibleUniverse}${scan.health.fullUniverseCoveragePct != null ? ` (${scan.health.fullUniverseCoveragePct}%)` : ""}`
-                : "—"],
-              ["Cold batch", scan?.health?.currentColdBatch ?? "—"],
+              ["Eligible", scan?.universe?.eligible ?? scan?.health?.eligibleUniverse ?? "—"],
+              ["Top 100 selected", scan?.universe?.selected ?? coins.length],
+              ["Analyzed", scan?.health?.analyzedCount != null
+                ? `${scan.health.analyzedCount}/${scan.health.selectedCount ?? scan?.universe?.selected ?? 100}`
+                : (scan?.progress?.scanned ?? 0)],
               ["Price update", scan?.health?.lastPriceAt ? new Date(scan.health.lastPriceAt).toLocaleTimeString() : "—"],
               ["Updated quotes", scan?.health?.priceUpdatedCount ?? "—"],
               ["Last analysis", scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleTimeString() : "—"],
@@ -388,9 +395,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
               ["Scan WAIT", scan?.counts?.wait ?? 0],
               ["Invalid/Expired", (scan?.counts?.invalid ?? 0) + (scan?.counts?.expired ?? 0)],
               ["Cycle", scan?.health?.lastCycleDurationMs != null ? `${scan.health.lastCycleDurationMs} ms` : "—"],
-              ["Full Top 50", (scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) != null ? `${Math.round(((scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) as number) / 1000)}s` : "not yet"],
-              ["Last full eligible", scan?.health?.lastFullEligibleUniverseAt ? new Date(scan.health.lastFullEligibleUniverseAt).toLocaleTimeString() : "not yet"],
-              ["Next full eligible", scan?.health?.nextExpectedFullEligibleUniverseAt ? new Date(scan.health.nextExpectedFullEligibleUniverseAt).toLocaleTimeString() : "—"],
+              ["Full Top 100", (scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) != null ? `${Math.round(((scan?.health?.analysisDurationMs ?? scan?.health?.lastFullUniverseDurationMs) as number) / 1000)}s` : "not yet"],
               ["Weight", scan?.health?.requestWeightUsed != null ? `${scan.health.requestWeightUsed}/${scan.health.requestWeightLimit || 2400}` : "—"],
               ["Worker", scan?.health?.workerStatus || scan?.health?.monitoring || "—"],
             ].map(([label, value]) => (
@@ -401,7 +406,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
             ))}
           </div>
           <p className="text-xs text-slate-500">
-            Health {scan?.health ? `${scan.health.priceFeed}/${scan.health.analysisFeed}` : "—"} · last scan {scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleString() : "—"} · last cycle {scan?.health?.lastCycleAt ? new Date(scan.health.lastCycleAt).toLocaleTimeString() : "—"} · last Top 50 pass {scan?.health?.lastFullUniverseAt ? new Date(scan.health.lastFullUniverseAt).toLocaleString() : "not measured yet"} · last full eligible {scan?.health?.lastFullEligibleUniverseAt ? new Date(scan.health.lastFullEligibleUniverseAt).toLocaleString() : "not measured yet"}
+            Health {scan?.health ? `${scan.health.priceFeed}/${scan.health.analysisFeed}` : "—"} · last scan {scan?.health?.lastScanAt ? new Date(scan.health.lastScanAt).toLocaleString() : "—"} · last cycle {scan?.health?.lastCycleAt ? new Date(scan.health.lastCycleAt).toLocaleTimeString() : "—"} · last Top 100 pass {scan?.health?.lastFullUniverseAt ? new Date(scan.health.lastFullUniverseAt).toLocaleString() : "not measured yet"}
           </p>
           {scan?.health?.coverageNote && <p className="text-xs text-amber-200">{scan.health.coverageNote}</p>}
           {!!scan?.warnings?.length && (
@@ -413,7 +418,7 @@ export default function ProDashboard({ user, expiresAt }: { user: User; expiresA
           )}
           {mode === "all" && (
             <p className="text-xs text-slate-400">
-              All Coins does not mean every eligible pair is listed as a board card here. Board cards remain the hot Top 50; cold-universe pairs are analyzed on a rolling schedule and appear under Official Live only when they pass the same publication gates (net R/R ≥ 3.0).
+              All Coins filters the published Top 100 worker board. The VPS worker analyzes Top 100 by 24h volume every 5 minutes with the restored pattern engine.
             </p>
           )}
         </section>
@@ -481,7 +486,24 @@ function HistoryPanel({ data }: { data: Record<string, unknown> | null }) {
   if (data.locked) {
     return <p className="text-sm text-slate-400">{String(data.note || "History is locked.")}</p>;
   }
-  const performance = data.performance as { waiting?: number; triggered?: number; targetHits?: number; stopHits?: number; missed?: number; expired?: number; invalidated?: number; observedSample?: number; brokerageVerified?: number } | undefined;
+  const performance = data.performance as {
+    waiting?: number;
+    triggered?: number;
+    targetHits?: number;
+    stopHits?: number;
+    missed?: number;
+    expired?: number;
+    invalidated?: number;
+    ambiguous?: number;
+    wins?: number;
+    losses?: number;
+    resolved?: number;
+    active?: number;
+    winRate?: number | null;
+    winRateLabel?: string;
+    observedSample?: number;
+    brokerageVerified?: number;
+  } | undefined;
   const live = (data.live as Array<Record<string, unknown>> | undefined) || [];
   return (
     <section className="space-y-4">
@@ -490,10 +512,25 @@ function HistoryPanel({ data }: { data: Record<string, unknown> | null }) {
         <SourceBadge kind="brokerage" />
       </div>
       {performance && (
+        <div className="rounded-2xl border border-[#FBB03B]/25 bg-[#0B1220]/80 px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FBB03B]">Official Live performance</p>
+          <p className="mt-2 text-lg font-bold text-white">
+            {performance.winRate == null || !(performance.resolved)
+              ? "Win rate — (no resolved TARGET/STOP yet)"
+              : performance.winRateLabel || `${((performance.winRate || 0) * 100).toFixed(1)}%`}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            Wins {performance.wins ?? 0} · Losses {performance.losses ?? 0} · Resolved {performance.resolved ?? 0} · Active {performance.active ?? 0} · Ambiguous {performance.ambiguous ?? 0}
+          </p>
+          <p className="mt-2 text-[11px] text-slate-500">TARGET_HIT / (TARGET_HIT + STOP_HIT) only. Educational/backtest rates are separate.</p>
+        </div>
+      )}
+      {performance && (
         <ObservedBars
           items={[
             { label: "Target hit", value: performance.targetHits ?? 0, color: "#10b981" },
             { label: "Stop hit", value: performance.stopHits ?? 0, color: "#f43f5e" },
+            { label: "Ambiguous", value: performance.ambiguous ?? 0, color: "#FBB03B" },
             { label: "Expired", value: performance.expired ?? 0, color: "#64748b" },
             { label: "Invalidated", value: performance.invalidated ?? 0, color: "#a855f7" },
             { label: "Missed", value: performance.missed ?? 0, color: "#94a3b8" },

@@ -57,11 +57,18 @@ type HistoryResponse = {
     published: number;
     waiting: number;
     triggered: number;
+    active?: number;
     missed: number;
     expired: number;
     invalidated: number;
+    ambiguous?: number;
     targetHits: number;
     stopHits: number;
+    wins?: number;
+    losses?: number;
+    resolved?: number;
+    winRate?: number | null;
+    winRateLabel?: string;
     observedSample: number;
     hypotheticalGrossPnl: number;
     hypotheticalNetPnl: number;
@@ -131,6 +138,7 @@ export default function SignalsHistoryPage() {
         { label: "Triggered", value: performance.triggered, color: "#3B82F6" },
         { label: "Target hit", value: performance.targetHits, color: "#10b981" },
         { label: "Stop hit", value: performance.stopHits, color: "#f43f5e" },
+        { label: "Ambiguous", value: performance.ambiguous ?? 0, color: "#eab308" },
         { label: "Missed", value: performance.missed, color: "#94a3b8" },
         { label: "Expired", value: performance.expired, color: "#64748b" },
         { label: "Invalidated", value: performance.invalidated, color: "#a855f7" },
@@ -153,15 +161,32 @@ export default function SignalsHistoryPage() {
       {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
       {loading && !data && <div className="h-24 animate-pulse rounded-2xl bg-white/5" />}
 
+      {performance && (
+        <article className="rounded-3xl border border-[#FBB03B]/30 bg-[#0F172A] p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FBB03B]">Official Live win rate</p>
+          <p className="mt-2 text-2xl font-extrabold">
+            {performance.winRate == null || !(performance.resolved)
+              ? "—"
+              : performance.winRateLabel || `${((performance.winRate || 0) * 100).toFixed(1)}%`}
+          </p>
+          <p className="mt-2 text-sm text-gray-300">
+            Wins {performance.wins ?? performance.targetHits ?? 0} · Losses {performance.losses ?? performance.stopHits ?? 0} · Resolved {performance.resolved ?? 0} · Active {performance.active ?? 0} · Ambiguous {performance.ambiguous ?? 0}
+          </p>
+          <p className="mt-3 text-xs text-gray-500">
+            TARGET_HIT / (TARGET_HIT + STOP_HIT) only. Educational live history and backtest percentages above are separate and are never labeled as the live product win rate.
+          </p>
+        </article>
+      )}
+
       <div className="grid gap-4 md:grid-cols-3">
         <article className="rounded-3xl border border-sky-500/20 bg-[#0F172A] p-5">
           <SourceBadge kind="backtested" />
           <p className="mt-3 text-2xl font-extrabold tabular-nums">{data?.backtestStats?.closedSample ?? 0}</p>
-          <p className="text-xs text-gray-400">Closed backtest sample</p>
+          <p className="text-xs text-gray-400">Closed backtest sample (educational)</p>
           <p className="mt-2 text-sm text-gray-300">
             Win rate {data?.backtestStats?.winRate == null ? "—" : `${(data.backtestStats.winRate * 100).toFixed(1)}%`}
           </p>
-          <p className="mt-3 text-xs text-gray-500">{data?.sources?.backtest || data?.backtestStats?.note || "Historical walk-forward only."}</p>
+          <p className="mt-3 text-xs text-gray-500">{data?.sources?.backtest || data?.backtestStats?.note || "Historical walk-forward only — not Official Live."}</p>
         </article>
         <article className="rounded-3xl border border-amber-500/20 bg-[#0F172A] p-5">
           <SourceBadge kind="observed" />

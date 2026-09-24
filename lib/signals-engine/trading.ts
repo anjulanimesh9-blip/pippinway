@@ -4,6 +4,14 @@ export const TAKER_FEE = 0.0005;
 export const DEFAULT_MARGIN_MODE: MarginMode = "ISOLATED";
 export const MIN_NET_RISK_REWARD = 3;
 
+/**
+ * Legacy pattern publication path (restored): net R/R ≥ 3 is NOT required by default.
+ * Set SIGNALS_REQUIRE_NET_RR=1 to re-enable the strict fee-aware floor.
+ */
+export function requirePublicationNetRr(): boolean {
+  return process.env.SIGNALS_REQUIRE_NET_RR === "1";
+}
+
 export function passesPublicationRr(netRiskReward: number | null | undefined): boolean {
   return Number.isFinite(netRiskReward) && (netRiskReward as number) >= MIN_NET_RISK_REWARD;
 }

@@ -1,7 +1,7 @@
 import { getOfficialStore } from '@/lib/signals/official-store';
 import { mergeOfficialLiveIntoResponse } from '@/lib/signals/official-live';
 import { publishScanSnapshot } from '@/lib/signals/scan-snapshot';
-import { weightSnapshot } from './rate-limit';
+import { weightSnapshot, lastBinanceFailure } from './rate-limit';
 import {
   persistLease,
   releaseLease,
@@ -20,11 +20,7 @@ import {
 import { monitorPriceTick } from './monitor';
 import {
   buildColdCoverage,
-  COLD_BATCH_SIZE,
-  COLD_FAST_BATCH_SIZE,
   getColdUniverseState,
-  restoreColdUniverseState,
-  runColdUniverseBatch,
   type ColdUniverseCoverage,
 } from './cold-universe';
 
@@ -114,12 +110,6 @@ function coverageHealthFields(coverage: ColdUniverseCoverage | null | undefined)
   };
 }
 
-function hotSymbolsFromBoard(): string[] {
-  const board = currentScannerResponse();
-  if (board?.coins?.length) return board.coins.map((coin) => coin.symbol);
-  return [];
-}
-
 function coverageNoteWithCold(base: string, coverage: ColdUniverseCoverage | null | undefined): string {
   if (!coverage || !coverage.eligibleUniverse) return base;
   const coldPart = coverage.coldUniverseSize > 0
@@ -150,8 +140,13 @@ async function publishBoard(input: {
     ?? liveBoard?.coins.filter((coin) => coin.scanState && coin.scanState !== 'pending').length
     ?? 0;
   const coldFields = coverageHealthFields(input.cold);
+  const rankedAt = liveBoard?.universe?.listedAt ?? null;
+  const analysisIntervalMs = Number(process.env.SIGNALS_ANALYSIS_INTERVAL_MS || 300_000);
+  const nextAnalysisAt = new Date(Date.parse(input.finishedAt) + analysisIntervalMs).toISOString();
+  const failure = lastBinanceFailure();
 
   await getOfficialStore().setHealth({
+    ...coldFields,
     lastCycleAt: input.startedAt,
     lastCycleDurationMs: input.durationMs,
     lastFullUniverseAt: boardHealth?.lastFullUniverseAt ?? null,
@@ -180,7 +175,16 @@ async function publishBoard(input: {
     lastPriceAt: boardHealth?.lastPriceAt ?? null,
     stale: Boolean(liveBoard?.stale),
     monitoring: 'running',
-    ...coldFields,
+    eligibleUniverse: liveBoard?.universe?.eligible ?? coldFields.eligibleUniverse,
+    hotUniverseSelected: selectedCount,
+    hotUniverseAnalyzed: analyzedCount,
+    top100RankedAt: rankedAt,
+    nextAnalysisAt,
+    binanceCircuitOpen: weight.circuitOpen,
+    lastBinanceStatus: failure?.status ?? null,
+    lastBinanceKind: failure?.kind ?? null,
+    lastBinanceReason: failure?.reason ?? null,
+    lastBinancePath: failure?.path ?? null,
   });
 
   if (liveBoard) {
@@ -188,6 +192,7 @@ async function publishBoard(input: {
     const enriched = mergeOfficialLiveIntoResponse(liveBoard, activeOfficial);
     enriched.health = {
       ...enriched.health!,
+      ...coldFields,
       lastCycleAt: input.startedAt,
       lastCycleDurationMs: input.durationMs,
       requestWeightUsed: weight.used,
@@ -202,7 +207,16 @@ async function publishBoard(input: {
       analysisDurationMs: input.analysisDurationMs,
       cycleStartedAt: input.startedAt,
       cycleCompletedAt: input.finishedAt,
-      ...coldFields,
+      eligibleUniverse: liveBoard.universe?.eligible ?? undefined,
+      hotUniverseSelected: selectedCount,
+      hotUniverseAnalyzed: analyzedCount,
+      top100RankedAt: rankedAt,
+      nextAnalysisAt,
+      binanceCircuitOpen: weight.circuitOpen,
+      lastBinanceStatus: failure?.status ?? null,
+      lastBinanceKind: failure?.kind ?? null,
+      lastBinanceReason: failure?.reason ?? null,
+      lastBinancePath: failure?.path ?? null,
     };
     await publishScanSnapshot(enriched, { processId: PROCESS_ID, source: 'persistent-worker' }).catch((error) => {
       console.warn(JSON.stringify({
@@ -227,18 +241,12 @@ export async function runFastMarketMonitor(): Promise<MonitoringCycleResult> {
   try {
     renewLease(PROCESS_ID);
     await persistLease();
-    await restoreColdUniverseState();
     await monitorPriceTick();
-    // Ensure board symbols exist (uses 15m Top 50 ranking cache).
+    // Ensure board symbols exist (Top 100 by 24h quote volume).
     const scan = await runScheduledScanTick();
     const prices = await refreshBoardPrices();
 
-    const hot = hotSymbolsFromBoard();
     const hotAnalyzed = (scan.coins || []).filter((coin) => coin.scanState && coin.scanState !== 'pending').length;
-    const cold = await runColdUniverseBatch(hot.length ? hot : (scan.coins || []).map((c) => c.symbol), {
-      batchSize: COLD_FAST_BATCH_SIZE,
-      hotAnalyzed: hotAnalyzed || hot.length,
-    });
 
     const finished = Date.now();
     const durationMs = finished - started;
@@ -248,10 +256,9 @@ export async function runFastMarketMonitor(): Promise<MonitoringCycleResult> {
     const pending = scan.counts?.pending ?? 0;
     const selected = scan.universe?.selected ?? 0;
     const analyzedCount = hotAnalyzed;
-    const baseNote = pending > 0 || analyzedCount < selected
+    const coverageNote = pending > 0 || analyzedCount < selected
       ? `Fast price monitor updated ${prices.priceUpdatedCount} quotes. Analysis coverage ${analyzedCount}/${selected}.`
-      : `Fast price monitor updated ${prices.priceUpdatedCount} quotes. Top ${selected} analysis complete — ${analyzedCount}/${selected} analyzed.`;
-    const coverageNote = coverageNoteWithCold(baseNote, cold.coverage);
+      : `Fast price monitor updated ${prices.priceUpdatedCount} quotes. Top ${selected} pattern analysis complete — ${analyzedCount}/${selected} analyzed.`;
 
     const published = await publishBoard({
       startedAt,
@@ -262,7 +269,7 @@ export async function runFastMarketMonitor(): Promise<MonitoringCycleResult> {
       priceUpdatedCount: prices.priceUpdatedCount,
       analysisDurationMs: null,
       warnings: scan.warnings,
-      cold: cold.coverage,
+      cold: null,
     });
 
     return {
@@ -284,7 +291,7 @@ export async function runFastMarketMonitor(): Promise<MonitoringCycleResult> {
       priceUpdatedCount: prices.priceUpdatedCount,
       coverageNote,
       workerStatus: 'running',
-      eligible: published.liveBoard?.universe?.eligible ?? scan.universe?.eligible ?? cold.coverage.eligibleUniverse,
+      eligible: published.liveBoard?.universe?.eligible ?? scan.universe?.eligible ?? 0,
       selected: published.selectedCount,
       long: published.boardCounts?.long ?? 0,
       short: published.boardCounts?.short ?? 0,
@@ -294,8 +301,6 @@ export async function runFastMarketMonitor(): Promise<MonitoringCycleResult> {
       stale: published.boardHealth?.staleCount ?? 0,
       failed: published.boardHealth?.failedCount ?? 0,
       pending: published.boardCounts?.pending ?? 0,
-      cold: cold.coverage,
-      coldAnalyzed: cold.analyzed,
     };
   } catch (error) {
     const finished = Date.now();
@@ -326,7 +331,7 @@ export async function runFastMarketMonitor(): Promise<MonitoringCycleResult> {
   }
 }
 
-/** Heavy path: complete Top 50 technical analysis + larger cold batch. */
+/** Heavy path: complete Top 100 pattern analysis (risk×2 TP, no net≥3 gate by default). */
 export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
   const started = Date.now();
   const startedAt = new Date(started).toISOString();
@@ -337,10 +342,10 @@ export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
   try {
     renewLease(PROCESS_ID);
     await persistLease();
-    await restoreColdUniverseState();
     await monitorPriceTick();
-    const scan = await runScheduledScanTick();
-    const selectedCount = scan.universe?.selected ?? 50;
+    // Force Top 100 re-rank from current eligible universe + 24h quote volume every analysis cycle.
+    const scan = await runScheduledScanTick({ refreshUniverse: true });
+    const selectedCount = scan.universe?.selected ?? 100;
     const batch = await processCycleBatch({
       fullPass: true,
       budget: selectedCount,
@@ -353,11 +358,6 @@ export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
     const hotAnalyzed = livePreview?.health?.analyzedCount
       ?? livePreview?.coins.filter((c) => c.scanState && c.scanState !== 'pending').length
       ?? batch.analyzed.length;
-    const hot = (livePreview?.coins || scan.coins || []).map((coin) => coin.symbol);
-    const cold = await runColdUniverseBatch(hot, {
-      batchSize: COLD_BATCH_SIZE,
-      hotAnalyzed,
-    });
 
     const finished = Date.now();
     const durationMs = finished - started;
@@ -365,10 +365,9 @@ export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
     recordCycleMetrics({ startedAt, durationMs, backlog: batch.backlog });
 
     const selected = livePreview?.universe?.selected ?? selectedCount;
-    const baseNote = hotAnalyzed < selected
-      ? `Coverage is incomplete — ${hotAnalyzed}/${selected} selected coins have completed analysis.`
-      : `Top ${selected} analysis complete — ${hotAnalyzed}/${selected} analyzed.`;
-    const coverageNote = coverageNoteWithCold(baseNote, cold.coverage);
+    const coverageNote = hotAnalyzed < selected
+      ? `Coverage is incomplete — ${hotAnalyzed}/${selected} selected coins have completed pattern analysis.`
+      : `Top ${selected} pattern analysis complete — ${hotAnalyzed}/${selected} analyzed.`;
 
     const published = await publishBoard({
       startedAt,
@@ -379,7 +378,7 @@ export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
       priceUpdatedCount: batch.priceUpdatedCount,
       analysisDurationMs: batch.analysisDurationMs,
       warnings: scan.warnings,
-      cold: cold.coverage,
+      cold: null,
     });
 
     return {
@@ -401,7 +400,7 @@ export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
       priceUpdatedCount: batch.priceUpdatedCount,
       coverageNote,
       workerStatus: 'running',
-      eligible: published.liveBoard?.universe?.eligible ?? scan.universe?.eligible ?? cold.coverage.eligibleUniverse,
+      eligible: published.liveBoard?.universe?.eligible ?? scan.universe?.eligible ?? 0,
       selected: published.selectedCount,
       long: published.boardCounts?.long ?? 0,
       short: published.boardCounts?.short ?? 0,
@@ -411,12 +410,10 @@ export async function runFullTop50Analysis(): Promise<MonitoringCycleResult> {
       stale: published.boardHealth?.staleCount ?? 0,
       failed: published.boardHealth?.failedCount ?? 0,
       pending: published.boardCounts?.pending ?? batch.backlog,
-      cold: cold.coverage,
-      coldAnalyzed: cold.analyzed,
     };
   } catch (error) {
     const finished = Date.now();
-    const message = error instanceof Error ? error.message : 'Full Top 50 analysis failed';
+    const message = error instanceof Error ? error.message : 'Full Top 100 pattern analysis failed';
     recordCycleMetrics({ startedAt, durationMs: finished - started });
     await getOfficialStore().setHealth({
       stale: true,

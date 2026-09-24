@@ -94,14 +94,14 @@ describe.each(SYMBOLS)("%s lifecycle", (symbol) => {
     expect(later.coin.setup?.executable).toBe(false);
   });
 
-  it("invalidates when the market call flips and keeps the old entry", () => {
+  it("keeps a published WAITING signal when a later scan flips direction (pattern changes do not invalidate)", () => {
     const first = reconcilePublishedSignal(freshCoin(symbol, "LONG", entry), null, openedAt());
     const flipped = reconcilePublishedSignal(
       { ...freshCoin(symbol, "SHORT", entry * 0.999), lastCandleCloseAt: first.coin.lastCandleCloseAt },
       first.published,
       openedAt(30_000),
     );
-    expect(flipped.coin.lifecycle?.status).toBe("INVALIDATED");
+    expect(flipped.coin.lifecycle?.status).not.toBe("INVALIDATED");
     expect(flipped.coin.setup?.entry).toBe(entry);
     expect(flipped.coin.direction).toBe("LONG");
   });

@@ -4,14 +4,14 @@
  *
  * Dual cadence:
  * - Fast market monitor (~60s): prices, 24h stats, lifecycle, heartbeat
- * - Full Top 50 analysis: complete technical pass for all selected symbols (cache-aware)
+ * - Full Top 100 pattern analysis (~5 minutes): complete technical pass for all selected symbols
  *
  * Binance requests run on THIS host. Vercel only reads Firestore snapshots.
  */
 import { runFastMarketMonitor, runFullTop50Analysis } from "../lib/signals-engine/monitor-cycle";
 
 const PRICE_INTERVAL_MS = Number(process.env.SIGNALS_PRICE_INTERVAL_MS || process.env.SIGNALS_MONITOR_INTERVAL_MS || 60_000);
-const ANALYSIS_INTERVAL_MS = Number(process.env.SIGNALS_ANALYSIS_INTERVAL_MS || 180_000);
+const ANALYSIS_INTERVAL_MS = Number(process.env.SIGNALS_ANALYSIS_INTERVAL_MS || 300_000);
 
 let priceInFlight = false;
 let analysisInFlight = false;

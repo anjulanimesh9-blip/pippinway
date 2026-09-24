@@ -4,7 +4,7 @@ import { getCandlesIncremental, needsTimeframeRefresh, restoreCandleCloses, seri
 import { buildMarketContext } from './context';
 import { freshnessCounts, prioritizeSymbols, symbolNeedsAnalysis } from './freshness';
 import { recordLiveSignals } from './history';
-import { reconcilePublishedSignal, type PublishedSignal } from './lifecycle';
+import { reconcilePublishedSignal, isTerminal, type PublishedSignal } from './lifecycle';
 import { weightSnapshot } from './rate-limit';
 import { analyzeTimeframe, buildCoinScan } from './signals';
 import {
@@ -43,9 +43,14 @@ async function attachLifecycle(coin: CoinScan): Promise<CoinScan> {
   const previous = published.get(coin.symbol) || null;
   const result = reconcilePublishedSignal(coin, previous);
   if (result.published) {
-    published.set(coin.symbol, result.published);
     await persistReconcile(result.coin, result.published, previous?.lifecycle.status);
-  } else {
+    if (isTerminal(result.published.lifecycle.status)) {
+      // Keep terminal out of the live published map so a genuinely new setup can publish later.
+      published.delete(coin.symbol);
+    } else {
+      published.set(coin.symbol, result.published);
+    }
+  } else if (!previous || isTerminal(previous.lifecycle.status)) {
     published.delete(coin.symbol);
   }
   return result.coin;
@@ -56,7 +61,7 @@ const INLINE_LIMIT = 15;
 const BACKGROUND_BATCH = 10;
 const BACKGROUND_MS = 10_000;
 const ANALYZE_TIMEOUT_MS = 25_000;
-const CYCLE_ANALYZE_BUDGET = 50;
+const CYCLE_ANALYZE_BUDGET = 100;
 
 type AnalysisHit = { coin: CoinScan; at: number };
 const analysisCache = new Map<string, AnalysisHit>();
@@ -94,6 +99,8 @@ export type ScanOptions = {
   mode?: ScanMode | string | null;
   custom?: string[];
   force?: boolean;
+  /** When true, bypass selection cache and re-rank Top N by live 24h quote volume. */
+  refreshUniverse?: boolean;
   backgroundLoop?: boolean;
   inlineAnalyze?: boolean;
 };
@@ -775,17 +782,23 @@ async function restorePersistedJob() {
   if (snapshot.lastCandleCloseBySymbolTf) restoreCandleCloses(snapshot.lastCandleCloseBySymbolTf);
 }
 
-export async function runScheduledScanTick(): Promise<ScannerResponse> {
+export async function runScheduledScanTick(options: { refreshUniverse?: boolean } = {}): Promise<ScannerResponse> {
   await restorePersistedJob();
-  const mode = getJob()?.mode && getJob()?.mode !== '15' ? getJob()!.mode : DEFAULT_LIVE_SCAN_MODE;
-  return scanMarkets(false, { mode, backgroundLoop: false, inlineAnalyze: false });
+  // Persistent worker always uses the configured live board (Top 100 pattern path).
+  return scanMarkets(false, {
+    mode: DEFAULT_LIVE_SCAN_MODE,
+    backgroundLoop: false,
+    inlineAnalyze: false,
+    refreshUniverse: options.refreshUniverse === true,
+  });
 }
 
 export async function scanMarkets(force = false, options: ScanOptions = {}): Promise<ScannerResponse> {
   if (options.backgroundLoop !== false) startBackgroundScanLoop();
   await restorePersistedJob();
   const mode = options.mode == null ? (getJob()?.mode && getJob()?.mode !== '15' ? getJob()!.mode : DEFAULT_LIVE_SCAN_MODE) : parseScanMode(options.mode);
-  const selection = await resolveUniverse(mode, options.custom);
+  const refreshUniverse = options.refreshUniverse === true || force === true;
+  const selection = await resolveUniverse(mode, options.custom, refreshUniverse);
   const job = syncJob(selection);
   const pending = selection.symbols.filter((symbol) => {
     const coin = job.coins.get(symbol);

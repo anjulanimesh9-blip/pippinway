@@ -181,8 +181,8 @@ export default function SignalsSettingsPage() {
             className="mt-2 w-full rounded-xl border border-white/10 bg-[#0B1220] px-3 py-2 text-white"
           >
             <option value="15">15 coins (original watchlist)</option>
-            <option value="50">Top 50 by 24h volume (default)</option>
-            <option value="100">100 coins by 24h volume</option>
+            <option value="100">Top 100 by 24h volume (default)</option>
+            <option value="50">Top 50 by 24h volume</option>
             <option value="all">All eligible USDT-M perpetuals</option>
             <option value="custom">Custom watchlist</option>
           </select>

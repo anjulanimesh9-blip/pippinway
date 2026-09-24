@@ -57,6 +57,7 @@ export type SignalLifecycleStatus =
   | 'ACTIVE'
   | 'TARGET_HIT'
   | 'STOP_HIT'
+  | 'AMBIGUOUS'
   | 'EXPIRED'
   | 'INVALIDATED'
   | 'MISSED_ENTRY';
@@ -355,6 +356,10 @@ export type ScannerHealth = {
   nextExpectedFullEligibleUniverseAt?: string | null;
   lastColdBatchAt?: string | null;
   lastColdBatchDurationMs?: number | null;
+  /** ISO timestamp when Top 100 was last re-ranked by 24h quote volume. */
+  top100RankedAt?: string | null;
+  /** ISO timestamp when the next full Top 100 analysis is due. */
+  nextAnalysisAt?: string | null;
 };
 
 export type ScannerResponse = {

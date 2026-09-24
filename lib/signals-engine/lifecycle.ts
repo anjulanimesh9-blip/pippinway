@@ -9,13 +9,21 @@ export const STILL_ACTIONABLE_PROGRESS = 0.15;
 export const TERMINAL_STATUSES: SignalLifecycleStatus[] = [
   "TARGET_HIT",
   "STOP_HIT",
+  "AMBIGUOUS",
   "EXPIRED",
   "INVALIDATED",
   "MISSED_ENTRY",
 ];
 
+/** Outcomes that count toward official TARGET vs STOP win rate. */
+export const RESOLVED_HIT_STATUSES: SignalLifecycleStatus[] = ["TARGET_HIT", "STOP_HIT"];
+
 export function isTerminal(status: SignalLifecycleStatus): boolean {
   return TERMINAL_STATUSES.includes(status);
+}
+
+export function isTriggeredOrActive(status: SignalLifecycleStatus): boolean {
+  return status === "TRIGGERED" || status === "ACTIVE";
 }
 
 export function lifecycleLabel(status: SignalLifecycleStatus): string {
@@ -30,6 +38,8 @@ export function lifecycleLabel(status: SignalLifecycleStatus): string {
       return "TARGET HIT";
     case "STOP_HIT":
       return "STOP HIT";
+    case "AMBIGUOUS":
+      return "AMBIGUOUS";
     case "EXPIRED":
       return "EXPIRED";
     case "INVALIDATED":
@@ -58,6 +68,26 @@ export function hitStop(direction: "LONG" | "SHORT", stop: number, price: number
 
 export function hitTarget(direction: "LONG" | "SHORT", target: number, price: number): boolean {
   return direction === "LONG" ? price >= target : price <= target;
+}
+
+/**
+ * Resolve TP/SL from a candle's high/low range.
+ * If both are touched and order cannot be established → AMBIGUOUS.
+ */
+export function resolveOutcomeFromCandle(
+  direction: "LONG" | "SHORT",
+  stop: number,
+  target: number,
+  high: number,
+  low: number,
+): "TARGET_HIT" | "STOP_HIT" | "AMBIGUOUS" | null {
+  if (!(Number.isFinite(high) && Number.isFinite(low))) return null;
+  const stopHit = direction === "LONG" ? low <= stop : high >= stop;
+  const targetHit = direction === "LONG" ? high >= target : low <= target;
+  if (stopHit && targetHit) return "AMBIGUOUS";
+  if (stopHit) return "STOP_HIT";
+  if (targetHit) return "TARGET_HIT";
+  return null;
 }
 
 export function createLifecycle(input: {
@@ -94,6 +124,29 @@ function close(lifecycle: SignalLifecycle, status: SignalLifecycleStatus, now: s
   };
 }
 
+function closeHit(
+  lifecycle: SignalLifecycle,
+  status: "TARGET_HIT" | "STOP_HIT" | "AMBIGUOUS",
+  now: string,
+  extras?: Partial<Pick<SignalLifecycle, "observedTrigger" | "seenAwayFromEntry" | "triggerObservedAt">>,
+): SignalLifecycle {
+  const notes: Record<typeof status, { note: string; nextStep: string }> = {
+    STOP_HIT: {
+      note: "Stop level traded after an observed, unconfirmed entry. This is a price-path observation, not a brokerage fill.",
+      nextStep: "Record as observed stop path only. Fill is unconfirmed.",
+    },
+    TARGET_HIT: {
+      note: "Target level traded after an observed, unconfirmed entry. This is a price-path observation, not a brokerage fill.",
+      nextStep: "Record as observed target path only. Fill is unconfirmed.",
+    },
+    AMBIGUOUS: {
+      note: "Both stop and target traded inside the same candle; execution order cannot be established.",
+      nextStep: "Do not count as a win or loss. Record as ambiguous only.",
+    },
+  };
+  return close({ ...lifecycle, ...extras }, status, now, notes[status].note, notes[status].nextStep);
+}
+
 export function advanceLifecycle(input: {
   lifecycle: SignalLifecycle;
   direction: "LONG" | "SHORT";
@@ -102,26 +155,32 @@ export function advanceLifecycle(input: {
   target: number;
   livePrice: number;
   now: string;
-  conditionsHold: boolean;
+  /** Delisting / contract unavailable only — later WAIT/pattern scans must NOT invalidate. */
+  delisted?: boolean;
+  /** @deprecated Prefer delisted. Kept for call-site compatibility; ignored for pattern WAIT. */
+  conditionsHold?: boolean;
   tickSize?: number;
+  candleHigh?: number | null;
+  candleLow?: number | null;
 }): SignalLifecycle {
-  const { lifecycle, direction, entry, stop, target, livePrice, now, conditionsHold } = input;
+  const { lifecycle, direction, entry, stop, target, livePrice, now } = input;
   if (isTerminal(lifecycle.status)) return lifecycle;
 
-  if (!conditionsHold) {
+  if (input.delisted) {
     return close(
       lifecycle,
       "INVALIDATED",
       now,
-      "Original market conditions no longer hold. The published entry was not replaced with a new price.",
-      "Stay flat. Wait for the next closed-candle setup. This is not a fresh executable trade.",
+      "Contract is no longer an eligible TRADING USDT-M perpetual. Frozen entry/SL/TP were not rewritten.",
+      "Stay flat. This is not a fresh executable trade.",
     );
   }
 
-  if (Date.parse(now) >= Date.parse(lifecycle.expiresAt)) {
+  // TRIGGERED / ACTIVE: never TTL-expire — wait for TARGET / STOP / AMBIGUOUS only.
+  if (!isTriggeredOrActive(lifecycle.status) && Date.parse(now) >= Date.parse(lifecycle.expiresAt)) {
     return close(
       lifecycle,
-      lifecycle.observedTrigger ? "EXPIRED" : "EXPIRED",
+      "EXPIRED",
       now,
       lifecycle.observedTrigger
         ? "Signal expired. An entry touch was observed, but no brokerage fill was confirmed."
@@ -162,23 +221,31 @@ export function advanceLifecycle(input: {
   }
 
   if (status === "TRIGGERED" || status === "ACTIVE") {
-    if (hitStop(direction, stop, livePrice)) {
-      return close(
-        { ...lifecycle, observedTrigger, seenAwayFromEntry: seenAway, triggerObservedAt },
-        "STOP_HIT",
-        now,
-        "Stop level traded after an observed, unconfirmed entry. This is a price-path observation, not a brokerage fill.",
-        "Record as observed stop path only. Fill is unconfirmed.",
-      );
-    }
-    if (hitTarget(direction, target, livePrice)) {
-      return close(
-        { ...lifecycle, observedTrigger, seenAwayFromEntry: seenAway, triggerObservedAt },
-        "TARGET_HIT",
-        now,
-        "Target level traded after an observed, unconfirmed entry. This is a price-path observation, not a brokerage fill.",
-        "Record as observed target path only. Fill is unconfirmed.",
-      );
+    const high = input.candleHigh;
+    const low = input.candleLow;
+    if (high != null && low != null && Number.isFinite(high) && Number.isFinite(low)) {
+      const fromCandle = resolveOutcomeFromCandle(direction, stop, target, high, low);
+      if (fromCandle) {
+        return closeHit(
+          lifecycle,
+          fromCandle,
+          now,
+          { observedTrigger, seenAwayFromEntry: seenAway, triggerObservedAt },
+        );
+      }
+    } else {
+      // Snapshot fallback when candle range is unavailable.
+      const stopNow = hitStop(direction, stop, livePrice);
+      const targetNow = hitTarget(direction, target, livePrice);
+      if (stopNow && targetNow) {
+        return closeHit(lifecycle, "AMBIGUOUS", now, { observedTrigger, seenAwayFromEntry: seenAway, triggerObservedAt });
+      }
+      if (stopNow) {
+        return closeHit(lifecycle, "STOP_HIT", now, { observedTrigger, seenAwayFromEntry: seenAway, triggerObservedAt });
+      }
+      if (targetNow) {
+        return closeHit(lifecycle, "TARGET_HIT", now, { observedTrigger, seenAwayFromEntry: seenAway, triggerObservedAt });
+      }
     }
     if (status === "TRIGGERED" && nearEntry) {
       note = "Price traded back through the original entry. This is an observed opportunity, not a confirmed order fill.";
@@ -273,6 +340,16 @@ function applyLifecycleFinance(_coin: CoinScan, setup: TradeSetup, lifecycle: Si
   };
 }
 
+function sameFrozenSetup(fresh: CoinScan, previous: PublishedSignal): boolean {
+  if (fresh.direction === "WAIT" || !fresh.setup) return false;
+  return (
+    fresh.direction === previous.direction
+    && fresh.setup.entry === previous.entry
+    && fresh.setup.stop === previous.stop
+    && fresh.setup.target === previous.target
+  );
+}
+
 export function reconcilePublishedSignal(
   fresh: CoinScan,
   previous: PublishedSignal | null,
@@ -283,21 +360,52 @@ export function reconcilePublishedSignal(
   }
 
   if (previous) {
-    const sameCandle = previous.lastCandleCloseAt != null && previous.lastCandleCloseAt === fresh.lastCandleCloseAt;
-    const conditionsHold = fresh.direction === previous.direction || isRrPublicationReject(fresh.reason);
-    const advanced = advanceLifecycle({
-      lifecycle: previous.lifecycle,
-      direction: previous.direction,
-      entry: previous.entry,
-      stop: previous.stop,
-      target: previous.target,
-      livePrice: fresh.price,
-      now,
-      conditionsHold: conditionsHold || isTerminal(previous.lifecycle.status),
-      tickSize: fresh.setup?.tickSize || fresh.filters?.tickSize,
-    });
-
-    if (!isTerminal(previous.lifecycle.status) || sameCandle) {
+    // Terminal official signal: never overwrite outcome. Allow a genuinely NEW setup only.
+    if (isTerminal(previous.lifecycle.status)) {
+      if (sameFrozenSetup(fresh, previous)) {
+        const rebuilt = fresh.filters
+          ? buildSetup({
+              direction: previous.direction,
+              entry: previous.entry,
+              stop: previous.stop,
+              target: previous.target,
+              filters: fresh.filters,
+            })
+          : fresh.setup;
+        const setup = rebuilt
+          ? applyLifecycleFinance({ ...fresh, direction: previous.direction, setup: rebuilt }, rebuilt, previous.lifecycle, fresh.price)
+          : null;
+        return {
+          coin: {
+            ...fresh,
+            direction: previous.direction,
+            pattern: previous.pattern,
+            patternStatus: previous.patternStatus,
+            setup,
+            originalEntry: previous.entry,
+            lifecycle: previous.lifecycle,
+            entryConditions: previous.entryConditions,
+            reason: previous.lifecycle.note,
+            nextStep: previous.lifecycle.nextStep,
+            analyzedAt: previous.lifecycle.openedAt,
+          },
+          published: null,
+        };
+      }
+      // Fall through to publish a new signal only when levels/direction differ.
+    } else {
+      // Keep advancing the frozen published signal. Later WAIT / opposite pattern does NOT invalidate.
+      const advanced = advanceLifecycle({
+        lifecycle: previous.lifecycle,
+        direction: previous.direction,
+        entry: previous.entry,
+        stop: previous.stop,
+        target: previous.target,
+        livePrice: fresh.price,
+        now,
+        delisted: false,
+        tickSize: fresh.setup?.tickSize || fresh.filters?.tickSize,
+      });
       const rebuilt = fresh.filters
         ? buildSetup({
             direction: previous.direction,
@@ -325,11 +433,12 @@ export function reconcilePublishedSignal(
           originalEntry: previous.entry,
           lifecycle: advanced,
           entryConditions: previous.entryConditions,
-          reason: isTerminal(advanced.status) ? advanced.note : fresh.reason,
+          reason: isTerminal(advanced.status) ? advanced.note : (isRrPublicationReject(fresh.reason) ? previous.reason : fresh.reason),
           nextStep: advanced.nextStep,
           analyzedAt: previous.lifecycle.openedAt,
         },
-        published: isTerminal(advanced.status) && !sameCandle ? null : published,
+        // Always return published through terminal so persistReconcile can store the outcome.
+        published,
       };
     }
   }
@@ -352,7 +461,7 @@ export function reconcilePublishedSignal(
     target: fresh.setup.target,
     livePrice: fresh.price,
     now,
-    conditionsHold: true,
+    delisted: false,
     tickSize: fresh.setup.tickSize,
   });
   const setup = applyLifecycleFinance(fresh, fresh.setup, started, fresh.price);

@@ -35,6 +35,8 @@ type Health = MonitorHealth & {
   lastColdBatchDurationMs?: number | null;
   requestWeightUsed?: number | null;
   requestWeightLimit?: number | null;
+  top100RankedAt?: string | null;
+  nextAnalysisAt?: string | null;
 };
 
 function stamp(value?: string | null) {
@@ -59,16 +61,18 @@ export default function ScannerHealthPanel({ health, selected }: { health?: Heal
         <LiveMonitorBadge health={health} />
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 xl:grid-cols-4">
-        <div><dt className="text-[11px] uppercase text-slate-500">Last cycle</dt><dd className="mt-1 font-semibold">{stamp(health?.lastCycleAt)}</dd></div>
-        <div><dt className="text-[11px] uppercase text-slate-500">Last price stamp</dt><dd className="mt-1 font-semibold">{stamp(health?.lastPriceAt)}</dd></div>
-        <div><dt className="text-[11px] uppercase text-slate-500">Last full Top 50 pass</dt><dd className="mt-1 font-semibold">{stamp(health?.lastFullUniverseAt)}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Eligible contracts</dt><dd className="mt-1 font-semibold tabular-nums">{health?.eligibleUniverse ?? "—"}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Top 100 selected / analyzed</dt><dd className="mt-1 font-semibold tabular-nums">{selectedCount != null && analyzedCount != null ? `${analyzedCount} / ${selectedCount}` : selectedCount != null ? `— / ${selectedCount}` : "—"}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Top-100 ranking time</dt><dd className="mt-1 font-semibold">{stamp(health?.top100RankedAt)}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Analysis timestamp</dt><dd className="mt-1 font-semibold">{stamp(health?.lastFullUniverseAt ?? health?.lastCycleAt)}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Next analysis</dt><dd className="mt-1 font-semibold">{stamp(health?.nextAnalysisAt) !== "—" ? stamp(health?.nextAnalysisAt) : nextCycleLabel(health)}</dd></div>
         <div><dt className="text-[11px] uppercase text-slate-500">Analysis duration</dt><dd className="mt-1 font-semibold tabular-nums">{analysisMs != null ? `${analysisMs} ms` : "—"}</dd></div>
-        <div><dt className="text-[11px] uppercase text-slate-500">Top 50 selected / analyzed</dt><dd className="mt-1 font-semibold tabular-nums">{selectedCount != null && analyzedCount != null ? `${analyzedCount} / ${selectedCount}` : selectedCount != null ? `— / ${selectedCount}` : "—"}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Request weight</dt><dd className="mt-1 font-semibold tabular-nums">{health?.requestWeightUsed != null ? `${health.requestWeightUsed}/${health.requestWeightLimit || 2400}` : "—"}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Worker / circuit</dt><dd className="mt-1 font-semibold">{`${health?.workerStatus || health?.monitoring || "—"}${health?.binanceCircuitOpen ? " · circuit open" : " · circuit closed"}`}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Last price stamp</dt><dd className="mt-1 font-semibold">{stamp(health?.lastPriceAt)}</dd></div>
         <div><dt className="text-[11px] uppercase text-slate-500">Updated in last cycle</dt><dd className="mt-1 font-semibold tabular-nums">{updated != null ? `${updated}${selectedCount ? ` / ${selectedCount}` : ""}` : "—"}</dd></div>
         <div><dt className="text-[11px] uppercase text-slate-500">Fresh / pending / failed</dt><dd className="mt-1 font-semibold tabular-nums">{`${health?.freshCount ?? "—"} / ${health?.pendingCount ?? "—"} / ${health?.failedCount ?? "—"}`}</dd></div>
-        <div><dt className="text-[11px] uppercase text-slate-500">Next expected cycle</dt><dd className="mt-1 font-semibold">{nextCycleLabel(health)}</dd></div>
-        <div><dt className="text-[11px] uppercase text-slate-500">Request weight</dt><dd className="mt-1 font-semibold tabular-nums">{health?.requestWeightUsed != null ? `${health.requestWeightUsed}/${health.requestWeightLimit || 2400}` : "—"}</dd></div>
-        <div><dt className="text-[11px] uppercase text-slate-500">Worker status</dt><dd className="mt-1 font-semibold">{health?.workerStatus || health?.monitoring || "—"}</dd></div>
+        <div><dt className="text-[11px] uppercase text-slate-500">Last full Top 100 pass</dt><dd className="mt-1 font-semibold">{stamp(health?.lastFullUniverseAt)}</dd></div>
       </dl>
       {hasCoverage && (
         <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 text-sm sm:grid-cols-3 xl:grid-cols-4">

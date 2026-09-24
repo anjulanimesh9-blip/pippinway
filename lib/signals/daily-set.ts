@@ -12,7 +12,7 @@ export type DailyCandidate = {
   lifecycle?: { status?: string } | null;
 };
 
-const CLOSED = new Set(["EXPIRED", "INVALIDATED", "MISSED_ENTRY", "TARGET_HIT", "STOP_HIT"]);
+const CLOSED = new Set(["EXPIRED", "INVALIDATED", "MISSED_ENTRY", "TARGET_HIT", "STOP_HIT", "AMBIGUOUS"]);
 
 export function isActionableFreeSignal(coin: DailyCandidate): boolean {
   if (!coin.available) return false;

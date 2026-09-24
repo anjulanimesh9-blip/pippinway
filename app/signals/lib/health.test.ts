@@ -8,6 +8,8 @@ describe("monitor health labels", () => {
     expect(monitorIsLive({ workerStatus: "idle", lastCycleAt: "2026-09-23T01:59:30.000Z" }, now)).toBe(false);
     expect(monitorIsLive({ workerStatus: "running", lastCycleAt: "2026-09-23T01:50:00.000Z" }, now)).toBe(false);
     expect(monitorStatusLabel({ workerStatus: "error" }, now)).toBe("Error");
-    expect(nextCycleLabel({ lastCycleAt: "2026-09-23T01:59:20.000Z" }, now)).toBe("In 20s");
+    expect(nextCycleLabel({ lastCycleAt: "2026-09-23T01:59:20.000Z" }, now)).toBe("In 4m");
+    expect(nextCycleLabel({ nextAnalysisAt: "2026-09-23T02:00:30.000Z" }, now)).toBe("In 30s");
+    expect(nextCycleLabel({ nextAnalysisAt: "2026-09-23T02:05:00.000Z" }, now)).toBe("In 5m");
   });
 });

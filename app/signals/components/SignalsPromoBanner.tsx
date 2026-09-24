@@ -27,7 +27,7 @@ export default function SignalsPromoBanner({
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#FBB03B]">Pippinway Signals</p>
         <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Live market monitoring</h2>
         <ul className="mt-3 space-y-1 text-sm text-slate-300">
-          <li>Top 50 Binance Futures coins</li>
+          <li>Top 100 Binance Futures coins</li>
           <li>{live ? "Monitoring cycle every 60 seconds" : "Monitoring cycle is delayed or offline"}</li>
           <li>Validated setups · clear risk management</li>
         </ul>

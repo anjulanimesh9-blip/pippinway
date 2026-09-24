@@ -1,7 +1,7 @@
 import { atr, candleConfirmation, detectRetest, lastEma, macd, rangeLevels, rsi, rsiDivergence, trendFromEmas } from './indicators';
 import { detectPatterns, structureSnapshot } from './patterns';
 import { fixtureFilters } from './exchange-fixtures';
-import { buildSetup, passesPublicationRr, roundToTick } from './trading';
+import { buildSetup, passesPublicationRr, requirePublicationNetRr, roundToTick } from './trading';
 import { verifySignal } from './verify';
 import type {
   Candle,
@@ -170,38 +170,27 @@ function decideDirection(snapshots: TimeframeSnapshot[]): {
 
 const STRUCTURE_INTERVALS = new Set(['15m', '1h', '4h']);
 
-function nearestLevel(entry: number, levels: number[], side: 'above' | 'below'): number | null {
-  const hits = levels.filter((value) => Number.isFinite(value) && (side === 'above' ? value > entry : value < entry));
-  if (!hits.length) return null;
-  return side === 'above' ? Math.min(...hits) : Math.max(...hits);
-}
-
 export function levelsForSetup(direction: Direction, snapshots: TimeframeSnapshot[], livePrice: number, tickSize = 0) {
   const mid = snapshots.find((item) => item.interval === '15m') || snapshots.find((item) => STRUCTURE_INTERVALS.has(item.interval)) || snapshots.at(-1);
   if (!mid || direction === 'WAIT') return null;
   const volatility = mid.atr || mid.price * 0.004 || livePrice * 0.004;
   const entry = tickSize > 0 ? roundToTick(mid.price, tickSize) : mid.price;
-  const structure = snapshots.filter((item) => STRUCTURE_INTERVALS.has(item.interval));
-  const resistances = structure.map((item) => item.resistance).filter((value): value is number => Number.isFinite(value));
-  const supports = structure.map((item) => item.support).filter((value): value is number => Number.isFinite(value));
   const tick = (value: number) => (tickSize > 0 ? roundToTick(value, tickSize) : value);
 
+  // Restored legacy pattern-engine geometry: ATR/support-based stop, risk×2 take-profit
+  // (previous working 15-coin / pattern scanner behavior).
   if (direction === 'LONG') {
     const stopRaw = Math.min(mid.support - volatility * 0.1, entry - volatility * 1.2);
     const stop = tick(stopRaw);
     const risk = entry - stop;
     if (!(risk > 0)) return null;
-    const structureTarget = nearestLevel(entry, resistances, 'above');
-    const targetRaw = structureTarget ?? entry + volatility * 2;
-    return { entry, stop, target: tick(targetRaw), source: structureTarget != null ? 'structure' : 'atr-measured' as const };
+    return { entry, stop, target: tick(entry + risk * 2), source: 'risk-multiple' as const };
   }
   const stopRaw = Math.max(mid.resistance + volatility * 0.1, entry + volatility * 1.2);
   const stop = tick(stopRaw);
   const risk = stop - entry;
   if (!(risk > 0)) return null;
-  const structureTarget = nearestLevel(entry, supports, 'below');
-  const targetRaw = structureTarget ?? entry - volatility * 2;
-  return { entry, stop, target: tick(targetRaw), source: structureTarget != null ? 'structure' : 'atr-measured' as const };
+  return { entry, stop, target: tick(entry - risk * 2), source: 'risk-multiple' as const };
 }
 
 export function buildCoinScan(input: {
@@ -284,7 +273,7 @@ export function buildCoinScan(input: {
       marginMode: DEFAULT_SETTINGS.marginMode,
     });
   }
-  if (setup && !passesPublicationRr(setup.netRiskReward)) {
+  if (setup && requirePublicationNetRr() && !passesPublicationRr(setup.netRiskReward)) {
     const net = setup.netRiskReward.toFixed(2);
     const gross = setup.grossRiskReward.toFixed(2);
     return {

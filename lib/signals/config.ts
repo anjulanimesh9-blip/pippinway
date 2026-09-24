@@ -53,7 +53,7 @@ export const DEFAULT_SIGNALS_SETTINGS: SignalsUserSettings = {
   takerFeeRate: 0.0005,
   venue: "Binance USDT-M Futures",
   mode: "MANUAL",
-  scanMode: "50",
+  scanMode: "100",
   watchlist: [],
 };
 

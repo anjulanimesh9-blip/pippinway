@@ -11,7 +11,7 @@ services:
       NODE_OPTIONS: --use-system-ca
       SIGNALS_WORKER_MODE: engine
       SIGNALS_PRICE_INTERVAL_MS: "60000"
-      SIGNALS_ANALYSIS_INTERVAL_MS: "180000"
+      SIGNALS_ANALYSIS_INTERVAL_MS: "300000"
     volumes:
       # Mount Firebase Admin JSON outside the image/repo
       - ${FIREBASE_ADMIN_HOST_PATH}:/run/secrets/firebase-adminsdk.json:ro

@@ -35,10 +35,19 @@ export function monitorStatusLabel(health?: MonitorHealth | null, now = Date.now
   return "Offline";
 }
 
-export function nextCycleLabel(health?: MonitorHealth | null, now = Date.now()) {
+export function nextCycleLabel(health?: MonitorHealth & { nextAnalysisAt?: string | null } | null, now = Date.now()) {
+  if (health?.nextAnalysisAt) {
+    const due = Date.parse(health.nextAnalysisAt);
+    if (Number.isFinite(due)) {
+      if (due <= now) return "Due now";
+      const mins = Math.max(1, Math.round((due - now) / 60_000));
+      const secs = Math.max(1, Math.round((due - now) / 1000));
+      return mins >= 2 ? `In ${mins}m` : `In ${secs}s`;
+    }
+  }
   const last = lastMonitorAt(health);
   if (!last) return "Waiting for the first cycle";
-  const due = last + 60_000;
+  const due = last + 300_000;
   if (due <= now) return "Due now";
-  return `In ${Math.max(1, Math.round((due - now) / 1000))}s`;
+  return `In ${Math.max(1, Math.round((due - now) / 60_000))}m`;
 }

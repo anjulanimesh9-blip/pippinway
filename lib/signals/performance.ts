@@ -9,8 +9,15 @@ export type PerformanceReport = {
   missed: number;
   expired: number;
   invalidated: number;
+  ambiguous: number;
   targetHits: number;
   stopHits: number;
+  wins: number;
+  losses: number;
+  resolved: number;
+  /** null until at least one TARGET_HIT or STOP_HIT exists */
+  winRate: number | null;
+  winRateLabel: string;
   sampleSize: number;
   observedSample: number;
   hypotheticalGrossPnl: number;
@@ -30,7 +37,27 @@ function count(records: OfficialSignal[], status: OfficialSignal["lifecycleStatu
   return records.filter((item) => item.lifecycleStatus === status).length;
 }
 
+/** Dedupe identical frozen setups so republishes do not inflate win rate. */
+function uniqueResolvedSignals(records: OfficialSignal[]): OfficialSignal[] {
+  const seen = new Set<string>();
+  const out: OfficialSignal[] = [];
+  for (const record of records) {
+    if (record.lifecycleStatus !== "TARGET_HIT" && record.lifecycleStatus !== "STOP_HIT") continue;
+    const key = `${record.symbol}|${record.direction}|${record.originalEntry}|${record.stop}|${record.target}|${record.pattern}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(record);
+  }
+  return out;
+}
+
 export function reportFrom(records: OfficialSignal[], outcomes: ObservedOutcome[]): PerformanceReport {
+  const uniqueHits = uniqueResolvedSignals(records);
+  const wins = uniqueHits.filter((item) => item.lifecycleStatus === "TARGET_HIT").length;
+  const losses = uniqueHits.filter((item) => item.lifecycleStatus === "STOP_HIT").length;
+  const resolved = wins + losses;
+  const winRate = resolved > 0 ? wins / resolved : null;
+
   const observedHits = outcomes.filter((item) => item.kind === "TARGET_HIT" || item.kind === "STOP_HIT");
   const chronological = [...observedHits].sort((a, b) => a.at.localeCompare(b.at));
   let equity = 0;
@@ -43,6 +70,7 @@ export function reportFrom(records: OfficialSignal[], outcomes: ObservedOutcome[
   }
   const gross = observedHits.reduce((sum, item) => sum + (item.hypotheticalGrossPnl || 0), 0);
   const net = observedHits.reduce((sum, item) => sum + (item.hypotheticalNetPnl || 0), 0);
+
   return {
     published: records.length,
     waiting: count(records, "WAITING_FOR_ENTRY"),
@@ -51,8 +79,17 @@ export function reportFrom(records: OfficialSignal[], outcomes: ObservedOutcome[
     missed: count(records, "MISSED_ENTRY"),
     expired: count(records, "EXPIRED"),
     invalidated: count(records, "INVALIDATED"),
-    targetHits: count(records, "TARGET_HIT"),
-    stopHits: count(records, "STOP_HIT"),
+    ambiguous: count(records, "AMBIGUOUS"),
+    targetHits: wins,
+    stopHits: losses,
+    wins,
+    losses,
+    resolved,
+    winRate,
+    winRateLabel:
+      winRate == null
+        ? "No resolved official TARGET/STOP outcomes yet"
+        : `${(winRate * 100).toFixed(1)}% (${wins} wins / ${resolved} resolved signals)`,
     sampleSize: records.length,
     observedSample: observedHits.length,
     hypotheticalGrossPnl: Number(gross.toFixed(4)),
@@ -61,11 +98,11 @@ export function reportFrom(records: OfficialSignal[], outcomes: ObservedOutcome[
     brokerageVerified: 0,
     fillConfirmed: records.filter((item) => item.fillConfirmed).length,
     sources: {
-      backtest: "Walk-forward 1H closed-candle sample. Separate from live official records.",
-      forwardObserved: "Official published signals and later price-path observations. A target or stop print is not a brokerage fill.",
+      backtest: "Walk-forward educational sample only. Never shown as Official Live win rate.",
+      forwardObserved: "Official published signals resolved to TARGET_HIT or STOP_HIT. AMBIGUOUS / EXPIRED / INVALIDATED are excluded.",
       brokerageVerified: "No execution venue is connected. Verified fills remain zero.",
     },
-    note: "Unfilled, missed, expired and invalidated signals are not counted as verified wins. Hypothetical P/L uses stored quantity and fees only after an observed target or stop, and stays unconfirmed.",
+    note: "Official win rate uses TARGET_HIT / (TARGET_HIT + STOP_HIT) only. Unfilled, missed, expired and invalidated signals are not counted as verified wins. Educational/backtest percentages are separate and are never labeled as live product performance.",
   };
 }
 
